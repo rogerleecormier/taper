@@ -29,6 +29,7 @@ import { TrackerToolbar } from "./tracker-toolbar";
 import { TrackerParentRow } from "./tracker-parent-row";
 
 const UNPAID_STATUSES = new Set(["pending", "partial", "overdue"]);
+const TOTALLED_BILL_STATUSES = new Set(["pending", "partial", "overdue", "paid"]);
 
 interface TrackerContainerProps {
   interval: TrackerInterval;
@@ -126,7 +127,9 @@ export function TrackerContainer({
             ? allOccs
             : allOccs.filter((o) => UNPAID_STATUSES.has(o.status));
           if (visibleOccs.length === 0) return null;
-          const periodTotal = allOccs.reduce((s, o) => s + o.amountCents, 0);
+          const periodTotal = allOccs
+            .filter((o) => TOTALLED_BILL_STATUSES.has(o.status))
+            .reduce((s, o) => s + o.amountCents, 0);
           return { ...row, entityId, occurrences: visibleOccs, periodTotal };
         })
         .filter(Boolean),
