@@ -1,15 +1,17 @@
 "use client";
 
 import { useState } from "react";
+import { Link } from "@tanstack/react-router";
 import {
   useReactTable,
   getCoreRowModel,
   flexRender,
   createColumnHelper,
 } from "@tanstack/react-table";
-import { Pencil, Trash2, Plus } from "lucide-react";
+import { Pencil, Trash2, ExternalLink } from "lucide-react";
 import { Button } from "~/components/ui/button";
 import { Badge } from "~/components/ui/badge";
+import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from "~/components/ui/tooltip";
 import { formatCurrency } from "~/lib/currency";
 import { useDeleteIncomeSource } from "~/hooks/use-income";
 import { IncomeFormDialog } from "./income-form-dialog";
@@ -51,7 +53,19 @@ export function IncomeList({ incomeSources }: IncomeListProps) {
   const columns = [
     columnHelper.accessor("name", {
       header: "Name",
-      cell: (info) => <span className="font-medium">{info.getValue()}</span>,
+      cell: (info) => {
+        const src = info.row.original;
+        return (
+          <div className="flex items-center gap-2">
+            <span className="font-medium">{info.getValue()}</span>
+            {src.sourceType === "payroll" && (
+              <Badge className="border-violet-200 bg-violet-100 text-violet-800 text-xs">
+                Payroll
+              </Badge>
+            )}
+          </div>
+        );
+      },
     }),
     columnHelper.accessor("vendor", {
       header: "Source / Vendor",
@@ -137,6 +151,21 @@ export function IncomeList({ incomeSources }: IncomeListProps) {
                 notes: src.notes ?? "",
               }}
             />
+            {src.sourceType === "payroll" && (
+              <TooltipProvider>
+                <Tooltip>
+                  <TooltipTrigger asChild>
+                    <Link to="/income/$id" params={{ id: src.id }}>
+                      <Button variant="ghost" size="sm" className="h-8 w-8 p-0 text-violet-600 hover:text-violet-800">
+                        <ExternalLink className="h-3.5 w-3.5" />
+                        <span className="sr-only">View Pay Cycles</span>
+                      </Button>
+                    </Link>
+                  </TooltipTrigger>
+                  <TooltipContent>View pay cycles</TooltipContent>
+                </Tooltip>
+              </TooltipProvider>
+            )}
             <Button
               variant="ghost"
               size="sm"
@@ -158,22 +187,6 @@ export function IncomeList({ incomeSources }: IncomeListProps) {
     columns,
     getCoreRowModel: getCoreRowModel(),
   });
-
-  if (incomeSources.length === 0) {
-    return (
-      <div className="flex flex-col items-center justify-center py-16 text-center text-muted-foreground">
-        <p className="text-sm">No income sources yet.</p>
-        <IncomeFormDialog
-          trigger={
-            <Button variant="outline" size="sm" className="mt-3">
-              <Plus className="mr-1.5 h-4 w-4" />
-              Add your first income source
-            </Button>
-          }
-        />
-      </div>
-    );
-  }
 
   return (
     <div className="w-full overflow-x-auto rounded-md border">

@@ -4,4 +4,8 @@ export * from "../app/db/schema/categories";
 export * from "../app/db/schema/bills";
 export * from "../app/db/schema/income-sources";
 export * from "../app/db/schema/bill-occurrences";
+export * from "../app/db/schema/bill-payments";
 export * from "../app/db/schema/income-occurrences";
+export * from "../app/db/schema/paystubs";
+export * from "../app/db/schema/paystub-deductions";
+export * from "../app/db/schema/user-preferences";

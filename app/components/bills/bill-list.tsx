@@ -7,7 +7,7 @@ import {
   flexRender,
   createColumnHelper,
 } from "@tanstack/react-table";
-import { Pencil, Trash2, Plus } from "lucide-react";
+import { Pencil, Trash2 } from "lucide-react";
 import { Button } from "~/components/ui/button";
 import { Badge } from "~/components/ui/badge";
 import { formatCurrency } from "~/lib/currency";
@@ -29,7 +29,7 @@ const INTERVAL_LABELS: Record<string, string> = {
   weekly: "Weekly",
   biweekly: "Biweekly",
   monthly: "Monthly",
-  standalone: "One-time",
+  standalone: "Standalone",
 };
 
 const columnHelper = createColumnHelper<BillWithRelations>();
@@ -39,7 +39,7 @@ export function BillList({ bills }: BillListProps) {
   const [deletingId, setDeletingId] = useState<string | null>(null);
 
   async function handleDelete(id: string) {
-    if (!confirm("Delete this bill and all its occurrences?")) return;
+    if (!confirm("Delete this expense and all its occurrences?")) return;
     setDeletingId(id);
     try {
       await deleteBill.mutateAsync(id);
@@ -161,22 +161,6 @@ export function BillList({ bills }: BillListProps) {
     columns,
     getCoreRowModel: getCoreRowModel(),
   });
-
-  if (bills.length === 0) {
-    return (
-      <div className="flex flex-col items-center justify-center py-16 text-center text-muted-foreground">
-        <p className="text-sm">No bills yet.</p>
-        <BillFormDialog
-          trigger={
-            <Button variant="outline" size="sm" className="mt-3">
-              <Plus className="mr-1.5 h-4 w-4" />
-              Add your first bill
-            </Button>
-          }
-        />
-      </div>
-    );
-  }
 
   return (
     <div className="w-full overflow-x-auto rounded-md border">

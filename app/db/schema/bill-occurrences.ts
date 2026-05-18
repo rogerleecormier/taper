@@ -2,7 +2,7 @@ import { sqliteTable, text, integer, uniqueIndex } from "drizzle-orm/sqlite-core
 import { user } from "./auth";
 import { bills } from "./bills";
 
-export type OccurrenceStatus = "pending" | "paid" | "overdue" | "skipped";
+export type OccurrenceStatus = "pending" | "partial" | "paid" | "overdue" | "skipped";
 
 export const billOccurrences = sqliteTable(
   "bill_occurrences",
@@ -17,7 +17,7 @@ export const billOccurrences = sqliteTable(
     dueDate: text("due_date").notNull(),
     amountCents: integer("amount_cents").notNull(),
     status: text("status", {
-      enum: ["pending", "paid", "overdue", "skipped"],
+      enum: ["pending", "partial", "paid", "overdue", "skipped"],
     })
       .notNull()
       .default("pending"),

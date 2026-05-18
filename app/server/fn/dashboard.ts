@@ -1,10 +1,11 @@
 import { createServerFn } from "@tanstack/react-start";
 import { z } from "zod";
-import { eq, and, gte, lte, lt, desc, asc } from "drizzle-orm";
+import { eq, and, gte, lte, lt, desc, asc, inArray } from "drizzle-orm";
 import { authMiddleware } from "~/server/middleware";
 import { bills } from "~/db/schema/bills";
 import { incomeSources } from "~/db/schema/income-sources";
 import { billOccurrences } from "~/db/schema/bill-occurrences";
+import { billPayments } from "~/db/schema/bill-payments";
 import { incomeOccurrences } from "~/db/schema/income-occurrences";
 import { vendors } from "~/db/schema/vendors";
 import { categories } from "~/db/schema/categories";
@@ -59,21 +60,32 @@ export type DashboardData = {
 
 export const getDashboardData = createServerFn()
   .middleware([authMiddleware])
-  .validator(
+  .inputValidator(
     z.object({
       upcomingDays: z.union([
         z.literal(7),
         z.literal(14),
         z.literal(30),
       ]).default(7),
+      referenceDate: z.string().regex(/^\d{4}-\d{2}-\d{2}$/).optional(),
     })
   )
   .handler(async ({ data, context }): Promise<DashboardData> => {
     const { db, user, env } = context;
-    const today = toDateStr(new Date());
-    const upcomingEnd = toDateStr(addDays(new Date(), data.upcomingDays));
-    const period = today.slice(0, 7);
-    const cacheKey = dashboardCacheKey(user.id, `${period}-${data.upcomingDays}`);
+    const reference = data.referenceDate ?? toDateStr(new Date());
+    const actualToday = toDateStr(new Date());
+    const effectiveUpcomingStart = reference > actualToday ? reference : actualToday;
+    const upcomingEnd = toDateStr(
+      addDays(new Date(`${effectiveUpcomingStart}T00:00:00`), data.upcomingDays)
+    );
+    const recentStart = toDateStr(
+      addDays(new Date(`${reference}T00:00:00`), -30)
+    );
+    const period = reference.slice(0, 7);
+    const cacheKey = dashboardCacheKey(
+      user.id,
+      `${period}-${reference}-${actualToday}-${data.upcomingDays}`
+    );
 
     return getCachedOrFetch(env.KV, cacheKey, 300, async () => {
       const [
@@ -118,9 +130,9 @@ export const getDashboardData = createServerFn()
           .where(
             and(
               eq(billOccurrences.userId, user.id),
-              gte(billOccurrences.dueDate, today),
+              gte(billOccurrences.dueDate, effectiveUpcomingStart),
               lte(billOccurrences.dueDate, upcomingEnd),
-              eq(billOccurrences.status, "pending")
+              inArray(billOccurrences.status, ["pending", "partial"])
             )
           )
           .orderBy(asc(billOccurrences.dueDate))
@@ -137,7 +149,8 @@ export const getDashboardData = createServerFn()
           .where(
             and(
               eq(billOccurrences.userId, user.id),
-              eq(billOccurrences.status, "overdue")
+              lt(billOccurrences.dueDate, actualToday),
+              inArray(billOccurrences.status, ["pending", "partial", "overdue"])
             )
           )
           .orderBy(asc(billOccurrences.dueDate))
@@ -146,20 +159,25 @@ export const getDashboardData = createServerFn()
 
         db
           .select({
-            occurrence: billOccurrences,
+            payment: billPayments,
             bill: bills,
             vendor: vendors,
           })
-          .from(billOccurrences)
-          .leftJoin(bills, eq(billOccurrences.billId, bills.id))
+          .from(billPayments)
+          .innerJoin(
+            billOccurrences,
+            eq(billPayments.occurrenceId, billOccurrences.id)
+          )
+          .innerJoin(bills, eq(billOccurrences.billId, bills.id))
           .leftJoin(vendors, eq(bills.vendorId, vendors.id))
           .where(
             and(
-              eq(billOccurrences.userId, user.id),
-              eq(billOccurrences.status, "paid")
+              eq(billPayments.userId, user.id),
+              gte(billPayments.paidDate, recentStart),
+              lte(billPayments.paidDate, reference)
             )
           )
-          .orderBy(desc(billOccurrences.paidDate))
+          .orderBy(desc(billPayments.paidDate))
           .limit(10)
           .all(),
       ]);
@@ -298,11 +316,10 @@ export const getDashboardData = createServerFn()
           amountCents: r.occurrence.amountCents,
         })),
         recentPayments: recentPayments.map((r) => ({
-          id: r.occurrence.id,
+          id: r.payment.id,
           billName: r.bill?.name ?? "Unknown",
-          paidDate: r.occurrence.paidDate ?? "",
-          paidAmountCents:
-            r.occurrence.paidAmountCents ?? r.occurrence.amountCents,
+          paidDate: r.payment.paidDate,
+          paidAmountCents: r.payment.amountCents,
           vendorName: r.vendor?.name ?? null,
         })),
         categoryBreakdown,

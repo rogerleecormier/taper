@@ -5,11 +5,14 @@ import {
   addDays,
   addWeeks,
   addMonths,
+  addYears,
   subDays,
   subWeeks,
   subMonths,
+  subYears,
   format,
   startOfMonth,
+  startOfYear,
 } from "date-fns";
 import { Button } from "~/components/ui/button";
 import { cn } from "~/lib/utils";
@@ -46,6 +49,10 @@ function navigatePeriod(
       return sign > 0
         ? startOfMonth(addMonths(periodStart, 1))
         : startOfMonth(subMonths(periodStart, 1));
+    case "yearly":
+      return sign > 0
+        ? startOfYear(addYears(periodStart, 1))
+        : startOfYear(subYears(periodStart, 1));
   }
 }
 
@@ -59,6 +66,8 @@ function getPeriodLabel(interval: TrackerInterval, periodStart: Date): string {
       return `${format(periodStart, "MMM d")} – ${format(addDays(periodStart, 13), "MMM d, yyyy")}`;
     case "monthly":
       return format(periodStart, "MMMM yyyy");
+    case "yearly":
+      return format(periodStart, "yyyy");
   }
 }
 

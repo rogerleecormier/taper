@@ -1,18 +1,26 @@
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import {
   getBillOccurrences,
-  markOccurrencePaid,
-  markOccurrenceSkipped,
+  carryForwardOccurrence,
+  updateBillOccurrence,
 } from "~/server/fn/bill-occurrences";
+import {
+  addBillPayment,
+  getBillPayments,
+  deleteBillPayment,
+} from "~/server/fn/bill-payments";
 import {
   getIncomeOccurrences,
   markIncomeReceived,
   markIncomeSkipped,
+  updateIncomeOccurrence,
 } from "~/server/fn/income-occurrences";
 
 export const occurrenceKeys = {
   bills: (filters: object) => ["bill-occurrences", filters] as const,
   income: (filters: object) => ["income-occurrences", filters] as const,
+  payments: (occurrenceId: string | null) =>
+    ["bill-payments", occurrenceId] as const,
 };
 
 export function useBillOccurrences(
@@ -35,22 +43,53 @@ export function useIncomeOccurrences(
   });
 }
 
-export function useMarkOccurrencePaid() {
+export function useBillPayments(occurrenceId: string | null) {
+  return useQuery({
+    queryKey: occurrenceKeys.payments(occurrenceId),
+    queryFn: () => getBillPayments({ data: { occurrenceId: occurrenceId! } }),
+    enabled: !!occurrenceId,
+  });
+}
+
+export function useAddBillPayment() {
   const qc = useQueryClient();
   return useMutation({
-    mutationFn: (data: Parameters<typeof markOccurrencePaid>[0]["data"]) =>
-      markOccurrencePaid({ data }),
-    onSuccess: () => {
+    mutationFn: (data: Parameters<typeof addBillPayment>[0]["data"]) =>
+      addBillPayment({ data }),
+    onSuccess: (_, variables) => {
       qc.invalidateQueries({ queryKey: ["bill-occurrences"] });
+      qc.invalidateQueries({
+        queryKey: occurrenceKeys.payments(variables.occurrenceId),
+      });
       qc.invalidateQueries({ queryKey: ["dashboard"] });
     },
   });
 }
 
-export function useMarkOccurrenceSkipped() {
+export function useDeleteBillPayment() {
   const qc = useQueryClient();
   return useMutation({
-    mutationFn: (id: string) => markOccurrenceSkipped({ data: { id } }),
+    mutationFn: ({
+      id,
+      occurrenceId: _occurrenceId,
+    }: {
+      id: string;
+      occurrenceId: string;
+    }) => deleteBillPayment({ data: { id } }),
+    onSuccess: (_, variables) => {
+      qc.invalidateQueries({ queryKey: ["bill-occurrences"] });
+      qc.invalidateQueries({
+        queryKey: occurrenceKeys.payments(variables.occurrenceId),
+      });
+      qc.invalidateQueries({ queryKey: ["dashboard"] });
+    },
+  });
+}
+
+export function useCarryForwardOccurrence() {
+  const qc = useQueryClient();
+  return useMutation({
+    mutationFn: (id: string) => carryForwardOccurrence({ data: { id } }),
     onSuccess: () => {
       qc.invalidateQueries({ queryKey: ["bill-occurrences"] });
       qc.invalidateQueries({ queryKey: ["dashboard"] });
@@ -76,6 +115,30 @@ export function useMarkIncomeSkipped() {
     mutationFn: (id: string) => markIncomeSkipped({ data: { id } }),
     onSuccess: () => {
       qc.invalidateQueries({ queryKey: ["income-occurrences"] });
+    },
+  });
+}
+
+export function useUpdateBillOccurrence() {
+  const qc = useQueryClient();
+  return useMutation({
+    mutationFn: (data: Parameters<typeof updateBillOccurrence>[0]["data"]) =>
+      updateBillOccurrence({ data }),
+    onSuccess: () => {
+      qc.invalidateQueries({ queryKey: ["bill-occurrences"] });
+      qc.invalidateQueries({ queryKey: ["dashboard"] });
+    },
+  });
+}
+
+export function useUpdateIncomeOccurrence() {
+  const qc = useQueryClient();
+  return useMutation({
+    mutationFn: (data: Parameters<typeof updateIncomeOccurrence>[0]["data"]) =>
+      updateIncomeOccurrence({ data }),
+    onSuccess: () => {
+      qc.invalidateQueries({ queryKey: ["income-occurrences"] });
+      qc.invalidateQueries({ queryKey: ["dashboard"] });
     },
   });
 }

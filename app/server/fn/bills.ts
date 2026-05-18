@@ -13,6 +13,7 @@ import {
 } from "~/lib/occurrence-generator";
 import { format, addMonths } from "date-fns";
 import { toDateStr } from "~/lib/dates";
+import { invalidateUserDashboard } from "~/lib/kv-cache";
 
 const BillInputSchema = z.object({
   vendorId: z.string().nullable().optional(),
@@ -74,7 +75,7 @@ async function generateAndInsertOccurrences(
 
 export const getBills = createServerFn()
   .middleware([authMiddleware])
-  .validator(
+  .inputValidator(
     z
       .object({
         categoryId: z.string().optional(),
@@ -103,7 +104,7 @@ export const getBills = createServerFn()
 
 export const getBill = createServerFn()
   .middleware([authMiddleware])
-  .validator(z.object({ id: z.string() }))
+  .inputValidator(z.object({ id: z.string() }))
   .handler(async ({ data, context }) => {
     const { db, user } = context;
     const rows = await db
@@ -119,7 +120,7 @@ export const getBill = createServerFn()
 
 export const createBill = createServerFn()
   .middleware([authMiddleware])
-  .validator(BillInputSchema)
+  .inputValidator(BillInputSchema)
   .handler(async ({ data, context }) => {
     const { db, user } = context;
     const now = new Date();
@@ -163,10 +164,12 @@ export const createBill = createServerFn()
 
 export const updateBill = createServerFn()
   .middleware([authMiddleware])
-  .validator(z.object({ id: z.string() }).merge(BillInputSchema))
+  .inputValidator(z.object({ id: z.string() }).merge(BillInputSchema))
   .handler(async ({ data, context }) => {
-    const { db, user } = context;
+    const { db, user, env } = context;
     const now = new Date();
+    const todayStr = toDateStr(now);
+    const currentPeriod = todayStr.slice(0, 7);
 
     await db
       .update(bills)
@@ -187,18 +190,18 @@ export const updateBill = createServerFn()
       })
       .where(and(eq(bills.id, data.id), eq(bills.userId, user.id)));
 
-    // Regenerate future occurrences
-    const todayStr = toDateStr(now);
+    // Regenerate open occurrences based on the updated series rule.
     const windowEnd = toDateStr(addMonths(now, 3));
 
-    // Delete pending occurrences from today forward
+    // Delete existing open occurrences (including previously marked overdue)
+    // so old schedule dates don't stick around after series edits.
     const future = await db
       .select({ id: billOccurrences.id })
       .from(billOccurrences)
       .where(
         and(
           eq(billOccurrences.billId, data.id),
-          eq(billOccurrences.status, "pending")
+          inArray(billOccurrences.status, ["pending", "overdue"])
         )
       )
       .all();
@@ -209,7 +212,7 @@ export const updateBill = createServerFn()
         .where(
           and(
             eq(billOccurrences.billId, data.id),
-            eq(billOccurrences.status, "pending"),
+            inArray(billOccurrences.status, ["pending", "overdue"]),
             inArray(billOccurrences.id, future.map((f: { id: string }) => f.id))
           )
         );
@@ -225,11 +228,16 @@ export const updateBill = createServerFn()
       dayOfMonth: data.dayOfMonth ?? null,
       dayOfWeek: data.dayOfWeek ?? null,
     }, windowEnd);
+
+    await Promise.all([
+      invalidateUserDashboard(env.KV, user.id, currentPeriod),
+      invalidateUserDashboard(env.KV, user.id, data.startDate.slice(0, 7)),
+    ]);
   });
 
 export const deleteBill = createServerFn()
   .middleware([authMiddleware])
-  .validator(z.object({ id: z.string() }))
+  .inputValidator(z.object({ id: z.string() }))
   .handler(async ({ data, context }) => {
     const { db, user } = context;
     await db
@@ -239,7 +247,7 @@ export const deleteBill = createServerFn()
 
 export const reorderBills = createServerFn()
   .middleware([authMiddleware])
-  .validator(z.object({ orderedIds: z.array(z.string()) }))
+  .inputValidator(z.object({ orderedIds: z.array(z.string()) }))
   .handler(async ({ data, context }) => {
     const { db, user } = context;
     await Promise.all(

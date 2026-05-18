@@ -26,7 +26,7 @@ export const getVendors = createServerFn()
 
 export const getVendor = createServerFn()
   .middleware([authMiddleware])
-  .validator(z.object({ id: z.string() }))
+  .inputValidator(z.object({ id: z.string() }))
   .handler(async ({ data, context }) => {
     const { db, user } = context;
     const rows = await db
@@ -39,7 +39,7 @@ export const getVendor = createServerFn()
 
 export const createVendor = createServerFn()
   .middleware([authMiddleware])
-  .validator(VendorInputSchema)
+  .inputValidator(VendorInputSchema)
   .handler(async ({ data, context }) => {
     const { db, user } = context;
     const now = new Date();
@@ -59,7 +59,7 @@ export const createVendor = createServerFn()
 
 export const updateVendor = createServerFn()
   .middleware([authMiddleware])
-  .validator(z.object({ id: z.string() }).merge(VendorInputSchema))
+  .inputValidator(z.object({ id: z.string() }).merge(VendorInputSchema))
   .handler(async ({ data, context }) => {
     const { db, user } = context;
     await db
@@ -76,7 +76,7 @@ export const updateVendor = createServerFn()
 
 export const deleteVendor = createServerFn()
   .middleware([authMiddleware])
-  .validator(z.object({ id: z.string() }))
+  .inputValidator(z.object({ id: z.string() }))
   .handler(async ({ data, context }) => {
     const { db, user } = context;
     await db

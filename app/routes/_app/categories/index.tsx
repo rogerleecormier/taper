@@ -19,7 +19,7 @@ function CategoriesPage() {
         <div>
           <h1 className="text-2xl font-bold text-gray-900">Categories</h1>
           <p className="mt-1 text-sm text-gray-500">
-            Organize your bills and income into categories
+            Organize your expenses and income into categories
           </p>
         </div>
         <button

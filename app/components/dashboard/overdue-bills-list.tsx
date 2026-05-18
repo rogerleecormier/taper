@@ -18,7 +18,7 @@ export function OverdueBillsList({ overdueBills }: OverdueBillsListProps) {
     return (
       <div className="flex flex-col items-center justify-center py-10 text-center text-muted-foreground">
         <CheckCircle className="mb-2 h-8 w-8 text-green-500 opacity-80" />
-        <p className="text-sm font-medium text-green-700">No overdue bills</p>
+        <p className="text-sm font-medium text-green-700">No overdue expenses</p>
         <p className="text-xs text-muted-foreground">All caught up!</p>
       </div>
     );
@@ -26,9 +26,9 @@ export function OverdueBillsList({ overdueBills }: OverdueBillsListProps) {
 
   return (
     <div className="space-y-3">
-      <h3 className="text-sm font-semibold text-muted-foreground uppercase tracking-wide">
-        Overdue Bills
-      </h3>
+        <h3 className="text-sm font-semibold text-muted-foreground uppercase tracking-wide">
+          Overdue Expenses
+        </h3>
       <ul className="divide-y">
         {overdueBills.map((bill) => {
           const days = daysOverdue(bill.dueDate);

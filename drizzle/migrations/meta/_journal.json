@@ -1,0 +1,27 @@
+{
+  "version": "7",
+  "dialect": "sqlite",
+  "entries": [
+    {
+      "idx": 0,
+      "version": "6",
+      "when": 1778850039696,
+      "tag": "0000_cool_morbius",
+      "breakpoints": true
+    },
+    {
+      "idx": 1,
+      "version": "6",
+      "when": 1778850039697,
+      "tag": "0001_paystubs",
+      "breakpoints": true
+    },
+    {
+      "idx": 2,
+      "version": "6",
+      "when": 1748131200000,
+      "tag": "0002_user_preferences",
+      "breakpoints": true
+    }
+  ]
+}

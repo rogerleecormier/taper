@@ -11,6 +11,7 @@ import {
   SelectTrigger,
   SelectValue,
 } from "~/components/ui/select";
+import { QuickAddVendorSelect, QuickAddCategorySelect } from "~/components/ui/quick-add-select";
 import { toDateStr } from "~/lib/dates";
 import { centsToDisplay, parseCurrencyToCents } from "~/lib/currency";
 
@@ -33,6 +34,7 @@ interface IncomeFormProps {
   isLoading?: boolean;
   vendors: Array<{ id: string; name: string }>;
   categories: Array<{ id: string; name: string }>;
+  isPayroll?: boolean;
 }
 
 const DAY_OF_WEEK_LABELS = [
@@ -53,6 +55,7 @@ export function IncomeForm({
   isLoading,
   vendors,
   categories,
+  isPayroll = false,
 }: IncomeFormProps) {
   const [name, setName] = useState(defaultValues?.name ?? "");
   const [vendorId, setVendorId] = useState<string | null>(
@@ -135,7 +138,9 @@ export function IncomeForm({
 
       {/* Amount */}
       <div className="space-y-1.5">
-        <Label htmlFor="income-amount">Amount *</Label>
+        <Label htmlFor="income-amount">
+          {isPayroll ? "Estimated Net Pay *" : "Amount *"}
+        </Label>
         <div className="relative">
           <span className="absolute left-3 top-1/2 -translate-y-1/2 text-sm text-muted-foreground">
             $
@@ -152,6 +157,11 @@ export function IncomeForm({
             required
           />
         </div>
+        {isPayroll && (
+          <p className="text-xs text-muted-foreground">
+            Your typical take-home pay. Used for projections until paystubs are uploaded — each uploaded paystub will set the actual amount for that pay period.
+          </p>
+        )}
       </div>
 
       {/* Interval */}
@@ -233,46 +243,20 @@ export function IncomeForm({
       </div>
 
       {/* Vendor */}
-      <div className="space-y-1.5">
-        <Label>Source / Vendor (optional)</Label>
-        <Select
-          value={vendorId ?? "__none__"}
-          onValueChange={(v) => setVendorId(v === "__none__" ? null : v)}
-        >
-          <SelectTrigger>
-            <SelectValue placeholder="No vendor" />
-          </SelectTrigger>
-          <SelectContent>
-            <SelectItem value="__none__">No vendor</SelectItem>
-            {vendors.map((v) => (
-              <SelectItem key={v.id} value={v.id}>
-                {v.name}
-              </SelectItem>
-            ))}
-          </SelectContent>
-        </Select>
-      </div>
+      <QuickAddVendorSelect
+        label="Source / Vendor (optional)"
+        value={vendorId}
+        onChange={setVendorId}
+        vendors={vendors}
+      />
 
       {/* Category */}
-      <div className="space-y-1.5">
-        <Label>Category (optional)</Label>
-        <Select
-          value={categoryId ?? "__none__"}
-          onValueChange={(v) => setCategoryId(v === "__none__" ? null : v)}
-        >
-          <SelectTrigger>
-            <SelectValue placeholder="No category" />
-          </SelectTrigger>
-          <SelectContent>
-            <SelectItem value="__none__">No category</SelectItem>
-            {categories.map((c) => (
-              <SelectItem key={c.id} value={c.id}>
-                {c.name}
-              </SelectItem>
-            ))}
-          </SelectContent>
-        </Select>
-      </div>
+      <QuickAddCategorySelect
+        value={categoryId}
+        onChange={setCategoryId}
+        categories={categories}
+        categoryType="income"
+      />
 
       {/* Notes */}
       <div className="space-y-1.5">

@@ -23,6 +23,7 @@ export const incomeSources = sqliteTable("income_sources", {
   endDate: text("end_date"),
   dayOfMonth: integer("day_of_month"),
   dayOfWeek: integer("day_of_week"),
+  sourceType: text("source_type", { enum: ["standard", "payroll"] }).notNull().default("standard"),
   isActive: integer("is_active", { mode: "boolean" }).notNull().default(true),
   notes: text("notes"),
   sortOrder: integer("sort_order").notNull().default(0),

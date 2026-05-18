@@ -12,7 +12,9 @@ import { CategoryForm, type CategoryFormData } from "./category-form";
 import { useCreateCategory, useUpdateCategory } from "~/hooks/use-categories";
 
 interface CategoryFormDialogProps {
-  trigger: ReactNode;
+  trigger?: ReactNode;
+  open?: boolean;
+  onOpenChange?: (open: boolean) => void;
   defaultValues?: Partial<CategoryFormData>;
   categoryId?: string;
   onSuccess?: () => void;
@@ -20,11 +22,20 @@ interface CategoryFormDialogProps {
 
 export function CategoryFormDialog({
   trigger,
+  open: controlledOpen,
+  onOpenChange: controlledOnOpenChange,
   defaultValues,
   categoryId,
   onSuccess,
 }: CategoryFormDialogProps) {
-  const [open, setOpen] = useState(false);
+  const [internalOpen, setInternalOpen] = useState(false);
+
+  const isControlled = controlledOpen !== undefined;
+  const open = isControlled ? controlledOpen : internalOpen;
+  function setOpen(val: boolean) {
+    if (isControlled) controlledOnOpenChange?.(val);
+    else setInternalOpen(val);
+  }
 
   const createCategory = useCreateCategory();
   const updateCategory = useUpdateCategory();
@@ -53,21 +64,33 @@ export function CategoryFormDialog({
     onSuccess?.();
   }
 
+  const dialogContent = (
+    <DialogContent className="sm:max-w-md">
+      <DialogHeader>
+        <DialogTitle>
+          {isEditing ? "Edit Category" : "Add Category"}
+        </DialogTitle>
+      </DialogHeader>
+      <CategoryForm
+        defaultValues={defaultValues}
+        onSubmit={handleSubmit}
+        isLoading={isLoading}
+      />
+    </DialogContent>
+  );
+
+  if (trigger) {
+    return (
+      <Dialog open={open} onOpenChange={setOpen}>
+        <DialogTrigger asChild>{trigger}</DialogTrigger>
+        {dialogContent}
+      </Dialog>
+    );
+  }
+
   return (
     <Dialog open={open} onOpenChange={setOpen}>
-      <DialogTrigger asChild>{trigger}</DialogTrigger>
-      <DialogContent className="sm:max-w-md">
-        <DialogHeader>
-          <DialogTitle>
-            {isEditing ? "Edit Category" : "Add Category"}
-          </DialogTitle>
-        </DialogHeader>
-        <CategoryForm
-          defaultValues={defaultValues}
-          onSubmit={handleSubmit}
-          isLoading={isLoading}
-        />
-      </DialogContent>
+      {dialogContent}
     </Dialog>
   );
 }

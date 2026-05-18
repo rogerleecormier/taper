@@ -24,6 +24,7 @@ const IncomeSourceInputSchema = z.object({
   endDate: z.string().regex(/^\d{4}-\d{2}-\d{2}$/).nullable().optional(),
   dayOfMonth: z.number().int().min(1).max(31).nullable().optional(),
   dayOfWeek: z.number().int().min(0).max(6).nullable().optional(),
+  sourceType: z.enum(["standard", "payroll"]).optional(),
   notes: z.string().optional(),
   sortOrder: z.number().int().optional(),
 });
@@ -104,7 +105,7 @@ export const getIncomeSources = createServerFn()
 
 export const createIncomeSource = createServerFn()
   .middleware([authMiddleware])
-  .validator(IncomeSourceInputSchema)
+  .inputValidator(IncomeSourceInputSchema)
   .handler(async ({ data, context }) => {
     const { db, user } = context;
     const now = new Date();
@@ -122,6 +123,7 @@ export const createIncomeSource = createServerFn()
       endDate: data.endDate ?? null,
       dayOfMonth: data.dayOfMonth ?? null,
       dayOfWeek: data.dayOfWeek ?? null,
+      sourceType: data.sourceType ?? "standard",
       isActive: true,
       notes: data.notes ?? null,
       sortOrder: data.sortOrder ?? 0,
@@ -146,7 +148,7 @@ export const createIncomeSource = createServerFn()
 
 export const updateIncomeSource = createServerFn()
   .middleware([authMiddleware])
-  .validator(z.object({ id: z.string() }).merge(IncomeSourceInputSchema))
+  .inputValidator(z.object({ id: z.string() }).merge(IncomeSourceInputSchema))
   .handler(async ({ data, context }) => {
     const { db, user } = context;
     const now = new Date();
@@ -203,7 +205,7 @@ export const updateIncomeSource = createServerFn()
 
 export const deleteIncomeSource = createServerFn()
   .middleware([authMiddleware])
-  .validator(z.object({ id: z.string() }))
+  .inputValidator(z.object({ id: z.string() }))
   .handler(async ({ data, context }) => {
     const { db, user } = context;
     await db
@@ -213,7 +215,7 @@ export const deleteIncomeSource = createServerFn()
 
 export const reorderIncomeSources = createServerFn()
   .middleware([authMiddleware])
-  .validator(z.object({ orderedIds: z.array(z.string()) }))
+  .inputValidator(z.object({ orderedIds: z.array(z.string()) }))
   .handler(async ({ data, context }) => {
     const { db, user } = context;
     await Promise.all(

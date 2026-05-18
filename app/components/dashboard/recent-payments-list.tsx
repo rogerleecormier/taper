@@ -5,9 +5,13 @@ import type { DashboardData } from "~/server/fn/dashboard";
 
 interface RecentPaymentsListProps {
   recentPayments: DashboardData["recentPayments"];
+  referenceDate: Date;
 }
 
-export function RecentPaymentsList({ recentPayments }: RecentPaymentsListProps) {
+export function RecentPaymentsList({
+  recentPayments,
+  referenceDate,
+}: RecentPaymentsListProps) {
   if (recentPayments.length === 0) {
     return (
       <div className="flex flex-col items-center justify-center py-10 text-center text-muted-foreground">
@@ -37,7 +41,7 @@ export function RecentPaymentsList({ recentPayments }: RecentPaymentsListProps) 
 
             {/* Paid date */}
             <span className="flex-shrink-0 text-xs text-muted-foreground">
-              {formatRelativeDate(payment.paidDate)}
+              {formatRelativeDate(payment.paidDate, referenceDate)}
             </span>
 
             {/* Amount */}

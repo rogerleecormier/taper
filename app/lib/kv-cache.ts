@@ -24,8 +24,16 @@ export async function invalidateUserDashboard(
   userId: string,
   period: string
 ): Promise<void> {
+  const dashboardPrefix = `${dashboardCacheKey(userId, period)}`;
+  const categoryPrefix = `${categoryTotalsCacheKey(userId, period)}`;
+
+  const [dashboardKeys, categoryKeys] = await Promise.all([
+    kv.list({ prefix: dashboardPrefix }),
+    kv.list({ prefix: categoryPrefix }),
+  ]);
+
   await Promise.all([
-    kv.delete(dashboardCacheKey(userId, period)),
-    kv.delete(categoryTotalsCacheKey(userId, period)),
+    ...dashboardKeys.keys.map((k) => kv.delete(k.name)),
+    ...categoryKeys.keys.map((k) => kv.delete(k.name)),
   ]);
 }

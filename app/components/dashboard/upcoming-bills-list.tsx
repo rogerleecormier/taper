@@ -1,11 +1,12 @@
 "use client";
 
 import { useState } from "react";
+import { useStore } from "@tanstack/react-store";
 import { CalendarClock } from "lucide-react";
-import { Badge } from "~/components/ui/badge";
 import { formatCurrency } from "~/lib/currency";
-import { formatRelativeDate } from "~/lib/dates";
+import { formatRelativeDate, toDateStr } from "~/lib/dates";
 import { cn } from "~/lib/utils";
+import { trackerStore } from "~/store/tracker-store";
 import type { DashboardData } from "~/server/fn/dashboard";
 
 type UpcomingBill = DashboardData["upcomingBills"][number];
@@ -23,24 +24,28 @@ const STATUS_CLASSES: Record<string, string> = {
   skipped: "border-gray-200 bg-gray-50 text-gray-500",
 };
 
-function getFilteredBills(bills: UpcomingBill[], days: DayFilter) {
-  const cutoff = new Date();
+function getFilteredBills(bills: UpcomingBill[], days: DayFilter, referenceDate: Date) {
+  const referenceStr = toDateStr(referenceDate);
+  const todayStr = toDateStr(new Date());
+  const startStr = referenceStr > todayStr ? referenceStr : todayStr;
+  const cutoff = new Date(`${startStr}T00:00:00`);
   cutoff.setDate(cutoff.getDate() + days);
-  const cutoffStr = cutoff.toISOString().slice(0, 10);
-  return bills.filter((b) => b.dueDate <= cutoffStr);
+  const cutoffStr = toDateStr(cutoff);
+  return bills.filter((b) => b.dueDate >= startStr && b.dueDate <= cutoffStr);
 }
 
 export function UpcomingBillsList({ upcomingBills }: UpcomingBillsListProps) {
   const [selectedDays, setSelectedDays] = useState<DayFilter>(7);
+  const referenceDate = useStore(trackerStore, (s) => s.periodStart);
 
-  const filtered = getFilteredBills(upcomingBills, selectedDays);
+  const filtered = getFilteredBills(upcomingBills, selectedDays, referenceDate);
 
   return (
     <div className="space-y-3">
       {/* Day toggle */}
       <div className="flex items-center justify-between">
         <h3 className="text-sm font-semibold text-muted-foreground uppercase tracking-wide">
-          Upcoming Bills
+          Upcoming Expenses
         </h3>
         <div className="inline-flex rounded-md border bg-muted p-0.5">
           {([7, 14, 30] as DayFilter[]).map((days) => (
@@ -64,7 +69,7 @@ export function UpcomingBillsList({ upcomingBills }: UpcomingBillsListProps) {
       {filtered.length === 0 ? (
         <div className="flex flex-col items-center justify-center py-10 text-center text-muted-foreground">
           <CalendarClock className="mb-2 h-8 w-8 opacity-40" />
-          <p className="text-sm">No upcoming bills in this period</p>
+          <p className="text-sm">No upcoming expenses in this period</p>
         </div>
       ) : (
         <ul className="divide-y">
@@ -90,7 +95,7 @@ export function UpcomingBillsList({ upcomingBills }: UpcomingBillsListProps) {
 
               {/* Due date */}
               <span className="flex-shrink-0 text-xs text-muted-foreground">
-                {formatRelativeDate(bill.dueDate)}
+                {formatRelativeDate(bill.dueDate, referenceDate)}
               </span>
 
               {/* Amount */}

@@ -4,6 +4,7 @@ import {
   createCategory,
   updateCategory,
   deleteCategory,
+  seedDefaultCategories,
 } from "~/server/fn/categories";
 
 export const categoryKeys = {
@@ -42,3 +43,12 @@ export function useDeleteCategory() {
     onSuccess: () => qc.invalidateQueries({ queryKey: categoryKeys.all() }),
   });
 }
+
+export function useSeedDefaultCategories() {
+  const qc = useQueryClient();
+  return useMutation({
+    mutationFn: () => seedDefaultCategories(),
+    onSuccess: () => qc.invalidateQueries({ queryKey: categoryKeys.all() }),
+  });
+}
+

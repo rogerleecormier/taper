@@ -1,7 +1,7 @@
 import { Store } from "@tanstack/react-store";
 import { startOfMonth } from "date-fns";
 
-export type TrackerInterval = "daily" | "weekly" | "biweekly" | "monthly";
+export type TrackerInterval = "daily" | "weekly" | "biweekly" | "monthly" | "yearly";
 
 type TrackerState = {
   interval: TrackerInterval;

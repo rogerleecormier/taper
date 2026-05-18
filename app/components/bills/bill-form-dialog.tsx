@@ -14,7 +14,9 @@ import { useVendors } from "~/hooks/use-vendors";
 import { useCategories } from "~/hooks/use-categories";
 
 interface BillFormDialogProps {
-  trigger: ReactNode;
+  trigger?: ReactNode;
+  open?: boolean;
+  onOpenChange?: (open: boolean) => void;
   defaultValues?: Partial<BillFormData>;
   billId?: string;
   onSuccess?: () => void;
@@ -22,11 +24,21 @@ interface BillFormDialogProps {
 
 export function BillFormDialog({
   trigger,
+  open: controlledOpen,
+  onOpenChange: controlledOnOpenChange,
   defaultValues,
   billId,
   onSuccess,
 }: BillFormDialogProps) {
-  const [open, setOpen] = useState(false);
+  const [internalOpen, setInternalOpen] = useState(false);
+
+  const isControlled = controlledOpen !== undefined;
+  const open = isControlled ? controlledOpen : internalOpen;
+
+  function setOpen(val: boolean) {
+    if (isControlled) controlledOnOpenChange?.(val);
+    else setInternalOpen(val);
+  }
 
   const { data: vendors = [] } = useVendors();
   const { data: categories = [] } = useCategories("expense");
@@ -52,21 +64,33 @@ export function BillFormDialog({
     (c) => ({ id: c.id, name: c.name })
   );
 
+  const dialogContent = (
+    <DialogContent className="max-h-[90vh] overflow-y-auto sm:max-w-lg">
+      <DialogHeader>
+        <DialogTitle>{isEditing ? "Edit Expense" : "Add Expense"}</DialogTitle>
+      </DialogHeader>
+      <BillForm
+        defaultValues={defaultValues}
+        onSubmit={handleSubmit}
+        isLoading={isLoading}
+        vendors={vendorOptions}
+        categories={categoryOptions}
+      />
+    </DialogContent>
+  );
+
+  if (trigger) {
+    return (
+      <Dialog open={open} onOpenChange={setOpen}>
+        <DialogTrigger asChild>{trigger}</DialogTrigger>
+        {dialogContent}
+      </Dialog>
+    );
+  }
+
   return (
     <Dialog open={open} onOpenChange={setOpen}>
-      <DialogTrigger asChild>{trigger}</DialogTrigger>
-      <DialogContent className="max-h-[90vh] overflow-y-auto sm:max-w-lg">
-        <DialogHeader>
-          <DialogTitle>{isEditing ? "Edit Bill" : "Add Bill"}</DialogTitle>
-        </DialogHeader>
-        <BillForm
-          defaultValues={defaultValues}
-          onSubmit={handleSubmit}
-          isLoading={isLoading}
-          vendors={vendorOptions}
-          categories={categoryOptions}
-        />
-      </DialogContent>
+      {dialogContent}
     </Dialog>
   );
 }

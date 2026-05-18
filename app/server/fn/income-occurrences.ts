@@ -7,7 +7,7 @@ import { invalidateUserDashboard } from "~/lib/kv-cache";
 
 export const getIncomeOccurrences = createServerFn()
   .middleware([authMiddleware])
-  .validator(
+  .inputValidator(
     z.object({
       incomeSourceId: z.string().optional(),
       startDate: z.string().regex(/^\d{4}-\d{2}-\d{2}$/),
@@ -35,7 +35,7 @@ export const getIncomeOccurrences = createServerFn()
 
 export const markIncomeReceived = createServerFn()
   .middleware([authMiddleware])
-  .validator(
+  .inputValidator(
     z.object({
       id: z.string(),
       receivedDate: z.string().regex(/^\d{4}-\d{2}-\d{2}$/),
@@ -66,9 +66,29 @@ export const markIncomeReceived = createServerFn()
     await invalidateUserDashboard(env.KV, user.id, period);
   });
 
+export const updateIncomeOccurrence = createServerFn()
+  .middleware([authMiddleware])
+  .inputValidator(
+    z.object({
+      id: z.string(),
+      amountCents: z.number().int().positive().optional(),
+      expectedDate: z.string().regex(/^\d{4}-\d{2}-\d{2}$/).optional(),
+    })
+  )
+  .handler(async ({ data, context }) => {
+    const { db, user } = context;
+    const patch: Record<string, unknown> = { updatedAt: new Date() };
+    if (data.amountCents !== undefined) patch.amountCents = data.amountCents;
+    if (data.expectedDate !== undefined) patch.expectedDate = data.expectedDate;
+    await db
+      .update(incomeOccurrences)
+      .set(patch)
+      .where(and(eq(incomeOccurrences.id, data.id), eq(incomeOccurrences.userId, user.id)));
+  });
+
 export const markIncomeSkipped = createServerFn()
   .middleware([authMiddleware])
-  .validator(z.object({ id: z.string() }))
+  .inputValidator(z.object({ id: z.string() }))
   .handler(async ({ data, context }) => {
     const { db, user } = context;
     await db

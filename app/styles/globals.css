@@ -7,6 +7,9 @@
   --color-card: oklch(1 0 0);
   --color-card-foreground: oklch(0.13 0.028 255);
 
+  --color-popover: oklch(1 0 0);
+  --color-popover-foreground: oklch(0.13 0.028 255);
+
   --color-primary: oklch(0.55 0.2 240);
   --color-primary-foreground: oklch(0.98 0.01 240);
 

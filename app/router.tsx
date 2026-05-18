@@ -12,14 +12,19 @@ export function createRouter() {
     },
   });
 
-  const router = createTanStackRouter({
+  return createTanStackRouter({
     routeTree,
     context: { queryClient },
     defaultPreload: "intent",
     defaultPreloadStaleTime: 0,
   });
+}
 
-  return router;
+let _router: ReturnType<typeof createRouter> | undefined;
+
+export function getRouter() {
+  if (!_router) _router = createRouter();
+  return _router;
 }
 
 declare module "@tanstack/react-router" {

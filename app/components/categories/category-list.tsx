@@ -4,10 +4,12 @@ import { useState } from "react";
 import {
   useReactTable,
   getCoreRowModel,
+  getSortedRowModel,
   flexRender,
   createColumnHelper,
+  type SortingState,
 } from "@tanstack/react-table";
-import { Pencil, Trash2, Plus } from "lucide-react";
+import { Pencil, Trash2, Plus, ChevronUp, ChevronDown, ChevronsUpDown } from "lucide-react";
 import { Button } from "~/components/ui/button";
 import { Badge } from "~/components/ui/badge";
 import { useDeleteCategory } from "~/hooks/use-categories";
@@ -20,12 +22,21 @@ interface CategoryListProps {
 
 const columnHelper = createColumnHelper<Category>();
 
+function SortIcon({ sorted }: { sorted: false | "asc" | "desc" }) {
+  if (sorted === "asc") return <ChevronUp className="h-3.5 w-3.5" />;
+  if (sorted === "desc") return <ChevronDown className="h-3.5 w-3.5" />;
+  return <ChevronsUpDown className="h-3.5 w-3.5 opacity-40" />;
+}
+
 export function CategoryList({ categories }: CategoryListProps) {
   const deleteCategory = useDeleteCategory();
   const [deletingId, setDeletingId] = useState<string | null>(null);
+  const [sorting, setSorting] = useState<SortingState>([
+    { id: "type", desc: false },
+  ]);
 
   async function handleDelete(id: string) {
-    if (!confirm("Delete this category? Bills and income sources using it will be uncategorized.")) return;
+    if (!confirm("Delete this category? Expenses and income sources using it will be uncategorized.")) return;
     setDeletingId(id);
     try {
       await deleteCategory.mutateAsync(id);
@@ -35,9 +46,9 @@ export function CategoryList({ categories }: CategoryListProps) {
   }
 
   const columns = [
-    columnHelper.display({
-      id: "color-name",
+    columnHelper.accessor("name", {
       header: "Name",
+      enableSorting: true,
       cell: (info) => {
         const cat = info.row.original;
         return (
@@ -53,13 +64,14 @@ export function CategoryList({ categories }: CategoryListProps) {
             {cat.icon && (
               <span className="text-base leading-none">{cat.icon}</span>
             )}
-            <span className="font-medium">{cat.name}</span>
+            <span className="font-medium">{info.getValue()}</span>
           </div>
         );
       },
     }),
     columnHelper.accessor("type", {
       header: "Type",
+      enableSorting: true,
       cell: (info) => {
         const t = info.getValue();
         return t === "income" ? (
@@ -75,6 +87,7 @@ export function CategoryList({ categories }: CategoryListProps) {
     }),
     columnHelper.accessor("color", {
       header: "Color",
+      enableSorting: false,
       cell: (info) => {
         const color = info.getValue();
         return color ? (
@@ -125,7 +138,10 @@ export function CategoryList({ categories }: CategoryListProps) {
   const table = useReactTable({
     data: categories,
     columns,
+    state: { sorting },
+    onSortingChange: setSorting,
     getCoreRowModel: getCoreRowModel(),
+    getSortedRowModel: getSortedRowModel(),
   });
 
   if (categories.length === 0) {
@@ -150,19 +166,28 @@ export function CategoryList({ categories }: CategoryListProps) {
         <thead className="border-b bg-muted/50">
           {table.getHeaderGroups().map((hg) => (
             <tr key={hg.id}>
-              {hg.headers.map((header) => (
-                <th
-                  key={header.id}
-                  className="px-4 py-3 text-left text-xs font-semibold uppercase tracking-wide text-muted-foreground"
-                >
-                  {header.isPlaceholder
-                    ? null
-                    : flexRender(
-                        header.column.columnDef.header,
-                        header.getContext()
-                      )}
-                </th>
-              ))}
+              {hg.headers.map((header) => {
+                const canSort = header.column.getCanSort();
+                const sorted = header.column.getIsSorted();
+                return (
+                  <th
+                    key={header.id}
+                    className="px-4 py-3 text-left text-xs font-semibold uppercase tracking-wide text-muted-foreground"
+                  >
+                    {header.isPlaceholder ? null : canSort ? (
+                      <button
+                        onClick={header.column.getToggleSortingHandler()}
+                        className="inline-flex items-center gap-1.5 hover:text-foreground transition-colors"
+                      >
+                        {flexRender(header.column.columnDef.header, header.getContext())}
+                        <SortIcon sorted={sorted} />
+                      </button>
+                    ) : (
+                      flexRender(header.column.columnDef.header, header.getContext())
+                    )}
+                  </th>
+                );
+              })}
             </tr>
           ))}
         </thead>

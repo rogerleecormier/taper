@@ -1,28 +1,27 @@
 name = "zero-dollar-budget-tracker"
-main = ".output/server/index.js"
 compatibility_date = "2025-05-01"
 compatibility_flags = ["nodejs_compat"]
 
 [[d1_databases]]
 binding = "DB"
 database_name = "budget-db"
-database_id = "YOUR_D1_DATABASE_ID"
+database_id = "c080be31-b0a4-4efc-936f-d120c109a3d5"
 migrations_dir = "drizzle/migrations"
 
 [[kv_namespaces]]
 binding = "KV"
-id = "YOUR_KV_NAMESPACE_ID"
-preview_id = "YOUR_KV_PREVIEW_NAMESPACE_ID"
+id = "b0924f4e922b4bf29ee00175a144bead"
+preview_id = "3e40b18e74144b0e9a00bd1a04517675"
 
 [[r2_buckets]]
 binding = "R2"
 bucket_name = "budget-receipts"
 
+[ai]
+binding = "AI"
+
 [vars]
-BETTER_AUTH_URL = "http://localhost:8787"
+BETTER_AUTH_URL = "https://zero-dollar-budget-tracker.rcormier.workers.dev"
 
 [triggers]
 crons = ["0 5 * * *"]
-
-[site]
-bucket = ".output/public"

@@ -1,4 +1,5 @@
 import { createFileRoute } from "@tanstack/react-router";
+import { useStore } from "@tanstack/react-store";
 import { useDashboard } from "~/hooks/use-dashboard";
 import { SummaryCards } from "~/components/dashboard/summary-cards";
 import { UnallocatedBanner } from "~/components/dashboard/unallocated-banner";
@@ -7,13 +8,17 @@ import { OverdueBillsList } from "~/components/dashboard/overdue-bills-list";
 import { RecentPaymentsList } from "~/components/dashboard/recent-payments-list";
 import { IncomeExpenseChart } from "~/components/dashboard/income-expense-chart";
 import { CategoryBreakdownChart } from "~/components/dashboard/category-breakdown-chart";
+import { trackerStore } from "~/store/tracker-store";
+import { Separator } from "~/components/ui/separator";
+import { Card, CardContent } from "~/components/ui/card";
 
 export const Route = createFileRoute("/_app/dashboard")({
   component: DashboardPage,
 });
 
 function DashboardPage() {
-  const { data, isLoading, isError } = useDashboard(7);
+  const referenceDate = useStore(trackerStore, (s) => s.periodStart);
+  const { data, isLoading, isError } = useDashboard(referenceDate, 30);
 
   if (isLoading) {
     return (
@@ -44,18 +49,62 @@ function DashboardPage() {
 
       <UnallocatedBanner data={data} />
 
-      <SummaryCards data={data} />
+      <Separator />
 
-      <div className="grid grid-cols-1 xl:grid-cols-2 gap-6">
-        <IncomeExpenseChart data={data} />
-        <CategoryBreakdownChart data={data} />
-      </div>
+      <section className="space-y-4">
+        <h2 className="text-sm font-semibold uppercase tracking-wide text-gray-400">
+          Overview
+        </h2>
+        <SummaryCards data={data} />
+      </section>
 
-      <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
-        <OverdueBillsList data={data} />
-        <UpcomingBillsList data={data} />
-        <RecentPaymentsList data={data} />
-      </div>
+      <Separator />
+
+      <section className="space-y-4">
+        <h2 className="text-sm font-semibold uppercase tracking-wide text-gray-400">
+          Trends
+        </h2>
+        <div className="grid grid-cols-1 xl:grid-cols-2 gap-6">
+          <Card>
+            <CardContent className="p-6">
+              <IncomeExpenseChart monthlyTrend={data.monthlyTrend} />
+            </CardContent>
+          </Card>
+          <Card>
+            <CardContent className="p-6">
+              <CategoryBreakdownChart categoryBreakdown={data.categoryBreakdown} />
+            </CardContent>
+          </Card>
+        </div>
+      </section>
+
+      <Separator />
+
+      <section className="space-y-4">
+        <h2 className="text-sm font-semibold uppercase tracking-wide text-gray-400">
+          Activity
+        </h2>
+        <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
+          <Card>
+            <CardContent className="p-6">
+              <OverdueBillsList overdueBills={data.overdueBills} />
+            </CardContent>
+          </Card>
+          <Card>
+            <CardContent className="p-6">
+              <UpcomingBillsList upcomingBills={data.upcomingBills} />
+            </CardContent>
+          </Card>
+          <Card>
+            <CardContent className="p-6">
+              <RecentPaymentsList
+                recentPayments={data.recentPayments}
+                referenceDate={referenceDate}
+              />
+            </CardContent>
+          </Card>
+        </div>
+      </section>
     </div>
   );
 }

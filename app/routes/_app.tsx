@@ -6,21 +6,23 @@ import {
   useNavigate,
   useRouterState,
 } from "@tanstack/react-router";
+import { getSession } from "~/server/middleware";
 import { authClient } from "~/auth/client";
 import {
   LayoutDashboard,
-  Kanban,
+  CalendarDays,
   Receipt,
   Wallet,
   Store,
   Tag,
+  Settings,
   LogOut,
 } from "lucide-react";
 
 export const Route = createFileRoute("/_app")({
   beforeLoad: async () => {
-    const session = await authClient.getSession();
-    if (!session.data) {
+    const session = await getSession();
+    if (!session?.user) {
       throw redirect({ to: "/login" });
     }
   },
@@ -29,11 +31,12 @@ export const Route = createFileRoute("/_app")({
 
 const navItems = [
   { label: "Dashboard", to: "/dashboard", icon: LayoutDashboard },
-  { label: "Tracker", to: "/tracker", icon: Kanban },
-  { label: "Bills", to: "/bills", icon: Receipt },
+  { label: "Budget Tracker", to: "/tracker", icon: CalendarDays },
+  { label: "Expenses", to: "/bills", icon: Receipt },
   { label: "Income", to: "/income", icon: Wallet },
   { label: "Vendors", to: "/vendors", icon: Store },
   { label: "Categories", to: "/categories", icon: Tag },
+  { label: "Settings", to: "/settings", icon: Settings },
 ] as const;
 
 function AppLayout() {

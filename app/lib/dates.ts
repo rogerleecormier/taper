@@ -2,10 +2,9 @@ import {
   format,
   startOfDay,
   endOfDay,
-  startOfWeek,
-  endOfWeek,
   startOfMonth,
   endOfMonth,
+  endOfYear,
   addDays,
   addWeeks,
   addMonths,
@@ -13,7 +12,7 @@ import {
   isValid,
 } from "date-fns";
 
-export type TrackerInterval = "daily" | "weekly" | "biweekly" | "monthly";
+export type TrackerInterval = "daily" | "weekly" | "biweekly" | "monthly" | "yearly";
 
 export function toDateStr(date: Date): string {
   return format(date, "yyyy-MM-dd");
@@ -33,13 +32,15 @@ export function getPeriodEnd(
 ): Date {
   switch (interval) {
     case "daily":
-      return endOfDay(addDays(periodStart, 13));
+      return endOfDay(periodStart);
     case "weekly":
-      return endOfDay(addWeeks(periodStart, 12));
+      return endOfDay(addDays(periodStart, 6));
     case "biweekly":
-      return endOfDay(addWeeks(periodStart, 24));
+      return endOfDay(addDays(periodStart, 13));
     case "monthly":
-      return endOfMonth(addMonths(periodStart, 11));
+      return endOfMonth(periodStart);
+    case "yearly":
+      return endOfYear(periodStart);
   }
 }
 
@@ -101,9 +102,9 @@ export function getTrackerColumns(
   return columns;
 }
 
-export function formatRelativeDate(dateStr: string): string {
+export function formatRelativeDate(dateStr: string, referenceDate: Date = new Date()): string {
   const date = parseISO(dateStr);
-  const today = startOfDay(new Date());
+  const today = startOfDay(referenceDate);
   const diff = Math.round(
     (date.getTime() - today.getTime()) / (1000 * 60 * 60 * 24)
   );

@@ -1,9 +1,10 @@
 import { createFileRoute } from "@tanstack/react-router";
 import { useState } from "react";
-import { Plus } from "lucide-react";
+import { Plus, TrendingUp } from "lucide-react";
 import { useIncomeSources } from "~/hooks/use-income";
 import { IncomeList } from "~/components/income/income-list";
 import { IncomeFormDialog } from "~/components/income/income-form-dialog";
+import { Button } from "~/components/ui/button";
 
 export const Route = createFileRoute("/_app/income/")({
   component: IncomePage,
@@ -17,38 +18,56 @@ function IncomePage() {
     <div className="p-6 space-y-6">
       <div className="flex items-center justify-between">
         <div>
-          <h1 className="text-2xl font-bold text-gray-900">Income Sources</h1>
-          <p className="mt-1 text-sm text-gray-500">
-            Manage your income sources and schedules
+          <h1 className="text-2xl font-bold">Income Sources</h1>
+          <p className="mt-1 text-sm text-muted-foreground">
+            Manage your income sources and pay schedules
           </p>
         </div>
-        <button
-          onClick={() => setIsDialogOpen(true)}
-          className="inline-flex items-center gap-2 rounded-md bg-blue-600 px-4 py-2 text-sm font-semibold text-white shadow-sm hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-blue-500 transition-colors"
-        >
+        <Button onClick={() => setIsDialogOpen(true)} className="gap-2">
           <Plus className="h-4 w-4" />
           Add Income
-        </button>
+        </Button>
       </div>
 
       {isLoading && (
-        <p className="text-sm text-gray-500">Loading...</p>
+        <div className="space-y-2">
+          {Array.from({ length: 4 }).map((_, i) => (
+            <div key={i} className="h-12 rounded-md bg-muted/50 animate-pulse" />
+          ))}
+        </div>
       )}
 
       {isError && (
-        <p className="text-sm text-red-500">
-          Failed to load income sources. Please try again.
-        </p>
+        <div className="flex flex-col items-center justify-center rounded-lg border border-dashed py-16 text-center">
+          <p className="text-sm text-destructive">Failed to load income sources.</p>
+          <p className="text-xs text-muted-foreground mt-1">
+            If this is a new setup, run:{" "}
+            <code className="font-mono">npx wrangler d1 migrations apply budget-db --remote</code>
+          </p>
+        </div>
       )}
 
-      {!isLoading && !isError && (
-        <IncomeList incomeSources={incomeSources ?? []} />
+      {!isLoading && !isError && incomeSources?.length === 0 && (
+        <div className="flex flex-col items-center justify-center rounded-lg border border-dashed py-20 text-center">
+          <div className="rounded-full bg-muted p-4 mb-4">
+            <TrendingUp className="h-8 w-8 text-muted-foreground" />
+          </div>
+          <h3 className="font-semibold text-base mb-1">No income sources yet</h3>
+          <p className="text-sm text-muted-foreground max-w-xs mb-6">
+            Add a salary, freelance contract, or payroll source to start tracking your earnings and pay schedule.
+          </p>
+          <Button onClick={() => setIsDialogOpen(true)} className="gap-2">
+            <Plus className="h-4 w-4" />
+            Add your first income source
+          </Button>
+        </div>
       )}
 
-      <IncomeFormDialog
-        open={isDialogOpen}
-        onOpenChange={setIsDialogOpen}
-      />
+      {!isLoading && !isError && incomeSources && incomeSources.length > 0 && (
+        <IncomeList incomeSources={incomeSources} />
+      )}
+
+      <IncomeFormDialog open={isDialogOpen} onOpenChange={setIsDialogOpen} />
     </div>
   );
 }

@@ -1,5 +1,5 @@
-import { createMiddleware } from "@tanstack/react-start";
-import { getWebRequest } from "@tanstack/react-start/server";
+import { createMiddleware, createServerFn } from "@tanstack/react-start";
+import { getRequest } from "@tanstack/react-start/server";
 import { createAuth, type AppEnv } from "~/auth/server";
 import { createDb } from "~/db";
 
@@ -22,7 +22,7 @@ function getEnv(): AppEnv {
 export const authMiddleware = createMiddleware().server(async ({ next }) => {
   const env = getEnv();
   const auth = createAuth(env);
-  const request = getWebRequest();
+  const request = getRequest();
   const session = await auth.api.getSession({ headers: request.headers });
 
   if (!session?.user) {
@@ -38,6 +38,16 @@ export const authMiddleware = createMiddleware().server(async ({ next }) => {
       env,
     },
   });
+});
+
+// Server function for SSR-safe session checking in beforeLoad.
+// Works both during SSR (reads cookies from the incoming request) and
+// during client-side navigation (makes an RPC call that forwards cookies).
+export const getSession = createServerFn().handler(async () => {
+  const env = getEnv();
+  const auth = createAuth(env);
+  const request = getRequest();
+  return auth.api.getSession({ headers: request.headers });
 });
 
 export { getEnv };

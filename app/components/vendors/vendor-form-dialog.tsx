@@ -12,7 +12,9 @@ import { VendorForm, type VendorFormData } from "./vendor-form";
 import { useCreateVendor, useUpdateVendor } from "~/hooks/use-vendors";
 
 interface VendorFormDialogProps {
-  trigger: ReactNode;
+  trigger?: ReactNode;
+  open?: boolean;
+  onOpenChange?: (open: boolean) => void;
   defaultValues?: Partial<VendorFormData>;
   vendorId?: string;
   onSuccess?: () => void;
@@ -20,11 +22,21 @@ interface VendorFormDialogProps {
 
 export function VendorFormDialog({
   trigger,
+  open: controlledOpen,
+  onOpenChange: controlledOnOpenChange,
   defaultValues,
   vendorId,
   onSuccess,
 }: VendorFormDialogProps) {
-  const [open, setOpen] = useState(false);
+  const [internalOpen, setInternalOpen] = useState(false);
+
+  const isControlled = controlledOpen !== undefined;
+  const open = isControlled ? controlledOpen : internalOpen;
+
+  function setOpen(val: boolean) {
+    if (isControlled) controlledOnOpenChange?.(val);
+    else setInternalOpen(val);
+  }
 
   const createVendor = useCreateVendor();
   const updateVendor = useUpdateVendor();
@@ -53,19 +65,31 @@ export function VendorFormDialog({
     onSuccess?.();
   }
 
+  const dialogContent = (
+    <DialogContent className="sm:max-w-md">
+      <DialogHeader>
+        <DialogTitle>{isEditing ? "Edit Vendor" : "Add Vendor"}</DialogTitle>
+      </DialogHeader>
+      <VendorForm
+        defaultValues={defaultValues}
+        onSubmit={handleSubmit}
+        isLoading={isLoading}
+      />
+    </DialogContent>
+  );
+
+  if (trigger) {
+    return (
+      <Dialog open={open} onOpenChange={setOpen}>
+        <DialogTrigger asChild>{trigger}</DialogTrigger>
+        {dialogContent}
+      </Dialog>
+    );
+  }
+
   return (
     <Dialog open={open} onOpenChange={setOpen}>
-      <DialogTrigger asChild>{trigger}</DialogTrigger>
-      <DialogContent className="sm:max-w-md">
-        <DialogHeader>
-          <DialogTitle>{isEditing ? "Edit Vendor" : "Add Vendor"}</DialogTitle>
-        </DialogHeader>
-        <VendorForm
-          defaultValues={defaultValues}
-          onSubmit={handleSubmit}
-          isLoading={isLoading}
-        />
-      </DialogContent>
+      {dialogContent}
     </Dialog>
   );
 }
