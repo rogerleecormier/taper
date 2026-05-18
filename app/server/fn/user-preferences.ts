@@ -9,6 +9,8 @@ const DEFAULT_PREFS = {
   trackerDefaultScope: "month" as const,
   trackerDefaultMonthInterval: "week" as const,
   trackerDefaultYearInterval: "month" as const,
+  paydayInterval: "biweekly" as "weekly" | "biweekly",
+  paydayAnchorDate: null as string | null,
 };
 
 export const getUserPreferences = createServerFn()
@@ -27,6 +29,8 @@ export const getUserPreferences = createServerFn()
         trackerDefaultScope: (row?.trackerDefaultScope ?? "month") as "month" | "year",
         trackerDefaultMonthInterval: (row?.trackerDefaultMonthInterval ?? "week") as "day" | "week" | "biweek" | "month",
         trackerDefaultYearInterval: (row?.trackerDefaultYearInterval ?? "month") as "month" | "quarter" | "half" | "year",
+        paydayInterval: (row?.paydayInterval ?? "biweekly") as "weekly" | "biweekly",
+        paydayAnchorDate: row?.paydayAnchorDate ?? null,
       };
     } catch {
       return DEFAULT_PREFS;
@@ -41,6 +45,8 @@ export const updateUserPreferences = createServerFn()
       trackerDefaultScope: z.enum(["month", "year"]).optional(),
       trackerDefaultMonthInterval: z.enum(["day", "week", "biweek", "month"]).optional(),
       trackerDefaultYearInterval: z.enum(["month", "quarter", "half", "year"]).optional(),
+      paydayInterval: z.enum(["weekly", "biweekly"]).optional(),
+      paydayAnchorDate: z.string().regex(/^\d{4}-\d{2}-\d{2}$/).nullable().optional(),
     })
   )
   .handler(async ({ data, context }) => {
@@ -65,6 +71,8 @@ export const updateUserPreferences = createServerFn()
         trackerDefaultScope: data.trackerDefaultScope ?? "month",
         trackerDefaultMonthInterval: data.trackerDefaultMonthInterval ?? "week",
         trackerDefaultYearInterval: data.trackerDefaultYearInterval ?? "month",
+        paydayInterval: data.paydayInterval ?? "biweekly",
+        paydayAnchorDate: data.paydayAnchorDate ?? null,
         updatedAt: now,
       });
     }

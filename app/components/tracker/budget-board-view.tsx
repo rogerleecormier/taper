@@ -23,12 +23,13 @@ import {
   useUpdateBillOccurrence,
   useUpdateIncomeOccurrence,
 } from "~/hooks/use-occurrences";
+import { usePreferences } from "~/hooks/use-preferences";
 import { cn } from "~/lib/utils";
 import { formatCurrency } from "~/lib/currency";
 import { toDateStr } from "~/lib/dates";
 
 export type BudgetScope = "month" | "year";
-export type MonthInterval = "day" | "week" | "biweek" | "month";
+export type MonthInterval = "day" | "week" | "biweek" | "month" | "pay-period";
 export type YearInterval = "month" | "quarter" | "half" | "year";
 export type BudgetBoardInterval = MonthInterval | YearInterval;
 
@@ -49,8 +50,26 @@ type BoardOccurrence = {
   status: string;
 };
 
-function getBuckets(scope: BudgetScope, interval: BudgetBoardInterval, periodStart: Date): Bucket[] {
+function getBuckets(
+  scope: BudgetScope,
+  interval: BudgetBoardInterval,
+  periodStart: Date,
+  paydayInterval: "weekly" | "biweekly" = "biweekly"
+): Bucket[] {
   if (scope === "month") {
+    if (interval === "pay-period") {
+      const days = paydayInterval === "weekly" ? 7 : 14;
+      const end = addDays(periodStart, days - 1);
+      return [
+        {
+          id: toDateStr(periodStart),
+          label: `${format(periodStart, "MMM d")} – ${format(end, "MMM d")}`,
+          start: periodStart,
+          end,
+        },
+      ];
+    }
+
     const monthStart = startOfMonth(periodStart);
     const monthEnd = endOfMonth(periodStart);
 
@@ -228,9 +247,12 @@ interface BudgetBoardViewProps {
 }
 
 export function BudgetBoardView({ scope, interval, periodStart }: BudgetBoardViewProps) {
+  const { data: prefs } = usePreferences();
+  const paydayInterval = prefs?.paydayInterval ?? "biweekly";
+
   const buckets = useMemo(
-    () => getBuckets(scope, interval, periodStart),
-    [scope, interval, periodStart]
+    () => getBuckets(scope, interval, periodStart, paydayInterval),
+    [scope, interval, periodStart, paydayInterval]
   );
 
   const windowStart = toDateStr(buckets[0]?.start ?? periodStart);

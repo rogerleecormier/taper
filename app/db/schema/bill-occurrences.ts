@@ -1,8 +1,8 @@
-import { sqliteTable, text, integer, uniqueIndex } from "drizzle-orm/sqlite-core";
+import { sqliteTable, text, integer } from "drizzle-orm/sqlite-core";
 import { user } from "./auth";
 import { bills } from "./bills";
 
-export type OccurrenceStatus = "pending" | "partial" | "paid" | "overdue" | "skipped";
+export type OccurrenceStatus = "pending" | "partial" | "paid" | "overdue" | "skipped" | "carried";
 
 export const billOccurrences = sqliteTable(
   "bill_occurrences",
@@ -17,18 +17,19 @@ export const billOccurrences = sqliteTable(
     dueDate: text("due_date").notNull(),
     amountCents: integer("amount_cents").notNull(),
     status: text("status", {
-      enum: ["pending", "partial", "paid", "overdue", "skipped"],
+      enum: ["pending", "partial", "paid", "overdue", "skipped", "carried"],
     })
       .notNull()
       .default("pending"),
     paidDate: text("paid_date"),
     paidAmountCents: integer("paid_amount_cents"),
+    carriedFromId: text("carried_from_id"),
     receiptKey: text("receipt_key"),
     notes: text("notes"),
     createdAt: integer("created_at", { mode: "timestamp" }).notNull(),
     updatedAt: integer("updated_at", { mode: "timestamp" }).notNull(),
   },
-  (t) => [uniqueIndex("bill_occurrences_bill_date_idx").on(t.billId, t.dueDate)]
+  () => []
 );
 
 export type BillOccurrence = typeof billOccurrences.$inferSelect;

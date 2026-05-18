@@ -1,9 +1,10 @@
 import { createFileRoute } from "@tanstack/react-router";
 import { useEffect, useState } from "react";
 import { authClient } from "~/auth/client";
-import { KeyRound, User, CheckCircle2, AlertCircle, Tag, CalendarDays } from "lucide-react";
+import { KeyRound, User, CheckCircle2, AlertCircle, Tag, CalendarDays, Wallet } from "lucide-react";
 import { useSeedDefaultCategories } from "~/hooks/use-categories";
-import { usePreferences, useUpdatePreferences } from "~/hooks/use-preferences";
+import { usePreferences, useUpdatePreferences, DEFAULT_PREFS, type UserPreferences } from "~/hooks/use-preferences";
+import { toDateStr } from "~/lib/dates";
 import { cn } from "~/lib/utils";
 
 export const Route = createFileRoute("/_app/settings")({
@@ -41,6 +42,9 @@ function SettingsPage() {
           </div>
         </section>
 
+        {/* Payday card */}
+        <PaydayCard />
+
         {/* Budget Tracker Defaults card */}
         <TrackerDefaultsCard />
 
@@ -54,15 +58,110 @@ function SettingsPage() {
   );
 }
 
-function TrackerDefaultsCard() {
-  const { data: prefs } = usePreferences();
+function PaydayCard() {
+  const { data: prefsData } = usePreferences();
+  const prefs: UserPreferences = prefsData ?? DEFAULT_PREFS;
   const update = useUpdatePreferences();
-  const [draft, setDraft] = useState(prefs);
+  const [paydayInterval, setPaydayInterval] = useState<"weekly" | "biweekly">(prefs.paydayInterval);
+  const [anchorDate, setAnchorDate] = useState<string>(prefs.paydayAnchorDate ?? "");
+  const [saveState, setSaveState] = useState<"idle" | "saved" | "error">("idle");
+
+  useEffect(() => {
+    setPaydayInterval(prefs.paydayInterval);
+    setAnchorDate(prefs.paydayAnchorDate ?? "");
+  }, [prefs.paydayInterval, prefs.paydayAnchorDate]);
+
+  const hasChanges =
+    paydayInterval !== prefs.paydayInterval ||
+    (anchorDate || null) !== prefs.paydayAnchorDate;
+
+  async function handleSave() {
+    setSaveState("idle");
+    try {
+      await update.mutateAsync({
+        paydayInterval,
+        paydayAnchorDate: anchorDate || null,
+      });
+      setSaveState("saved");
+    } catch {
+      setSaveState("error");
+    }
+  }
+
+  return (
+    <section className="rounded-xl border border-gray-200 bg-white overflow-hidden">
+      <div className="flex items-center gap-2 px-5 py-4 border-b border-gray-100 bg-gray-50">
+        <Wallet className="h-4 w-4 text-gray-500" />
+        <h2 className="text-sm font-semibold text-gray-700">Payday Settings</h2>
+      </div>
+      <div className="px-5 py-4 space-y-5">
+        <p className="text-sm text-gray-500">
+          Set your pay schedule so the budget tracker can align to your pay periods. Once configured, select "Pay Period" in the tracker interval selector.
+        </p>
+
+        <PrefRow label="Pay Frequency">
+          {(["weekly", "biweekly"] as const).map((v) => (
+            <PrefButton
+              key={v}
+              active={paydayInterval === v}
+              onClick={() => {
+                setPaydayInterval(v);
+                setSaveState("idle");
+              }}
+            >
+              {v === "weekly" ? "Weekly" : "Biweekly (every 2 weeks)"}
+            </PrefButton>
+          ))}
+        </PrefRow>
+
+        <div className="flex items-start gap-4">
+          <span className="w-36 flex-shrink-0 pt-1 text-sm font-medium text-gray-700">Most Recent Payday</span>
+          <div className="space-y-1">
+            <input
+              type="date"
+              value={anchorDate}
+              max={toDateStr(new Date())}
+              onChange={(e) => {
+                setAnchorDate(e.target.value);
+                setSaveState("idle");
+              }}
+              className="rounded-md border border-gray-300 px-3 py-1.5 text-sm shadow-sm focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
+            />
+            <p className="text-xs text-gray-400">Pick a date you were actually paid — all pay periods are calculated from this anchor.</p>
+          </div>
+        </div>
+
+        <div className="pt-1">
+          {saveState === "saved" && (
+            <p className="mb-2 text-sm text-green-700">Payday settings saved.</p>
+          )}
+          {saveState === "error" && (
+            <p className="mb-2 text-sm text-red-700">Couldn&apos;t save. Please try again.</p>
+          )}
+          <button
+            type="button"
+            onClick={handleSave}
+            disabled={update.isPending || !hasChanges}
+            className="rounded-md bg-blue-600 px-4 py-2 text-sm font-semibold text-white hover:bg-blue-700 disabled:opacity-50 disabled:cursor-not-allowed transition-colors"
+          >
+            {update.isPending ? "Saving…" : "Save payday settings"}
+          </button>
+        </div>
+      </div>
+    </section>
+  );
+}
+
+function TrackerDefaultsCard() {
+  const { data: prefsData } = usePreferences();
+  const prefs: UserPreferences = prefsData ?? DEFAULT_PREFS;
+  const update = useUpdatePreferences();
+  const [draft, setDraft] = useState<UserPreferences>(prefs);
   const [saveState, setSaveState] = useState<"idle" | "saved" | "error">("idle");
 
   useEffect(() => {
     setDraft(prefs);
-  }, [prefs]);
+  }, [prefsData]); // eslint-disable-line react-hooks/exhaustive-deps
 
   const hasChanges =
     draft.trackerDefaultMode !== prefs.trackerDefaultMode ||

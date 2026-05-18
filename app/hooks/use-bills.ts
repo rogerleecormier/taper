@@ -2,6 +2,7 @@ import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import {
   getBills,
   getBill,
+  getBillHistory,
   createBill,
   updateBill,
   deleteBill,
@@ -12,6 +13,7 @@ export const billKeys = {
   all: () => ["bills"] as const,
   filtered: (filters: object) => ["bills", filters] as const,
   detail: (id: string) => ["bills", id] as const,
+  history: (id: string) => ["bill-history", id] as const,
 };
 
 export function useBills(filters?: Parameters<typeof getBills>[0]["data"]) {
@@ -25,6 +27,14 @@ export function useBill(id: string) {
   return useQuery({
     queryKey: billKeys.detail(id),
     queryFn: () => getBill({ data: { id } }),
+    enabled: !!id,
+  });
+}
+
+export function useBillHistory(id: string) {
+  return useQuery({
+    queryKey: billKeys.history(id),
+    queryFn: () => getBillHistory({ data: { id } }),
     enabled: !!id,
   });
 }

@@ -2,11 +2,14 @@ import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import {
   getBillOccurrences,
   carryForwardOccurrence,
+  reopenOccurrence,
   updateBillOccurrence,
+  deleteOccurrence,
 } from "~/server/fn/bill-occurrences";
 import {
   addBillPayment,
   getBillPayments,
+  getBillPaymentsForPeriod,
   deleteBillPayment,
 } from "~/server/fn/bill-payments";
 import {
@@ -23,6 +26,8 @@ export const occurrenceKeys = {
     ["bill-payments", occurrenceId] as const,
 };
 
+const PERIOD_STALE_MS = 5 * 60 * 1000; // matches server KV cache TTL
+
 export function useBillOccurrences(
   filters: Parameters<typeof getBillOccurrences>[0]["data"]
 ) {
@@ -30,6 +35,7 @@ export function useBillOccurrences(
     queryKey: occurrenceKeys.bills(filters),
     queryFn: () => getBillOccurrences({ data: filters }),
     enabled: !!filters.startDate && !!filters.endDate,
+    staleTime: PERIOD_STALE_MS,
   });
 }
 
@@ -40,6 +46,7 @@ export function useIncomeOccurrences(
     queryKey: occurrenceKeys.income(filters),
     queryFn: () => getIncomeOccurrences({ data: filters }),
     enabled: !!filters.startDate && !!filters.endDate,
+    staleTime: PERIOD_STALE_MS,
   });
 }
 
@@ -51,6 +58,17 @@ export function useBillPayments(occurrenceId: string | null) {
   });
 }
 
+export function useBillPaymentsForPeriod(
+  filters: Parameters<typeof getBillPaymentsForPeriod>[0]["data"]
+) {
+  return useQuery({
+    queryKey: ["bill-payments-period", filters] as const,
+    queryFn: () => getBillPaymentsForPeriod({ data: filters }),
+    enabled: !!filters.startDate && !!filters.endDate,
+    staleTime: PERIOD_STALE_MS,
+  });
+}
+
 export function useAddBillPayment() {
   const qc = useQueryClient();
   return useMutation({
@@ -58,6 +76,8 @@ export function useAddBillPayment() {
       addBillPayment({ data }),
     onSuccess: (_, variables) => {
       qc.invalidateQueries({ queryKey: ["bill-occurrences"] });
+      qc.invalidateQueries({ queryKey: ["bill-payments-period"] });
+      qc.invalidateQueries({ queryKey: ["bill-history"] });
       qc.invalidateQueries({
         queryKey: occurrenceKeys.payments(variables.occurrenceId),
       });
@@ -78,6 +98,8 @@ export function useDeleteBillPayment() {
     }) => deleteBillPayment({ data: { id } }),
     onSuccess: (_, variables) => {
       qc.invalidateQueries({ queryKey: ["bill-occurrences"] });
+      qc.invalidateQueries({ queryKey: ["bill-payments-period"] });
+      qc.invalidateQueries({ queryKey: ["bill-history"] });
       qc.invalidateQueries({
         queryKey: occurrenceKeys.payments(variables.occurrenceId),
       });
@@ -89,9 +111,12 @@ export function useDeleteBillPayment() {
 export function useCarryForwardOccurrence() {
   const qc = useQueryClient();
   return useMutation({
-    mutationFn: (id: string) => carryForwardOccurrence({ data: { id } }),
+    mutationFn: (data: { id: string; targetDate: string }) =>
+      carryForwardOccurrence({ data }),
     onSuccess: () => {
       qc.invalidateQueries({ queryKey: ["bill-occurrences"] });
+      qc.invalidateQueries({ queryKey: ["bill-payments-period"] });
+      qc.invalidateQueries({ queryKey: ["bill-history"] });
       qc.invalidateQueries({ queryKey: ["dashboard"] });
     },
   });
@@ -119,6 +144,18 @@ export function useMarkIncomeSkipped() {
   });
 }
 
+export function useReopenOccurrence() {
+  const qc = useQueryClient();
+  return useMutation({
+    mutationFn: (id: string) => reopenOccurrence({ data: { id } }),
+    onSuccess: () => {
+      qc.invalidateQueries({ queryKey: ["bill-occurrences"] });
+      qc.invalidateQueries({ queryKey: ["bill-history"] });
+      qc.invalidateQueries({ queryKey: ["dashboard"] });
+    },
+  });
+}
+
 export function useUpdateBillOccurrence() {
   const qc = useQueryClient();
   return useMutation({
@@ -126,6 +163,20 @@ export function useUpdateBillOccurrence() {
       updateBillOccurrence({ data }),
     onSuccess: () => {
       qc.invalidateQueries({ queryKey: ["bill-occurrences"] });
+      qc.invalidateQueries({ queryKey: ["bill-history"] });
+      qc.invalidateQueries({ queryKey: ["dashboard"] });
+    },
+  });
+}
+
+export function useDeleteOccurrence() {
+  const qc = useQueryClient();
+  return useMutation({
+    mutationFn: (id: string) => deleteOccurrence({ data: { id } }),
+    onSuccess: () => {
+      qc.invalidateQueries({ queryKey: ["bill-occurrences"] });
+      qc.invalidateQueries({ queryKey: ["bill-payments-period"] });
+      qc.invalidateQueries({ queryKey: ["bill-history"] });
       qc.invalidateQueries({ queryKey: ["dashboard"] });
     },
   });

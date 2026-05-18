@@ -10,9 +10,10 @@ import {
   addMonths,
   parseISO,
   isValid,
+  differenceInDays,
 } from "date-fns";
 
-export type TrackerInterval = "daily" | "weekly" | "biweekly" | "monthly" | "yearly";
+export type TrackerInterval = "daily" | "weekly" | "biweekly" | "monthly" | "yearly" | "pay-period";
 
 export function toDateStr(date: Date): string {
   return format(date, "yyyy-MM-dd");
@@ -26,9 +27,26 @@ export function isValidDateStr(dateStr: string): boolean {
   return isValid(parseISO(dateStr));
 }
 
+/**
+ * Given a known payday anchor date and interval, returns the most recent payday
+ * on or before today (or a provided reference date).
+ */
+export function getMostRecentPayday(
+  anchorDate: string,
+  paydayInterval: "weekly" | "biweekly",
+  today: Date = new Date()
+): string {
+  const anchor = parseISO(anchorDate);
+  const intervalDays = paydayInterval === "weekly" ? 7 : 14;
+  const daysSinceAnchor = differenceInDays(startOfDay(today), startOfDay(anchor));
+  const periodsPassed = Math.floor(daysSinceAnchor / intervalDays);
+  return toDateStr(addDays(anchor, periodsPassed * intervalDays));
+}
+
 export function getPeriodEnd(
   interval: TrackerInterval,
-  periodStart: Date
+  periodStart: Date,
+  paydayInterval?: "weekly" | "biweekly"
 ): Date {
   switch (interval) {
     case "daily":
@@ -41,12 +59,17 @@ export function getPeriodEnd(
       return endOfMonth(periodStart);
     case "yearly":
       return endOfYear(periodStart);
+    case "pay-period": {
+      const days = paydayInterval === "weekly" ? 7 : 14;
+      return endOfDay(addDays(periodStart, days - 1));
+    }
   }
 }
 
 export function getTrackerColumns(
   interval: TrackerInterval,
-  periodStart: Date
+  periodStart: Date,
+  paydayInterval?: "weekly" | "biweekly"
 ): Array<{ label: string; dateStr: string; start: Date }> {
   const columns: Array<{ label: string; dateStr: string; start: Date }> = [];
 
@@ -97,9 +120,32 @@ export function getTrackerColumns(
       }
       break;
     }
+    case "pay-period": {
+      const days = paydayInterval === "weekly" ? 7 : 14;
+      const end = addDays(periodStart, days - 1);
+      columns.push({
+        label: `${format(periodStart, "MMM d")} – ${format(end, "MMM d")}`,
+        dateStr: toDateStr(periodStart),
+        start: periodStart,
+      });
+      break;
+    }
   }
 
   return columns;
+}
+
+export function nextOccurrenceDate(dueDate: string, interval: string): string {
+  const d = parseISO(dueDate);
+  switch (interval) {
+    case "daily":       return toDateStr(addDays(d, 1));
+    case "weekly":      return toDateStr(addDays(d, 7));
+    case "biweekly":    return toDateStr(addDays(d, 14));
+    case "pay-period":  return toDateStr(addDays(d, 14));
+    case "monthly":     return toDateStr(addMonths(d, 1));
+    case "yearly":      return toDateStr(addMonths(d, 12));
+    default:            return toDateStr(addMonths(d, 1));
+  }
 }
 
 export function formatRelativeDate(dateStr: string, referenceDate: Date = new Date()): string {

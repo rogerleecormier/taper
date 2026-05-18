@@ -1,7 +1,7 @@
 import { createServerFn } from "@tanstack/react-start";
 import { z } from "zod";
 import { nanoid } from "nanoid";
-import { eq, and, asc, desc, sum } from "drizzle-orm";
+import { eq, and, gte, lte, asc, desc } from "drizzle-orm";
 import { authMiddleware } from "~/server/middleware";
 import { billPayments } from "~/db/schema/bill-payments";
 import { billOccurrences } from "~/db/schema/bill-occurrences";
@@ -84,6 +84,45 @@ export const addBillPayment = createServerFn()
     await invalidateUserDashboard(env.KV, user.id, data.paidDate.slice(0, 7));
 
     return { id: paymentId };
+  });
+
+// Fetch all payments for occurrences whose dueDate falls in [startDate, endDate].
+// Returns payments keyed by occurrenceId for the tracker's period view.
+export const getBillPaymentsForPeriod = createServerFn()
+  .middleware([authMiddleware])
+  .inputValidator(
+    z.object({
+      startDate: z.string().regex(/^\d{4}-\d{2}-\d{2}$/),
+      endDate: z.string().regex(/^\d{4}-\d{2}-\d{2}$/),
+    })
+  )
+  .handler(async ({ data, context }) => {
+    const { db, user } = context;
+    return db
+      .select({
+        id: billPayments.id,
+        userId: billPayments.userId,
+        occurrenceId: billPayments.occurrenceId,
+        amountCents: billPayments.amountCents,
+        paidDate: billPayments.paidDate,
+        notes: billPayments.notes,
+        createdAt: billPayments.createdAt,
+        updatedAt: billPayments.updatedAt,
+      })
+      .from(billPayments)
+      .innerJoin(
+        billOccurrences,
+        eq(billPayments.occurrenceId, billOccurrences.id)
+      )
+      .where(
+        and(
+          eq(billPayments.userId, user.id),
+          gte(billOccurrences.dueDate, data.startDate),
+          lte(billOccurrences.dueDate, data.endDate)
+        )
+      )
+      .orderBy(asc(billPayments.paidDate))
+      .all();
   });
 
 export const getBillPayments = createServerFn()

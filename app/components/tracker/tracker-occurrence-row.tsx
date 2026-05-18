@@ -3,8 +3,6 @@
 import { useState } from "react";
 import {
   Check,
-  ChevronDown,
-  ChevronRight,
   CornerDownRight,
   Pencil,
   Trash2,
@@ -13,20 +11,20 @@ import {
 } from "lucide-react";
 import { cn } from "~/lib/utils";
 import { formatCurrency } from "~/lib/currency";
-import { toDateStr } from "~/lib/dates";
+import { toDateStr, nextOccurrenceDate } from "~/lib/dates";
 import { Button } from "~/components/ui/button";
 import { Input } from "~/components/ui/input";
 import {
-  useAddBillPayment,
   useCarryForwardOccurrence,
   useDeleteBillPayment,
-  useBillPayments,
   useMarkIncomeReceived,
   useMarkIncomeSkipped,
   useUpdateBillOccurrence,
   useUpdateIncomeOccurrence,
 } from "~/hooks/use-occurrences";
+import { PaymentModal } from "./payment-modal";
 import type { BillOccurrence } from "~/db/schema/bill-occurrences";
+import type { BillPayment } from "~/db/schema/bill-payments";
 import type { IncomeOccurrence } from "~/db/schema/income-occurrences";
 
 type AnyOcc = BillOccurrence | IncomeOccurrence;
@@ -42,69 +40,58 @@ const STATUS_STYLES: Record<string, string> = {
   pending: "border-amber-200 bg-amber-50 text-amber-700",
   overdue: "border-red-200 bg-red-100 text-red-800",
   skipped: "border-gray-200 bg-gray-100 text-gray-500",
+  carried: "border-purple-200 bg-purple-50 text-purple-700",
 };
 
 interface Props {
   occurrence: AnyOcc;
   type: "bill" | "income";
+  billName: string;
+  interval: string;
+  payments?: BillPayment[];
 }
 
-function BillPaymentHistory({ occurrenceId }: { occurrenceId: string }) {
-  const { data: payments = [], isLoading } = useBillPayments(occurrenceId);
+function PaymentRow({
+  payment,
+  occurrenceId,
+}: {
+  payment: BillPayment;
+  occurrenceId: string;
+}) {
   const deletePayment = useDeleteBillPayment();
-
-  if (isLoading) {
-    return (
-      <div className="flex items-center gap-1 px-12 py-1 text-xs text-muted-foreground">
-        <Loader2 className="h-3 w-3 animate-spin" />
-        Loading payments…
-      </div>
-    );
-  }
-
-  if (payments.length === 0) {
-    return (
-      <p className="px-12 py-1 text-xs italic text-muted-foreground">
-        No payments recorded
-      </p>
-    );
-  }
-
   return (
-    <div className="divide-y divide-dashed">
-      {payments.map((p) => (
-        <div
-          key={p.id}
-          className="flex items-center gap-2 px-12 py-1 text-xs hover:bg-muted/10"
-        >
-          <CornerDownRight className="h-3 w-3 flex-shrink-0 text-muted-foreground" />
-          <span className="tabular-nums font-medium text-green-700">
-            {formatCurrency(p.amountCents)}
-          </span>
-          <span className="text-muted-foreground">on {p.paidDate}</span>
-          {p.notes && (
-            <span className="truncate text-muted-foreground">— {p.notes}</span>
-          )}
-          <Button
-            size="sm"
-            variant="ghost"
-            className="ml-auto h-5 w-5 p-0 text-muted-foreground hover:text-destructive"
-            disabled={deletePayment.isPending}
-            onClick={() =>
-              deletePayment.mutate({ id: p.id, occurrenceId: occurrenceId })
-            }
-          >
-            <Trash2 className="h-3 w-3" />
-          </Button>
-        </div>
-      ))}
+    <div className="flex items-center gap-2 px-4 pl-14 py-1 text-xs border-b border-dashed border-muted last:border-0 hover:bg-muted/10">
+      <CornerDownRight className="h-3 w-3 flex-shrink-0 text-muted-foreground" />
+      <span className="w-20 flex-shrink-0 tabular-nums text-muted-foreground">
+        {payment.paidDate}
+      </span>
+      <span className="w-24 flex-shrink-0 tabular-nums font-medium text-green-700">
+        {formatCurrency(payment.amountCents)}
+      </span>
+      <span className="rounded border border-green-200 bg-green-50 px-1.5 py-0.5 text-[11px] text-green-700 flex-shrink-0">
+        paid
+      </span>
+      {payment.notes && (
+        <span className="truncate text-muted-foreground">{payment.notes}</span>
+      )}
+      <Button
+        size="sm"
+        variant="ghost"
+        className="ml-auto h-5 w-5 p-0 flex-shrink-0 text-muted-foreground hover:text-destructive"
+        disabled={deletePayment.isPending}
+        onClick={() =>
+          deletePayment.mutate({ id: payment.id, occurrenceId })
+        }
+      >
+        <Trash2 className="h-3 w-3" />
+      </Button>
     </div>
   );
 }
 
-export function TrackerOccurrenceRow({ occurrence, type }: Props) {
-  const [mode, setMode] = useState<"view" | "edit" | "pay">("view");
-  const [showPayments, setShowPayments] = useState(false);
+export function TrackerOccurrenceRow({ occurrence, type, billName, interval, payments = [] }: Props) {
+  const [mode, setMode] = useState<"view" | "edit" | "income-pay" | "carry">("view");
+  const [payModalOpen, setPayModalOpen] = useState(false);
   const today = toDateStr(new Date());
 
   const dateStr = isBill(occurrence) ? occurrence.dueDate : occurrence.expectedDate;
@@ -116,20 +103,19 @@ export function TrackerOccurrenceRow({ occurrence, type }: Props) {
   const isIncome = type === "income";
   const status = occurrence.status;
 
-  // For bill occurrences: remaining balance
   const paidSoFar = isBill(occurrence) ? (occurrence.paidAmountCents ?? 0) : 0;
   const remaining = isBill(occurrence)
     ? occurrence.amountCents - paidSoFar
     : 0;
 
-  const [payAmount, setPayAmount] = useState(
-    String(Math.max(remaining, occurrence.amountCents) / 100)
+  const [incomePayAmount, setIncomePayAmount] = useState(
+    String(occurrence.amountCents / 100)
   );
-  const [payDate, setPayDate] = useState(
-    isBill(occurrence) ? (occurrence.paidDate ?? today) : today
+  const [incomePayDate, setIncomePayDate] = useState(today);
+  const [carryDate, setCarryDate] = useState(() =>
+    isBill(occurrence) ? nextOccurrenceDate(occurrence.dueDate, interval) : today
   );
 
-  const addPayment = useAddBillPayment();
   const carryForward = useCarryForwardOccurrence();
   const markReceived = useMarkIncomeReceived();
   const skipIncome = useMarkIncomeSkipped();
@@ -137,43 +123,21 @@ export function TrackerOccurrenceRow({ occurrence, type }: Props) {
   const updateIncome = useUpdateIncomeOccurrence();
 
   const isBusy =
-    addPayment.isPending ||
     carryForward.isPending ||
     markReceived.isPending ||
     skipIncome.isPending ||
     updateBill.isPending ||
     updateIncome.isPending;
 
-  const isCompleted =
-    status === "paid" || status === "received" || status === "skipped";
-  const hasPayments = isBill(occurrence) && paidSoFar > 0;
-  const paymentCount = hasPayments ? null : null; // count shown via history
-
-  async function handlePay() {
-    const cents = Math.round(parseFloat(payAmount) * 100) || remaining || occurrence.amountCents;
-    if (isIncome) {
-      await markReceived.mutateAsync({
-        id: occurrence.id,
-        receivedDate: payDate,
-        receivedAmountCents: cents,
-      });
-    } else {
-      await addPayment.mutateAsync({
-        occurrenceId: occurrence.id,
-        amountCents: cents,
-        paidDate: payDate,
-      });
-    }
+  async function handleIncomeReceive() {
+    const cents =
+      Math.round(parseFloat(incomePayAmount) * 100) || occurrence.amountCents;
+    await markReceived.mutateAsync({
+      id: occurrence.id,
+      receivedDate: incomePayDate,
+      receivedAmountCents: cents,
+    });
     setMode("view");
-    if (!isIncome && cents > 0) setShowPayments(true);
-  }
-
-  async function handleCarryForward() {
-    await carryForward.mutateAsync(occurrence.id);
-  }
-
-  async function handleSkipIncome() {
-    await skipIncome.mutateAsync(occurrence.id);
   }
 
   async function handleSaveEdit() {
@@ -195,15 +159,6 @@ export function TrackerOccurrenceRow({ occurrence, type }: Props) {
     setMode("view");
   }
 
-  // Reset pay amount when switching to pay mode
-  function openPayMode() {
-    const defaultAmount =
-      isBill(occurrence) && remaining > 0 ? remaining : occurrence.amountCents;
-    setPayAmount(String(defaultAmount / 100));
-    setPayDate(today);
-    setMode("pay");
-  }
-
   const incomeReceiveInfo =
     status === "received" && !isBill(occurrence)
       ? `Received ${(occurrence as IncomeOccurrence).receivedDate ?? ""}${
@@ -220,7 +175,66 @@ export function TrackerOccurrenceRow({ occurrence, type }: Props) {
         isBusy && "opacity-60"
       )}
     >
-      {/* Main row */}
+      {/* Bill payment modal */}
+      {type === "bill" && isBill(occurrence) && (
+        <PaymentModal
+          open={payModalOpen}
+          onClose={() => setPayModalOpen(false)}
+          occurrence={occurrence}
+          billName={billName}
+          interval={interval}
+        />
+      )}
+
+      {/* Carry-forward mode — full-width row replacement */}
+      {mode === "carry" && (
+        <div className="flex items-center gap-2 px-4 pl-10 py-1.5 bg-amber-50/60 border-b border-dashed border-amber-200">
+          <span className="text-xs text-amber-700 flex-shrink-0 font-medium">
+            Carry {formatCurrency(remaining)} to:
+          </span>
+          <Input
+            type="date"
+            value={carryDate}
+            onChange={(e) => setCarryDate(e.target.value)}
+            className="h-7 w-36 text-xs flex-shrink-0"
+          />
+          <div className="ml-auto flex items-center gap-1 flex-shrink-0">
+            <Button
+              size="sm"
+              className="h-6 px-2 text-xs bg-amber-600 hover:bg-amber-700 text-white"
+              disabled={carryForward.isPending}
+              onClick={async () => {
+                try {
+                  await carryForward.mutateAsync({ id: occurrence.id, targetDate: carryDate });
+                  setMode("view");
+                } catch (e) {
+                  // error will surface via mutation error state; stay in carry mode
+                }
+              }}
+            >
+              {carryForward.isPending ? (
+                <Loader2 className="h-3 w-3 animate-spin" />
+              ) : (
+                <>
+                  <Check className="h-3 w-3 mr-1" />
+                  Confirm
+                </>
+              )}
+            </Button>
+            <Button
+              size="sm"
+              variant="ghost"
+              className="h-6 w-6 p-0"
+              onClick={() => setMode("view")}
+            >
+              <X className="h-3 w-3" />
+            </Button>
+          </div>
+        </div>
+      )}
+
+      {/* Occurrence row */}
+      {mode !== "carry" && (
       <div className="flex items-center gap-2 px-4 pl-10 py-1.5 text-sm hover:bg-muted/10 transition-colors">
         {/* Date column */}
         {mode === "edit" ? (
@@ -236,8 +250,8 @@ export function TrackerOccurrenceRow({ occurrence, type }: Props) {
           </span>
         )}
 
-        {/* Amount / input column */}
-        {mode === "edit" || mode === "pay" ? (
+        {/* Amount / input */}
+        {mode === "edit" || mode === "income-pay" ? (
           <div className="relative w-28 flex-shrink-0">
             <span className="absolute left-2 top-1/2 -translate-y-1/2 text-xs text-muted-foreground">
               $
@@ -246,11 +260,11 @@ export function TrackerOccurrenceRow({ occurrence, type }: Props) {
               type="number"
               step="0.01"
               min="0.01"
-              value={mode === "edit" ? editAmount : payAmount}
+              value={mode === "edit" ? editAmount : incomePayAmount}
               onChange={(e) =>
                 mode === "edit"
                   ? setEditAmount(e.target.value)
-                  : setPayAmount(e.target.value)
+                  : setIncomePayAmount(e.target.value)
               }
               className="h-7 pl-5 text-xs w-28"
             />
@@ -266,17 +280,17 @@ export function TrackerOccurrenceRow({ occurrence, type }: Props) {
           </span>
         )}
 
-        {/* Pay-mode date picker */}
-        {mode === "pay" && (
+        {/* Income-pay date picker */}
+        {mode === "income-pay" && (
           <Input
             type="date"
-            value={payDate}
-            onChange={(e) => setPayDate(e.target.value)}
+            value={incomePayDate}
+            onChange={(e) => setIncomePayDate(e.target.value)}
             className="h-7 w-36 text-xs flex-shrink-0"
           />
         )}
 
-        {/* Balance remaining (partial/overdue with payments) */}
+        {/* Remaining balance (partial/overdue with some payments) */}
         {mode === "view" && isBill(occurrence) && paidSoFar > 0 && status !== "paid" && (
           <span className="text-xs tabular-nums text-blue-600 flex-shrink-0">
             {formatCurrency(remaining)} left
@@ -295,33 +309,22 @@ export function TrackerOccurrenceRow({ occurrence, type }: Props) {
           </span>
         )}
 
-        {/* Income receive info */}
         {mode === "view" && incomeReceiveInfo && (
           <span className="text-xs text-muted-foreground truncate">
             {incomeReceiveInfo}
           </span>
         )}
 
-        {/* Skipped label for bills */}
-        {mode === "view" && type === "bill" && status === "skipped" && (
-          <span className="inline-flex rounded border border-blue-200 bg-blue-50 px-1.5 py-0.5 text-[11px] font-medium text-blue-700 flex-shrink-0">
+        {mode === "view" && type === "bill" && (status === "skipped" || status === "carried") && (
+          <span className="inline-flex rounded border border-purple-200 bg-purple-50 px-1.5 py-0.5 text-[11px] font-medium text-purple-700 flex-shrink-0">
             Balance carried forward
           </span>
         )}
 
-        {/* Payment history toggle (bills with any payments) */}
-        {mode === "view" && hasPayments && (
-          <button
-            className="inline-flex items-center gap-0.5 rounded border border-dashed px-1.5 py-0.5 text-[11px] text-muted-foreground hover:text-foreground flex-shrink-0"
-            onClick={() => setShowPayments((v) => !v)}
-          >
-            Payments
-            {showPayments ? (
-              <ChevronDown className="h-3 w-3" />
-            ) : (
-              <ChevronRight className="h-3 w-3" />
-            )}
-          </button>
+        {mode === "view" && isBill(occurrence) && occurrence.carriedFromId && (
+          <span className="inline-flex rounded border border-orange-200 bg-orange-50 px-1.5 py-0.5 text-[11px] font-medium text-orange-700 flex-shrink-0">
+            Carried balance
+          </span>
         )}
 
         {/* Actions */}
@@ -354,15 +357,12 @@ export function TrackerOccurrenceRow({ occurrence, type }: Props) {
             </>
           )}
 
-          {mode === "pay" && (
+          {mode === "income-pay" && (
             <>
               <Button
                 size="sm"
-                className={cn(
-                  "h-6 px-2 text-xs",
-                  isIncome ? "bg-green-600 hover:bg-green-700" : ""
-                )}
-                onClick={handlePay}
+                className="h-6 px-2 text-xs bg-green-600 hover:bg-green-700"
+                onClick={handleIncomeReceive}
                 disabled={isBusy}
               >
                 {isBusy ? (
@@ -385,80 +385,92 @@ export function TrackerOccurrenceRow({ occurrence, type }: Props) {
             </>
           )}
 
-          {mode === "view" && (
-            <>
-              {/* Pay / Receive — not shown for skipped */}
-              {status !== "skipped" && (
-                <Button
-                  size="sm"
-                  variant="outline"
-                  className={cn(
-                    "h-6 px-2 text-xs",
-                    isIncome
-                      ? "border-green-200 text-green-700 hover:bg-green-50"
-                      : "border-blue-200 text-blue-700 hover:bg-blue-50"
-                  )}
-                  onClick={openPayMode}
-                  disabled={isBusy}
-                >
-                  <Check className="h-3 w-3 mr-1" />
-                  {status === "paid" || status === "received"
-                    ? "Add Payment"
-                    : isIncome
-                      ? "Receive"
-                      : status === "partial"
-                        ? `Pay ${formatCurrency(remaining)}`
-                        : "Pay"}
-                </Button>
+          {mode === "view" && status !== "skipped" && status !== "carried" && (
+            <Button
+              size="sm"
+              variant="outline"
+              className={cn(
+                "h-6 px-2 text-xs",
+                isIncome
+                  ? "border-green-200 text-green-700 hover:bg-green-50"
+                  : "border-blue-200 text-blue-700 hover:bg-blue-50"
               )}
+              onClick={() => {
+                if (isIncome) {
+                  setIncomePayAmount(String(occurrence.amountCents / 100));
+                  setIncomePayDate(today);
+                  setMode("income-pay");
+                } else {
+                  setPayModalOpen(true);
+                }
+              }}
+              disabled={isBusy}
+            >
+              <Check className="h-3 w-3 mr-1" />
+              {isIncome
+                ? status === "received"
+                  ? "Add"
+                  : "Receive"
+                : status === "paid"
+                  ? "Add Payment"
+                  : status === "partial"
+                    ? `Pay ${formatCurrency(remaining)}`
+                    : "Pay"}
+            </Button>
+          )}
 
-              {/* Carry Forward (bills only, not yet fully paid or skipped) */}
-              {type === "bill" &&
-                status !== "paid" &&
-                status !== "skipped" &&
-                remaining > 0 && (
-                  <Button
-                    size="sm"
-                    variant="ghost"
-                    className="h-6 px-2 text-xs text-muted-foreground hover:text-foreground"
-                    onClick={handleCarryForward}
-                    disabled={isBusy}
-                  >
-                    Carry Fwd
-                  </Button>
-                )}
-
-              {/* Skip (income only) */}
-              {isIncome && status !== "received" && status !== "skipped" && (
-                <Button
-                  size="sm"
-                  variant="ghost"
-                  className="h-6 px-2 text-xs text-muted-foreground hover:text-foreground"
-                  onClick={handleSkipIncome}
-                  disabled={isBusy}
-                >
-                  Skip
-                </Button>
-              )}
-
-              {/* Edit */}
+          {mode === "view" &&
+            type === "bill" &&
+            status !== "paid" &&
+            status !== "skipped" &&
+            status !== "carried" &&
+            remaining > 0 && (
               <Button
                 size="sm"
                 variant="ghost"
-                className="h-6 w-6 p-0 text-muted-foreground hover:text-foreground"
-                onClick={() => setMode("edit")}
+                className="h-6 px-2 text-xs text-muted-foreground hover:text-foreground"
+                onClick={() => setMode("carry")}
+                disabled={isBusy}
               >
-                <Pencil className="h-3 w-3" />
+                Carry Fwd
               </Button>
-            </>
+            )}
+
+          {mode === "view" &&
+            isIncome &&
+            status !== "received" &&
+            status !== "skipped" && (
+              <Button
+                size="sm"
+                variant="ghost"
+                className="h-6 px-2 text-xs text-muted-foreground hover:text-foreground"
+                onClick={() => skipIncome.mutateAsync(occurrence.id)}
+                disabled={isBusy}
+              >
+                Skip
+              </Button>
+            )}
+
+          {mode === "view" && (
+            <Button
+              size="sm"
+              variant="ghost"
+              className="h-6 w-6 p-0 text-muted-foreground hover:text-foreground"
+              onClick={() => setMode("edit")}
+            >
+              <Pencil className="h-3 w-3" />
+            </Button>
           )}
         </div>
       </div>
+      )}
 
-      {/* Payment history (bills only) */}
-      {showPayments && isBill(occurrence) && (
-        <div className="bg-muted/5 pb-1">
-          <BillPaymentHistory occurrenceId={occurrence.id} />
+      {/* Payments for this occurrence — always visible when they exist */}
+      {payments.length > 0 && (
+        <div className="bg-muted/5">
+          {payments.map((p) => (
+            <PaymentRow key={p.id} payment={p} occurrenceId={occurrence.id} />
+          ))}
         </div>
       )}
     </div>

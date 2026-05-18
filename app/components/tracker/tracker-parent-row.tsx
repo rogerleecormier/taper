@@ -10,6 +10,7 @@ import { formatCurrency } from "~/lib/currency";
 import { TrackerRowDragHandle } from "./tracker-row-drag-handle";
 import { TrackerOccurrenceRow } from "./tracker-occurrence-row";
 import type { BillOccurrence } from "~/db/schema/bill-occurrences";
+import type { BillPayment } from "~/db/schema/bill-payments";
 import type { IncomeOccurrence } from "~/db/schema/income-occurrences";
 
 const INTERVAL_LABELS: Record<string, string> = {
@@ -31,6 +32,7 @@ interface TrackerParentRowProps {
   categoryColor: string | null;
   vendorName: string | null;
   occurrences: BillOccurrence[] | IncomeOccurrence[];
+  paymentsByOccurrenceId?: Map<string, BillPayment[]>;
 }
 
 export function TrackerParentRow({
@@ -44,6 +46,7 @@ export function TrackerParentRow({
   categoryColor,
   vendorName,
   occurrences,
+  paymentsByOccurrenceId,
 }: TrackerParentRowProps) {
   const [expanded, setExpanded] = useState(true);
   const isIncome = type === "income";
@@ -139,7 +142,18 @@ export function TrackerParentRow({
             </p>
           ) : (
             (occurrences as (BillOccurrence | IncomeOccurrence)[]).map((occ) => (
-              <TrackerOccurrenceRow key={occ.id} occurrence={occ} type={type} />
+              <TrackerOccurrenceRow
+                key={occ.id}
+                occurrence={occ}
+                type={type}
+                billName={name}
+                interval={interval}
+                payments={
+                  type === "bill" && paymentsByOccurrenceId
+                    ? (paymentsByOccurrenceId.get(occ.id) ?? [])
+                    : []
+                }
+              />
             ))
           )}
         </div>

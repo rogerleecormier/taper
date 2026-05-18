@@ -53,6 +53,8 @@ function navigatePeriod(
       return sign > 0
         ? startOfYear(addYears(periodStart, 1))
         : startOfYear(subYears(periodStart, 1));
+    case "pay-period":
+      return sign > 0 ? addDays(periodStart, 14) : subDays(periodStart, 14);
   }
 }
 
@@ -68,6 +70,8 @@ function getPeriodLabel(interval: TrackerInterval, periodStart: Date): string {
       return format(periodStart, "MMMM yyyy");
     case "yearly":
       return format(periodStart, "yyyy");
+    case "pay-period":
+      return `${format(periodStart, "MMM d")} – ${format(addDays(periodStart, 13), "MMM d, yyyy")}`;
   }
 }
 

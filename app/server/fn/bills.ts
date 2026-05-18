@@ -1,10 +1,11 @@
 import { createServerFn } from "@tanstack/react-start";
 import { z } from "zod";
 import { nanoid } from "nanoid";
-import { eq, and, asc, inArray } from "drizzle-orm";
+import { eq, and, asc, desc, inArray } from "drizzle-orm";
 import { authMiddleware } from "~/server/middleware";
 import { bills } from "~/db/schema/bills";
 import { billOccurrences } from "~/db/schema/bill-occurrences";
+import { billPayments } from "~/db/schema/bill-payments";
 import { vendors } from "~/db/schema/vendors";
 import { categories } from "~/db/schema/categories";
 import {
@@ -243,6 +244,65 @@ export const deleteBill = createServerFn()
     await db
       .delete(bills)
       .where(and(eq(bills.id, data.id), eq(bills.userId, user.id)));
+  });
+
+export const getBillHistory = createServerFn()
+  .middleware([authMiddleware])
+  .inputValidator(z.object({ id: z.string() }))
+  .handler(async ({ data, context }) => {
+    const { db, user } = context;
+
+    const billRows = await db
+      .select({ bill: bills, vendor: vendors, category: categories })
+      .from(bills)
+      .leftJoin(vendors, eq(bills.vendorId, vendors.id))
+      .leftJoin(categories, eq(bills.categoryId, categories.id))
+      .where(and(eq(bills.id, data.id), eq(bills.userId, user.id)))
+      .all();
+
+    if (!billRows[0]) return null;
+    const bill = {
+      ...billRows[0].bill,
+      vendor: billRows[0].vendor,
+      category: billRows[0].category,
+    };
+
+    const occs = await db
+      .select()
+      .from(billOccurrences)
+      .where(
+        and(
+          eq(billOccurrences.billId, data.id),
+          eq(billOccurrences.userId, user.id)
+        )
+      )
+      .orderBy(desc(billOccurrences.dueDate))
+      .all();
+
+    if (occs.length === 0) return { bill, occurrences: [] };
+
+    const occurrenceIds = occs.map((o) => o.id);
+    const pmts = await db
+      .select()
+      .from(billPayments)
+      .where(
+        and(
+          eq(billPayments.userId, user.id),
+          inArray(billPayments.occurrenceId, occurrenceIds)
+        )
+      )
+      .orderBy(asc(billPayments.paidDate))
+      .all();
+
+    const byOcc: Record<string, typeof pmts> = {};
+    for (const p of pmts) {
+      (byOcc[p.occurrenceId] ??= []).push(p);
+    }
+
+    return {
+      bill,
+      occurrences: occs.map((o) => ({ ...o, payments: byOcc[o.id] ?? [] })),
+    };
   });
 
 export const reorderBills = createServerFn()

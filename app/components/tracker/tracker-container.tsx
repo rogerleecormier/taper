@@ -23,6 +23,7 @@ import { formatCurrency } from "~/lib/currency";
 import { cn } from "~/lib/utils";
 import type { TrackerInterval } from "~/lib/dates";
 import type { BillOccurrence } from "~/db/schema/bill-occurrences";
+import type { BillPayment } from "~/db/schema/bill-payments";
 import type { IncomeOccurrence } from "~/db/schema/income-occurrences";
 import { TrackerToolbar } from "./tracker-toolbar";
 import { TrackerParentRow } from "./tracker-parent-row";
@@ -40,8 +41,13 @@ export function TrackerContainer({
   periodStart,
   showToolbar = true,
 }: TrackerContainerProps) {
-  const { rows, billOccurrenceMap, incomeOccurrenceMap, isLoading } =
-    useTrackerData(interval, periodStart);
+  const {
+    rows,
+    billOccurrenceMap,
+    incomeOccurrenceMap,
+    billPaymentsByOccurrenceMap,
+    isLoading,
+  } = useTrackerData(interval, periodStart);
 
   const [showPaid, setShowPaid] = useState(false);
 
@@ -303,6 +309,7 @@ export function TrackerContainer({
                           categoryColor={p.categoryColor}
                           vendorName={p.vendorName}
                           occurrences={p.occurrences}
+                          paymentsByOccurrenceId={billPaymentsByOccurrenceMap}
                         />
                       )
                   )}

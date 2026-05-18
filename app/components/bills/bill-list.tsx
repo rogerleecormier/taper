@@ -1,6 +1,7 @@
 "use client";
 
 import { useState } from "react";
+import { Link } from "@tanstack/react-router";
 import {
   useReactTable,
   getCoreRowModel,
@@ -52,7 +53,13 @@ export function BillList({ bills }: BillListProps) {
     columnHelper.accessor("name", {
       header: "Name",
       cell: (info) => (
-        <span className="font-medium">{info.getValue()}</span>
+        <Link
+          to="/bills/$id"
+          params={{ id: info.row.original.id }}
+          className="font-medium hover:text-primary hover:underline underline-offset-4"
+        >
+          {info.getValue()}
+        </Link>
       ),
     }),
     columnHelper.accessor("vendor", {

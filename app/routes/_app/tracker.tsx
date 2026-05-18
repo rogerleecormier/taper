@@ -16,6 +16,8 @@ import {
   subWeeks,
   subYears,
 } from "date-fns";
+import { AlertCircle } from "lucide-react";
+import { Link } from "@tanstack/react-router";
 import { Button } from "~/components/ui/button";
 import { cn } from "~/lib/utils";
 import { TrackerContainer } from "~/components/tracker/tracker-container";
@@ -25,7 +27,8 @@ import {
   type BudgetScope,
 } from "~/components/tracker/budget-board-view";
 import type { TrackerInterval } from "~/lib/dates";
-import { usePreferences, type UserPreferences } from "~/hooks/use-preferences";
+import { getMostRecentPayday, fromDateStr } from "~/lib/dates";
+import { usePreferences, DEFAULT_PREFS, type UserPreferences } from "~/hooks/use-preferences";
 
 export const Route = createFileRoute("/_app/tracker")({
   component: TrackerPage,
@@ -36,6 +39,7 @@ const MONTH_INTERVALS: Array<{ value: BudgetBoardInterval; label: string }> = [
   { value: "week", label: "Weeks" },
   { value: "biweek", label: "Biweeks" },
   { value: "month", label: "Month" },
+  { value: "pay-period", label: "Pay Period" },
 ];
 
 const YEAR_INTERVALS: Array<{ value: BudgetBoardInterval; label: string }> = [
@@ -50,6 +54,7 @@ function getListInterval(scope: BudgetScope, interval: BudgetBoardInterval): Tra
   if (interval === "day") return "daily";
   if (interval === "week") return "weekly";
   if (interval === "biweek") return "biweekly";
+  if (interval === "pay-period") return "pay-period";
   return "monthly";
 }
 
@@ -57,7 +62,8 @@ function navigatePeriod(
   scope: BudgetScope,
   interval: BudgetBoardInterval,
   periodStart: Date,
-  dir: "prev" | "next"
+  dir: "prev" | "next",
+  paydayInterval: "weekly" | "biweekly" = "biweekly"
 ) {
   const n = dir === "next" ? 1 : -1;
 
@@ -65,6 +71,10 @@ function navigatePeriod(
     if (interval === "day") return n > 0 ? addDays(periodStart, 1) : subDays(periodStart, 1);
     if (interval === "week") return n > 0 ? addWeeks(periodStart, 1) : subWeeks(periodStart, 1);
     if (interval === "biweek") return n > 0 ? addWeeks(periodStart, 2) : subWeeks(periodStart, 2);
+    if (interval === "pay-period") {
+      const days = paydayInterval === "weekly" ? 7 : 14;
+      return addDays(periodStart, n * days);
+    }
     return n > 0 ? addMonths(periodStart, 1) : subMonths(periodStart, 1);
   }
 
@@ -74,34 +84,61 @@ function navigatePeriod(
   return n > 0 ? addYears(periodStart, 1) : subYears(periodStart, 1);
 }
 
-function getPeriodLabel(scope: BudgetScope, interval: BudgetBoardInterval, periodStart: Date) {
+function getPeriodLabel(
+  scope: BudgetScope,
+  interval: BudgetBoardInterval,
+  periodStart: Date,
+  paydayInterval: "weekly" | "biweekly" = "biweekly"
+) {
   if (scope === "month") {
     if (interval === "day") return format(periodStart, "MMM d, yyyy");
     if (interval === "week") return `Week of ${format(periodStart, "MMM d, yyyy")}`;
     if (interval === "biweek") return `${format(periodStart, "MMM d")} - ${format(addDays(periodStart, 13), "MMM d, yyyy")}`;
+    if (interval === "pay-period") {
+      const days = paydayInterval === "weekly" ? 7 : 14;
+      return `${format(periodStart, "MMM d")} – ${format(addDays(periodStart, days - 1), "MMM d, yyyy")}`;
+    }
     return format(periodStart, "MMMM yyyy");
   }
   if (interval === "year") return format(periodStart, "yyyy");
   return `Year ${format(periodStart, "yyyy")}`;
 }
 
-function getRangeStartContainingToday(interval: BudgetBoardInterval): Date {
+function getRangeStartContainingToday(
+  interval: BudgetBoardInterval,
+  paydayInterval?: "weekly" | "biweekly",
+  paydayAnchorDate?: string | null
+): Date {
   const today = new Date();
   if (interval === "day") return startOfDay(today);
   if (interval === "week" || interval === "biweek") return startOfWeek(today);
+  if (interval === "pay-period") {
+    if (paydayAnchorDate) {
+      return fromDateStr(getMostRecentPayday(paydayAnchorDate, paydayInterval ?? "biweekly", today));
+    }
+    return startOfDay(today);
+  }
   return startOfMonth(today);
 }
 
 function getCurrentPeriodStart(
   scope: BudgetScope,
   monthInterval: BudgetBoardInterval,
-  yearInterval: BudgetBoardInterval
+  yearInterval: BudgetBoardInterval,
+  paydayInterval?: "weekly" | "biweekly",
+  paydayAnchorDate?: string | null
 ): Date {
   const today = new Date();
 
   if (scope === "month") {
     if (monthInterval === "day") return startOfDay(today);
     if (monthInterval === "week" || monthInterval === "biweek") return startOfWeek(today);
+    if (monthInterval === "pay-period") {
+      if (paydayAnchorDate) {
+        return fromDateStr(getMostRecentPayday(paydayAnchorDate, paydayInterval ?? "biweekly", today));
+      }
+      return startOfDay(today);
+    }
     return startOfMonth(today);
   }
 
@@ -115,7 +152,8 @@ function getCurrentPeriodStart(
 }
 
 function TrackerPage() {
-  const { data: prefs } = usePreferences();
+  const { data: prefsData } = usePreferences();
+  const prefs: UserPreferences = prefsData ?? DEFAULT_PREFS;
   return <TrackerContent prefs={prefs} />;
 }
 
@@ -128,7 +166,9 @@ function TrackerContent({ prefs }: { prefs: UserPreferences }) {
     getCurrentPeriodStart(
       prefs.trackerDefaultScope,
       prefs.trackerDefaultMonthInterval,
-      prefs.trackerDefaultYearInterval
+      prefs.trackerDefaultYearInterval,
+      prefs.paydayInterval,
+      prefs.paydayAnchorDate
     )
   );
 
@@ -141,7 +181,9 @@ function TrackerContent({ prefs }: { prefs: UserPreferences }) {
       getCurrentPeriodStart(
         prefs.trackerDefaultScope,
         prefs.trackerDefaultMonthInterval,
-        prefs.trackerDefaultYearInterval
+        prefs.trackerDefaultYearInterval,
+        prefs.paydayInterval,
+        prefs.paydayAnchorDate
       )
     );
   }, [
@@ -154,7 +196,10 @@ function TrackerContent({ prefs }: { prefs: UserPreferences }) {
   const interval = scope === "month" ? monthInterval : yearInterval;
   const activeIntervals = scope === "month" ? MONTH_INTERVALS : YEAR_INTERVALS;
   const listInterval = getListInterval(scope, interval);
-  const periodLabel = getPeriodLabel(scope, interval, periodStart);
+  const periodLabel = getPeriodLabel(scope, interval, periodStart, prefs.paydayInterval);
+
+  const payPeriodNotConfigured =
+    interval === "pay-period" && !prefs.paydayAnchorDate;
 
   function onScopeChange(nextScope: BudgetScope) {
     setScope(nextScope);
@@ -229,6 +274,11 @@ function TrackerContent({ prefs }: { prefs: UserPreferences }) {
                         ) {
                           setPeriodStart(getRangeStartContainingToday(opt.value));
                         }
+                        if (opt.value === "pay-period") {
+                          setPeriodStart(
+                            getRangeStartContainingToday("pay-period", prefs.paydayInterval, prefs.paydayAnchorDate)
+                          );
+                        }
                         return;
                       }
                       setYearInterval(opt.value);
@@ -246,21 +296,47 @@ function TrackerContent({ prefs }: { prefs: UserPreferences }) {
           )}
         </div>
 
+        {/* Pay Period not configured nudge */}
+        {payPeriodNotConfigured && (
+          <div className="flex items-center gap-2 rounded-md border border-amber-200 bg-amber-50 px-3 py-2 text-sm text-amber-800">
+            <AlertCircle className="h-4 w-4 flex-shrink-0" />
+            <span>
+              Configure your payday in{" "}
+              <Link to="/settings" className="font-semibold underline hover:no-underline">
+                Settings
+              </Link>{" "}
+              to use the Pay Period view.
+            </span>
+          </div>
+        )}
+
         <div className="flex items-center gap-2 border-t pt-3">
-          <Button size="sm" variant="ghost" onClick={() => setPeriodStart(navigatePeriod(scope, interval, periodStart, "prev"))}>
+          <Button
+            size="sm"
+            variant="ghost"
+            disabled={payPeriodNotConfigured}
+            onClick={() => setPeriodStart(navigatePeriod(scope, interval, periodStart, "prev", prefs.paydayInterval))}
+          >
             Prev
           </Button>
           <span className="min-w-48 text-center text-sm font-medium">{periodLabel}</span>
-          <Button size="sm" variant="ghost" onClick={() => setPeriodStart(navigatePeriod(scope, interval, periodStart, "next"))}>
+          <Button
+            size="sm"
+            variant="ghost"
+            disabled={payPeriodNotConfigured}
+            onClick={() => setPeriodStart(navigatePeriod(scope, interval, periodStart, "next", prefs.paydayInterval))}
+          >
             Next
           </Button>
         </div>
       </div>
 
-      {mode === "board" ? (
-        <BudgetBoardView scope={scope} interval={interval} periodStart={periodStart} />
-      ) : (
-        <TrackerContainer interval={listInterval} periodStart={periodStart} showToolbar={false} />
+      {!payPeriodNotConfigured && (
+        mode === "board" ? (
+          <BudgetBoardView scope={scope} interval={interval} periodStart={periodStart} />
+        ) : (
+          <TrackerContainer interval={listInterval} periodStart={periodStart} showToolbar={false} />
+        )
       )}
     </div>
   );

@@ -22,6 +22,7 @@ import { Route as AppIncomeIndexRouteImport } from './routes/_app/income/index'
 import { Route as AppCategoriesIndexRouteImport } from './routes/_app/categories/index'
 import { Route as AppBillsIndexRouteImport } from './routes/_app/bills/index'
 import { Route as AppIncomeIdRouteImport } from './routes/_app/income/$id'
+import { Route as AppBillsIdRouteImport } from './routes/_app/bills/$id'
 
 const AuthRoute = AuthRouteImport.update({
   id: '/_auth',
@@ -86,6 +87,11 @@ const AppIncomeIdRoute = AppIncomeIdRouteImport.update({
   path: '/income/$id',
   getParentRoute: () => AppRoute,
 } as any)
+const AppBillsIdRoute = AppBillsIdRouteImport.update({
+  id: '/bills/$id',
+  path: '/bills/$id',
+  getParentRoute: () => AppRoute,
+} as any)
 
 export interface FileRoutesByFullPath {
   '/': typeof IndexRoute
@@ -94,6 +100,7 @@ export interface FileRoutesByFullPath {
   '/tracker': typeof AppTrackerRoute
   '/login': typeof AuthLoginRoute
   '/register': typeof AuthRegisterRoute
+  '/bills/$id': typeof AppBillsIdRoute
   '/income/$id': typeof AppIncomeIdRoute
   '/bills/': typeof AppBillsIndexRoute
   '/categories/': typeof AppCategoriesIndexRoute
@@ -107,6 +114,7 @@ export interface FileRoutesByTo {
   '/tracker': typeof AppTrackerRoute
   '/login': typeof AuthLoginRoute
   '/register': typeof AuthRegisterRoute
+  '/bills/$id': typeof AppBillsIdRoute
   '/income/$id': typeof AppIncomeIdRoute
   '/bills': typeof AppBillsIndexRoute
   '/categories': typeof AppCategoriesIndexRoute
@@ -123,6 +131,7 @@ export interface FileRoutesById {
   '/_app/tracker': typeof AppTrackerRoute
   '/_auth/login': typeof AuthLoginRoute
   '/_auth/register': typeof AuthRegisterRoute
+  '/_app/bills/$id': typeof AppBillsIdRoute
   '/_app/income/$id': typeof AppIncomeIdRoute
   '/_app/bills/': typeof AppBillsIndexRoute
   '/_app/categories/': typeof AppCategoriesIndexRoute
@@ -138,6 +147,7 @@ export interface FileRouteTypes {
     | '/tracker'
     | '/login'
     | '/register'
+    | '/bills/$id'
     | '/income/$id'
     | '/bills/'
     | '/categories/'
@@ -151,6 +161,7 @@ export interface FileRouteTypes {
     | '/tracker'
     | '/login'
     | '/register'
+    | '/bills/$id'
     | '/income/$id'
     | '/bills'
     | '/categories'
@@ -166,6 +177,7 @@ export interface FileRouteTypes {
     | '/_app/tracker'
     | '/_auth/login'
     | '/_auth/register'
+    | '/_app/bills/$id'
     | '/_app/income/$id'
     | '/_app/bills/'
     | '/_app/categories/'
@@ -272,6 +284,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof AppIncomeIdRouteImport
       parentRoute: typeof AppRoute
     }
+    '/_app/bills/$id': {
+      id: '/_app/bills/$id'
+      path: '/bills/$id'
+      fullPath: '/bills/$id'
+      preLoaderRoute: typeof AppBillsIdRouteImport
+      parentRoute: typeof AppRoute
+    }
   }
 }
 
@@ -279,6 +298,7 @@ interface AppRouteChildren {
   AppDashboardRoute: typeof AppDashboardRoute
   AppSettingsRoute: typeof AppSettingsRoute
   AppTrackerRoute: typeof AppTrackerRoute
+  AppBillsIdRoute: typeof AppBillsIdRoute
   AppIncomeIdRoute: typeof AppIncomeIdRoute
   AppBillsIndexRoute: typeof AppBillsIndexRoute
   AppCategoriesIndexRoute: typeof AppCategoriesIndexRoute
@@ -290,6 +310,7 @@ const AppRouteChildren: AppRouteChildren = {
   AppDashboardRoute: AppDashboardRoute,
   AppSettingsRoute: AppSettingsRoute,
   AppTrackerRoute: AppTrackerRoute,
+  AppBillsIdRoute: AppBillsIdRoute,
   AppIncomeIdRoute: AppIncomeIdRoute,
   AppBillsIndexRoute: AppBillsIndexRoute,
   AppCategoriesIndexRoute: AppCategoriesIndexRoute,

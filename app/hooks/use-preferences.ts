@@ -5,11 +5,13 @@ export type UserPreferences = Awaited<ReturnType<typeof getUserPreferences>>;
 
 const PREFS_KEY = ["user-preferences"] as const;
 
-const DEFAULT_PREFS: UserPreferences = {
+export const DEFAULT_PREFS: UserPreferences = {
   trackerDefaultMode: "board",
   trackerDefaultScope: "month",
   trackerDefaultMonthInterval: "week",
   trackerDefaultYearInterval: "month",
+  paydayInterval: "biweekly",
+  paydayAnchorDate: null,
 };
 
 export function usePreferences() {
