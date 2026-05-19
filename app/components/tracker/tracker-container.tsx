@@ -217,23 +217,33 @@ export function TrackerContainer({
           {/* ── Expenses section ── */}
           {billParents.length > 0 && (
             <section>
-              <div className="flex items-center justify-between border-b bg-red-50 px-4 py-2.5">
-                <div className="flex items-center gap-2">
-                  <Receipt className="h-3.5 w-3.5 text-red-600" />
-                  <span className="text-xs font-semibold uppercase tracking-wider text-red-700">
-                    Expenses
-                  </span>
-                  <span className="text-xs text-red-600/70">
-                    {billParents.length} item{billParents.length !== 1 ? "s" : ""}
+              <div className="border-b bg-red-50 px-4 py-2.5">
+                <div className="flex items-center justify-between gap-2">
+                  <div className="flex items-center gap-2">
+                    <Receipt className="h-3.5 w-3.5 text-red-600" />
+                    <span className="text-xs font-semibold uppercase tracking-wider text-red-700">
+                      Expenses
+                    </span>
+                    <span className="text-xs text-red-600/70">
+                      {billParents.length} item{billParents.length !== 1 ? "s" : ""}
+                    </span>
+                  </div>
+                  <span className="text-sm font-semibold tabular-nums text-red-700">
+                    {formatCurrency(
+                      selectedVendor === "__all__"
+                        ? expenseTotal
+                        : filteredExpenseTotal
+                    )}
                   </span>
                 </div>
-                <div className="flex items-center gap-3">
-                  <div className="w-44">
+
+                <div className="mt-2 flex items-center gap-2 sm:mt-0 sm:gap-3">
+                  <div className="min-w-0 flex-1 sm:w-44 sm:flex-none">
                     <Select
                       value={selectedVendor}
                       onValueChange={setSelectedVendor}
                     >
-                      <SelectTrigger className="h-7 border-red-200 bg-white text-xs">
+                      <SelectTrigger className="h-7 w-full border-red-200 bg-white text-xs">
                         <SelectValue placeholder="All vendors" />
                       </SelectTrigger>
                       <SelectContent>
@@ -250,7 +260,7 @@ export function TrackerContainer({
                   <button
                     onClick={() => setShowPaid((v) => !v)}
                     className={cn(
-                      "inline-flex items-center gap-1.5 rounded-md border px-2.5 py-1 text-xs font-medium transition-colors",
+                      "inline-flex h-7 shrink-0 items-center gap-1.5 whitespace-nowrap rounded-md border px-2.5 py-1 text-xs font-medium transition-colors",
                       showPaid
                         ? "border-green-200 bg-green-100 text-green-700 hover:bg-green-200"
                         : "border-gray-200 bg-white text-gray-500 hover:text-gray-700"
@@ -264,13 +274,6 @@ export function TrackerContainer({
                     <span className="hidden sm:inline">{showPaid ? "Showing All" : "Unpaid Only"}</span>
                     <span className="sm:hidden">{showPaid ? "All" : "Unpaid"}</span>
                   </button>
-                  <span className="text-sm font-semibold tabular-nums text-red-700">
-                    {formatCurrency(
-                      selectedVendor === "__all__"
-                        ? expenseTotal
-                        : filteredExpenseTotal
-                    )}
-                  </span>
                 </div>
               </div>
 

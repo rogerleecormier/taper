@@ -334,9 +334,9 @@ export function TrackerOccurrenceRow({ occurrence, type, billName, interval, pay
         )}
 
         {/* Actions */}
-        <div className="w-full sm:w-auto sm:ml-auto flex items-center gap-1 flex-wrap sm:flex-nowrap">
+        <div className="w-full sm:w-auto sm:ml-auto">
           {mode === "edit" && (
-            <>
+            <div className="flex items-center gap-1 justify-end">
               <Button
                 size="sm"
                 className="h-7 px-2 text-xs"
@@ -360,11 +360,11 @@ export function TrackerOccurrenceRow({ occurrence, type, billName, interval, pay
               >
                 <X className="h-3 w-3" />
               </Button>
-            </>
+            </div>
           )}
 
           {mode === "income-pay" && (
-            <>
+            <div className="flex items-center gap-1 justify-end">
               <Button
                 size="sm"
                 className="h-7 px-2 text-xs bg-green-600 hover:bg-green-700"
@@ -388,102 +388,137 @@ export function TrackerOccurrenceRow({ occurrence, type, billName, interval, pay
               >
                 <X className="h-3 w-3" />
               </Button>
-            </>
+            </div>
           )}
-
-          {mode === "view" && status !== "skipped" && status !== "carried" && (
-            <Button
-              size="sm"
-              variant="outline"
-              className={cn(
-                "h-7 px-2.5 text-xs",
-                isIncome
-                  ? "border-green-200 text-green-700 hover:bg-green-50"
-                  : "border-blue-200 text-blue-700 hover:bg-blue-50"
-              )}
-              onClick={() => {
-                if (isIncome) {
-                  setIncomePayAmount(String(occurrence.amountCents / 100));
-                  setIncomePayDate(today);
-                  setMode("income-pay");
-                } else {
-                  setPayModalOpen(true);
-                }
-              }}
-              disabled={isBusy}
-            >
-              <Check className="h-3 w-3 mr-1" />
-              {isIncome
-                ? status === "received"
-                  ? "Add"
-                  : "Receive"
-                : status === "paid"
-                  ? "Add Payment"
-                  : status === "partial"
-                    ? `Pay ${formatCurrency(remaining)}`
-                    : "Pay"}
-            </Button>
-          )}
-
-          {mode === "view" &&
-            type === "bill" &&
-            status !== "paid" &&
-            status !== "skipped" &&
-            status !== "carried" &&
-            remaining > 0 && (
-              <Button
-                size="sm"
-                variant="outline"
-                className="h-7 px-2.5 text-xs border-amber-200 text-amber-700 hover:bg-amber-50"
-                onClick={() => setMode("carry")}
-                disabled={isBusy}
-              >
-                <ArrowRight className="h-3 w-3 mr-1" />
-                Carry Fwd
-              </Button>
-            )}
-
-          {mode === "view" &&
-            isBill(occurrence) &&
-            occurrence.carriedFromId &&
-            !(occurrence.paidAmountCents && occurrence.paidAmountCents > 0) && (
-              <Button
-                size="sm"
-                variant="outline"
-                className="h-7 px-2.5 text-xs border-orange-200 text-orange-700 hover:bg-orange-50"
-                onClick={() => reverseCarry.mutate(occurrence.id)}
-                disabled={isBusy}
-              >
-                <ArrowLeft className="h-3 w-3 mr-1" />
-                Undo Carry
-              </Button>
-            )}
-
-          {mode === "view" &&
-            isIncome &&
-            status !== "received" &&
-            status !== "skipped" && (
-              <Button
-                size="sm"
-                variant="outline"
-                className="h-7 px-2.5 text-xs border-gray-200 text-gray-500 hover:bg-gray-50 hover:text-gray-700"
-                onClick={() => skipIncome.mutateAsync(occurrence.id)}
-                disabled={isBusy}
-              >
-                <Minus className="h-3 w-3 mr-1" />
-                Skip
-              </Button>
-            )}
 
           {mode === "view" && (
-            <Button
-              size="sm"
-              variant="ghost"
-              className="h-7 w-7 p-0 text-muted-foreground hover:text-foreground"
-              onClick={() => setMode("edit")}
-            >
-              <Pencil className="h-3 w-3" />
-            </Button>
+            <div className="grid grid-cols-4 gap-1">
+              <Button
+                size="sm"
+                variant="outline"
+                className={cn(
+                  "h-7 px-2 text-[11px] sm:text-xs",
+                  status !== "skipped" && status !== "carried"
+                    ? isIncome
+                      ? "border-green-200 text-green-700 hover:bg-green-50"
+                      : "border-blue-200 text-blue-700 hover:bg-blue-50"
+                    : "invisible"
+                )}
+                onClick={() => {
+                  if (isIncome) {
+                    setIncomePayAmount(String(occurrence.amountCents / 100));
+                    setIncomePayDate(today);
+                    setMode("income-pay");
+                  } else {
+                    setPayModalOpen(true);
+                  }
+                }}
+                disabled={isBusy || status === "skipped" || status === "carried"}
+              >
+                <Check className="h-3 w-3 mr-1" />
+                <span className="sm:hidden">Pay</span>
+                <span className="hidden sm:inline">
+                  {isIncome
+                    ? status === "received"
+                      ? "Add"
+                      : "Receive"
+                    : status === "paid"
+                      ? "Add Payment"
+                      : status === "partial"
+                        ? `Pay ${formatCurrency(remaining)}`
+                        : "Pay"}
+                </span>
+              </Button>
+
+              <Button
+                size="sm"
+                variant="outline"
+                className={cn(
+                  "h-7 px-2 text-[11px] sm:text-xs border-amber-200 text-amber-700 hover:bg-amber-50",
+                  !(
+                    type === "bill" &&
+                    status !== "paid" &&
+                    status !== "skipped" &&
+                    status !== "carried" &&
+                    remaining > 0
+                  ) && "invisible"
+                )}
+                onClick={() => setMode("carry")}
+                disabled={
+                  isBusy ||
+                  !(
+                    type === "bill" &&
+                    status !== "paid" &&
+                    status !== "skipped" &&
+                    status !== "carried" &&
+                    remaining > 0
+                  )
+                }
+              >
+                <ArrowRight className="h-3 w-3 mr-1" />
+                <span className="sm:hidden">Carry</span>
+                <span className="hidden sm:inline">Carry Fwd</span>
+              </Button>
+
+              <Button
+                size="sm"
+                variant="outline"
+                className={cn(
+                  "h-7 px-2 text-[11px] sm:text-xs",
+                  isIncome
+                    ? "border-gray-200 text-gray-500 hover:bg-gray-50 hover:text-gray-700"
+                    : "border-orange-200 text-orange-700 hover:bg-orange-50",
+                  !(
+                    (isIncome &&
+                      status !== "received" &&
+                      status !== "skipped") ||
+                    (isBill(occurrence) &&
+                      occurrence.carriedFromId &&
+                      !(occurrence.paidAmountCents && occurrence.paidAmountCents > 0))
+                  ) && "invisible"
+                )}
+                onClick={() => {
+                  if (isIncome) {
+                    void skipIncome.mutateAsync(occurrence.id);
+                  } else {
+                    reverseCarry.mutate(occurrence.id);
+                  }
+                }}
+                disabled={
+                  isBusy ||
+                  !(
+                    (isIncome &&
+                      status !== "received" &&
+                      status !== "skipped") ||
+                    (isBill(occurrence) &&
+                      occurrence.carriedFromId &&
+                      !(occurrence.paidAmountCents && occurrence.paidAmountCents > 0))
+                  )
+                }
+              >
+                {isIncome ? (
+                  <Minus className="h-3 w-3 mr-1" />
+                ) : (
+                  <ArrowLeft className="h-3 w-3 mr-1" />
+                )}
+                <span className="sm:hidden">
+                  {isIncome ? "Skip" : "Undo"}
+                </span>
+                <span className="hidden sm:inline">
+                  {isIncome ? "Skip" : "Undo Carry"}
+                </span>
+              </Button>
+
+              <Button
+                size="sm"
+                variant="ghost"
+                className="h-7 px-2 text-[11px] sm:text-xs text-muted-foreground hover:text-foreground"
+                onClick={() => setMode("edit")}
+              >
+                <Pencil className="h-3 w-3 mr-1" />
+                <span>Edit</span>
+              </Button>
+            </div>
           )}
         </div>
       </div>
