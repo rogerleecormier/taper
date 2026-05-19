@@ -161,7 +161,63 @@ export function CategoryList({ categories }: CategoryListProps) {
   }
 
   return (
-    <div className="w-full overflow-x-auto rounded-md border">
+    <>
+      <div className="space-y-3 md:hidden">
+        {categories.map((cat) => (
+          <div key={cat.id} className="rounded-md border p-3">
+            <div className="flex items-start justify-between gap-3">
+              <div className="min-w-0">
+                <div className="flex items-center gap-2.5">
+                  {cat.color ? (
+                    <span className="h-4 w-4 flex-shrink-0 rounded-full" style={{ backgroundColor: cat.color }} />
+                  ) : (
+                    <span className="h-4 w-4 flex-shrink-0 rounded-full bg-gray-200" />
+                  )}
+                  {cat.icon && <span className="text-base leading-none">{cat.icon}</span>}
+                  <span className="font-medium break-words">{cat.name}</span>
+                </div>
+                <div className="mt-2 flex flex-wrap items-center gap-2 text-xs">
+                  {cat.type === "income" ? (
+                    <Badge className="border-green-200 bg-green-100 text-green-800">Income</Badge>
+                  ) : (
+                    <Badge className="border-red-200 bg-red-100 text-red-800">Expense</Badge>
+                  )}
+                  <span className="font-mono text-muted-foreground">{cat.color ?? "—"}</span>
+                </div>
+              </div>
+              <div className="flex items-center gap-1">
+                <CategoryFormDialog
+                  trigger={
+                    <Button variant="ghost" size="sm" className="h-8 w-8 p-0">
+                      <Pencil className="h-3.5 w-3.5" />
+                      <span className="sr-only">Edit</span>
+                    </Button>
+                  }
+                  categoryId={cat.id}
+                  defaultValues={{
+                    name: cat.name,
+                    type: cat.type,
+                    color: cat.color ?? "#64748b",
+                    icon: cat.icon ?? "",
+                  }}
+                />
+                <Button
+                  variant="ghost"
+                  size="sm"
+                  className="h-8 w-8 p-0 text-red-500 hover:text-red-700"
+                  onClick={() => handleDelete(cat.id)}
+                  disabled={deletingId === cat.id}
+                >
+                  <Trash2 className="h-3.5 w-3.5" />
+                  <span className="sr-only">Delete</span>
+                </Button>
+              </div>
+            </div>
+          </div>
+        ))}
+      </div>
+
+      <div className="hidden w-full overflow-x-auto rounded-md border md:block">
       <table className="w-full text-sm">
         <thead className="border-b bg-muted/50">
           {table.getHeaderGroups().map((hg) => (
@@ -203,6 +259,7 @@ export function CategoryList({ categories }: CategoryListProps) {
           ))}
         </tbody>
       </table>
-    </div>
+      </div>
+    </>
   );
 }

@@ -227,6 +227,7 @@ function TrackerDefaultsCard() {
               { value: "week", label: "Weeks" },
               { value: "biweek", label: "Biweeks" },
               { value: "month", label: "Month" },
+              { value: "pay-period", label: "Pay Period" },
             ] as const
           ).map(({ value, label }) => (
             <PrefButton

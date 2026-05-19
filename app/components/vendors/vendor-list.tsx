@@ -141,7 +141,64 @@ export function VendorList({ vendors }: VendorListProps) {
   }
 
   return (
-    <div className="w-full overflow-x-auto rounded-md border">
+    <>
+      <div className="space-y-3 md:hidden">
+        {vendors.map((vendor) => (
+          <div key={vendor.id} className="rounded-md border p-3">
+            <div className="flex items-start justify-between gap-3">
+              <div className="min-w-0">
+                <p className="font-medium break-words">{vendor.name}</p>
+                <div className="mt-1 space-y-1 text-xs text-muted-foreground">
+                  <p className="break-all">
+                    {vendor.website ? (
+                      <a
+                        href={vendor.website}
+                        target="_blank"
+                        rel="noopener noreferrer"
+                        className="inline-flex items-center gap-1 text-blue-600 hover:underline"
+                      >
+                        {vendor.website.replace(/^https?:\/\//, "").split("/")[0]}
+                        <ExternalLink className="h-3 w-3" />
+                      </a>
+                    ) : "No website"}
+                  </p>
+                  <p>{vendor.phone ?? "No phone"}</p>
+                  <p className="break-words">{vendor.notes ?? "No notes"}</p>
+                </div>
+              </div>
+              <div className="flex items-center gap-1">
+                <VendorFormDialog
+                  trigger={
+                    <Button variant="ghost" size="sm" className="h-8 w-8 p-0">
+                      <Pencil className="h-3.5 w-3.5" />
+                      <span className="sr-only">Edit</span>
+                    </Button>
+                  }
+                  vendorId={vendor.id}
+                  defaultValues={{
+                    name: vendor.name,
+                    website: vendor.website ?? "",
+                    phone: vendor.phone ?? "",
+                    notes: vendor.notes ?? "",
+                  }}
+                />
+                <Button
+                  variant="ghost"
+                  size="sm"
+                  className="h-8 w-8 p-0 text-red-500 hover:text-red-700"
+                  onClick={() => handleDelete(vendor.id)}
+                  disabled={deletingId === vendor.id}
+                >
+                  <Trash2 className="h-3.5 w-3.5" />
+                  <span className="sr-only">Delete</span>
+                </Button>
+              </div>
+            </div>
+          </div>
+        ))}
+      </div>
+
+      <div className="hidden w-full overflow-x-auto rounded-md border md:block">
       <table className="w-full text-sm">
         <thead className="border-b bg-muted/50">
           {table.getHeaderGroups().map((hg) => (
@@ -174,6 +231,7 @@ export function VendorList({ vendors }: VendorListProps) {
           ))}
         </tbody>
       </table>
-    </div>
+      </div>
+    </>
   );
 }

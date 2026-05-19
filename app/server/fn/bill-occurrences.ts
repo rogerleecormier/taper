@@ -3,7 +3,7 @@ import { z } from "zod";
 import { nanoid } from "nanoid";
 import { eq, and, gte, lte, inArray, lt } from "drizzle-orm";
 import { authMiddleware } from "~/server/middleware";
-import { billOccurrences } from "~/db/schema/bill-occurrences";
+import { billOccurrences, type OccurrenceStatus } from "~/db/schema/bill-occurrences";
 import { bills } from "~/db/schema/bills";
 import { generateOccurrenceDates, type RecurrenceRule } from "~/lib/occurrence-generator";
 import { toDateStr } from "~/lib/dates";
@@ -104,6 +104,82 @@ export const carryForwardOccurrence = createServerFn()
     const destinationPeriod = data.targetDate.slice(0, 7);
     if (destinationPeriod !== sourcePeriod) {
       await invalidateUserDashboard(env.KV, user.id, destinationPeriod);
+    }
+  });
+
+export const reverseCarryForward = createServerFn()
+  .middleware([authMiddleware])
+  .inputValidator(z.object({ id: z.string() }))
+  .handler(async ({ data, context }) => {
+    const { db, user, env } = context;
+
+    const dest = await db
+      .select()
+      .from(billOccurrences)
+      .where(
+        and(
+          eq(billOccurrences.id, data.id),
+          eq(billOccurrences.userId, user.id)
+        )
+      )
+      .get();
+
+    if (!dest) throw new Error("Occurrence not found");
+    if (!dest.carriedFromId)
+      throw new Error("This occurrence was not carried forward");
+    if (dest.paidAmountCents && dest.paidAmountCents > 0)
+      throw new Error("Cannot reverse a carry forward that already has payments");
+
+    const source = await db
+      .select()
+      .from(billOccurrences)
+      .where(
+        and(
+          eq(billOccurrences.id, dest.carriedFromId),
+          eq(billOccurrences.userId, user.id)
+        )
+      )
+      .get();
+
+    if (!source) throw new Error("Source occurrence not found");
+
+    const now = new Date();
+    const today = toDateStr(now);
+
+    const sourcePaid = source.paidAmountCents ?? 0;
+    let restoredStatus: OccurrenceStatus;
+    if (sourcePaid > 0) {
+      restoredStatus = "partial";
+    } else if (source.dueDate < today) {
+      restoredStatus = "overdue";
+    } else {
+      restoredStatus = "pending";
+    }
+
+    await db
+      .delete(billOccurrences)
+      .where(
+        and(
+          eq(billOccurrences.id, dest.id),
+          eq(billOccurrences.userId, user.id)
+        )
+      );
+
+    await db
+      .update(billOccurrences)
+      .set({ status: restoredStatus, updatedAt: now })
+      .where(
+        and(
+          eq(billOccurrences.id, source.id),
+          eq(billOccurrences.userId, user.id)
+        )
+      );
+
+    const sourcePeriod = source.dueDate.slice(0, 7);
+    const destPeriod = dest.dueDate.slice(0, 7);
+    await invalidateUserDashboard(env.KV, user.id, sourcePeriod);
+    if (destPeriod !== sourcePeriod) {
+      await invalidateUserDashboard(env.KV, user.id, destPeriod);
     }
   });
 

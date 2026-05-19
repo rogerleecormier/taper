@@ -189,7 +189,84 @@ export function IncomeList({ incomeSources }: IncomeListProps) {
   });
 
   return (
-    <div className="w-full overflow-x-auto rounded-md border">
+    <>
+      <div className="space-y-3 md:hidden">
+        {incomeSources.map((src) => (
+          <div key={src.id} className="rounded-md border p-3">
+            <div className="flex items-start justify-between gap-3">
+              <div className="min-w-0">
+                <div className="flex flex-wrap items-center gap-2">
+                  <span className="font-medium break-words">{src.name}</span>
+                  {src.sourceType === "payroll" && (
+                    <Badge className="border-violet-200 bg-violet-100 text-violet-800 text-xs">
+                      Payroll
+                    </Badge>
+                  )}
+                </div>
+                <p className="mt-1 text-xs text-muted-foreground break-words">
+                  {src.vendor?.name ?? "No source"} · {src.category?.name ?? "No category"}
+                </p>
+              </div>
+              <div className="flex items-center gap-1">
+                <IncomeFormDialog
+                  trigger={
+                    <Button variant="ghost" size="sm" className="h-8 w-8 p-0">
+                      <Pencil className="h-3.5 w-3.5" />
+                      <span className="sr-only">Edit</span>
+                    </Button>
+                  }
+                  incomeSourceId={src.id}
+                  defaultValues={{
+                    name: src.name,
+                    vendorId: src.vendorId,
+                    categoryId: src.categoryId,
+                    amountCents: src.amountCents,
+                    interval: src.interval,
+                    startDate: src.startDate,
+                    endDate: src.endDate ?? null,
+                    dayOfMonth: src.dayOfMonth ?? null,
+                    dayOfWeek: src.dayOfWeek ?? null,
+                    notes: src.notes ?? "",
+                  }}
+                />
+                {src.sourceType === "payroll" && (
+                  <Link to="/income/$id" params={{ id: src.id }}>
+                    <Button variant="ghost" size="sm" className="h-8 w-8 p-0 text-violet-600 hover:text-violet-800">
+                      <ExternalLink className="h-3.5 w-3.5" />
+                      <span className="sr-only">View Pay Cycles</span>
+                    </Button>
+                  </Link>
+                )}
+                <Button
+                  variant="ghost"
+                  size="sm"
+                  className="h-8 w-8 p-0 text-red-500 hover:text-red-700"
+                  onClick={() => handleDelete(src.id)}
+                  disabled={deletingId === src.id}
+                >
+                  <Trash2 className="h-3.5 w-3.5" />
+                  <span className="sr-only">Delete</span>
+                </Button>
+              </div>
+            </div>
+            <div className="mt-2 flex flex-wrap items-center gap-2 text-xs">
+              <span className="font-medium tabular-nums text-green-700">
+                {formatCurrency(src.amountCents)}
+              </span>
+              <span className="text-muted-foreground">
+                {INTERVAL_LABELS[src.interval] ?? src.interval}
+              </span>
+              {src.isActive ? (
+                <Badge className="border-green-200 bg-green-100 text-green-800">Active</Badge>
+              ) : (
+                <Badge variant="secondary">Inactive</Badge>
+              )}
+            </div>
+          </div>
+        ))}
+      </div>
+
+      <div className="hidden w-full overflow-x-auto rounded-md border md:block">
       <table className="w-full text-sm">
         <thead className="border-b bg-muted/50">
           {table.getHeaderGroups().map((hg) => (
@@ -222,6 +299,7 @@ export function IncomeList({ incomeSources }: IncomeListProps) {
           ))}
         </tbody>
       </table>
-    </div>
+      </div>
+    </>
   );
 }

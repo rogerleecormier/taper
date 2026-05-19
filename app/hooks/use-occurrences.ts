@@ -2,6 +2,7 @@ import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import {
   getBillOccurrences,
   carryForwardOccurrence,
+  reverseCarryForward,
   reopenOccurrence,
   updateBillOccurrence,
   deleteOccurrence,
@@ -113,6 +114,19 @@ export function useCarryForwardOccurrence() {
   return useMutation({
     mutationFn: (data: { id: string; targetDate: string }) =>
       carryForwardOccurrence({ data }),
+    onSuccess: () => {
+      qc.invalidateQueries({ queryKey: ["bill-occurrences"] });
+      qc.invalidateQueries({ queryKey: ["bill-payments-period"] });
+      qc.invalidateQueries({ queryKey: ["bill-history"] });
+      qc.invalidateQueries({ queryKey: ["dashboard"] });
+    },
+  });
+}
+
+export function useReverseCarryForward() {
+  const qc = useQueryClient();
+  return useMutation({
+    mutationFn: (id: string) => reverseCarryForward({ data: { id } }),
     onSuccess: () => {
       qc.invalidateQueries({ queryKey: ["bill-occurrences"] });
       qc.invalidateQueries({ queryKey: ["bill-payments-period"] });

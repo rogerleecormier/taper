@@ -1,29 +1,13 @@
 "use client";
 
-import { useMemo, useEffect, useState } from "react";
-import {
-  DndContext,
-  closestCenter,
-  PointerSensor,
-  useSensor,
-  useSensors,
-  type DragEndEvent,
-} from "@dnd-kit/core";
-import {
-  SortableContext,
-  verticalListSortingStrategy,
-  arrayMove,
-} from "@dnd-kit/sortable";
+import { useMemo, useState } from "react";
 import { TrendingUp, Receipt, Loader2, Eye, EyeOff } from "lucide-react";
 import { useTrackerData } from "~/hooks/use-tracker";
-import { useReorderBills } from "~/hooks/use-bills";
-import { useReorderIncomeSources } from "~/hooks/use-income";
 import { setTrackerInterval, setTrackerPeriodStart } from "~/store/tracker-store";
 import { formatCurrency } from "~/lib/currency";
 import { cn } from "~/lib/utils";
 import type { TrackerInterval } from "~/lib/dates";
 import type { BillOccurrence } from "~/db/schema/bill-occurrences";
-import type { BillPayment } from "~/db/schema/bill-payments";
 import type { IncomeOccurrence } from "~/db/schema/income-occurrences";
 import { TrackerToolbar } from "./tracker-toolbar";
 import { TrackerParentRow } from "./tracker-parent-row";
@@ -55,69 +39,25 @@ export function TrackerContainer({
   const billRows = useMemo(() => rows.filter((r) => r.type === "bill"), [rows]);
   const incomeRows = useMemo(() => rows.filter((r) => r.type === "income"), [rows]);
 
-  // Local DnD order — optimistic, synced from server data
-  const [billOrder, setBillOrder] = useState<string[]>(() => billRows.map((r) => r.id));
-  const [incomeOrder, setIncomeOrder] = useState<string[]>(() => incomeRows.map((r) => r.id));
-
-  const billKey = billRows.map((r) => r.id).join(",");
-  const incomeKey = incomeRows.map((r) => r.id).join(",");
-  useEffect(() => setBillOrder(billRows.map((r) => r.id)), [billKey]);
-  useEffect(() => setIncomeOrder(incomeRows.map((r) => r.id)), [incomeKey]);
-
-  const reorderBills = useReorderBills();
-  const reorderIncome = useReorderIncomeSources();
-
-  const sensors = useSensors(
-    useSensor(PointerSensor, { activationConstraint: { distance: 8 } })
-  );
-
-  function handleBillDragEnd(event: DragEndEvent) {
-    const { active, over } = event;
-    if (!over || active.id === over.id) return;
-    const oldIdx = billOrder.indexOf(String(active.id));
-    const newIdx = billOrder.indexOf(String(over.id));
-    if (oldIdx === -1 || newIdx === -1) return;
-    const next = arrayMove(billOrder, oldIdx, newIdx);
-    setBillOrder(next);
-    reorderBills.mutate(next.map((id) => id.split(":")[1]));
-  }
-
-  function handleIncomeDragEnd(event: DragEndEvent) {
-    const { active, over } = event;
-    if (!over || active.id === over.id) return;
-    const oldIdx = incomeOrder.indexOf(String(active.id));
-    const newIdx = incomeOrder.indexOf(String(over.id));
-    if (oldIdx === -1 || newIdx === -1) return;
-    const next = arrayMove(incomeOrder, oldIdx, newIdx);
-    setIncomeOrder(next);
-    reorderIncome.mutate(next.map((id) => id.split(":")[1]));
-  }
-
   // Build parent items — attach their occurrence arrays for the current period
   const incomeParents = useMemo(
     () =>
-      incomeOrder
-        .map((dndId) => {
-          const row = incomeRows.find((r) => r.id === dndId);
-          if (!row) return null;
-          const entityId = dndId.split(":")[1];
-          const occs = Array.from(incomeOccurrenceMap.get(entityId)?.values() ?? []).sort(
-            (a, b) => a.expectedDate.localeCompare(b.expectedDate)
-          ) as IncomeOccurrence[];
-          const periodTotal = occs.reduce((s, o) => s + o.amountCents, 0);
-          return { ...row, entityId, occurrences: occs, periodTotal };
-        })
-        .filter(Boolean),
-    [incomeOrder, incomeRows, incomeOccurrenceMap]
+      incomeRows.map((row) => {
+        const entityId = row.id.split(":")[1];
+        const occs = Array.from(incomeOccurrenceMap.get(entityId)?.values() ?? []).sort(
+          (a, b) => a.expectedDate.localeCompare(b.expectedDate)
+        ) as IncomeOccurrence[];
+        const periodTotal = occs.reduce((s, o) => s + o.amountCents, 0);
+        return { ...row, entityId, occurrences: occs, periodTotal };
+      }),
+    [incomeRows, incomeOccurrenceMap]
   );
 
   const billParents = useMemo(
     () =>
-      billOrder
-        .map((dndId) => {
-          const row = billRows.find((r) => r.id === dndId);
-          if (!row) return null;
-          const entityId = dndId.split(":")[1];
+      billRows
+        .map((row) => {
+          const entityId = row.id.split(":")[1];
           const allOccs = Array.from(
             billOccurrenceMap.get(entityId)?.values() ?? []
           ).sort((a, b) =>
@@ -133,7 +73,7 @@ export function TrackerContainer({
           return { ...row, entityId, occurrences: visibleOccs, periodTotal };
         })
         .filter(Boolean),
-    [billOrder, billRows, billOccurrenceMap, showPaid]
+    [billRows, billOccurrenceMap, showPaid]
   );
 
   const incomeTotal = incomeParents.reduce((s, p) => s + p!.periodTotal, 0);
@@ -163,30 +103,30 @@ export function TrackerContainer({
       )}
 
       {/* Summary bar */}
-      <div className="grid grid-cols-3 divide-x border-b bg-muted/20">
-        <div className="flex flex-col items-center py-3">
-          <span className="text-[11px] font-semibold uppercase tracking-wider text-muted-foreground">
+      <div className="grid grid-cols-3 divide-x border-b bg-gray-50">
+        <div className="flex flex-col items-center py-4">
+          <span className="text-[11px] font-semibold uppercase tracking-wider text-gray-400">
             Income
           </span>
-          <span className="mt-0.5 text-xl font-bold tabular-nums text-green-600">
+          <span className="mt-1 text-xl font-bold tabular-nums text-green-600">
             {formatCurrency(incomeTotal)}
           </span>
         </div>
-        <div className="flex flex-col items-center py-3">
-          <span className="text-[11px] font-semibold uppercase tracking-wider text-muted-foreground">
+        <div className="flex flex-col items-center py-4">
+          <span className="text-[11px] font-semibold uppercase tracking-wider text-gray-400">
             Expenses
           </span>
-          <span className="mt-0.5 text-xl font-bold tabular-nums text-red-600">
+          <span className="mt-1 text-xl font-bold tabular-nums text-red-600">
             {formatCurrency(expenseTotal)}
           </span>
         </div>
-        <div className="flex flex-col items-center py-3">
-          <span className="text-[11px] font-semibold uppercase tracking-wider text-muted-foreground">
+        <div className="flex flex-col items-center py-4">
+          <span className="text-[11px] font-semibold uppercase tracking-wider text-gray-400">
             {balance >= 0 ? "Unallocated" : "Shortfall"}
           </span>
           <span
             className={cn(
-              "mt-0.5 text-xl font-bold tabular-nums",
+              "mt-1 text-xl font-bold tabular-nums",
               balance === 0 ? "text-blue-600" : balance > 0 ? "text-amber-600" : "text-red-600"
             )}
           >
@@ -211,13 +151,13 @@ export function TrackerContainer({
           {/* ── Income section ── */}
           {incomeParents.length > 0 && (
             <section>
-              <div className="flex items-center justify-between border-b bg-green-50/70 px-4 py-1.5">
+              <div className="flex items-center justify-between border-b bg-green-50 px-4 py-2.5">
                 <div className="flex items-center gap-2">
                   <TrendingUp className="h-3.5 w-3.5 text-green-600" />
-                  <span className="text-xs font-bold uppercase tracking-wider text-green-700">
+                  <span className="text-xs font-semibold uppercase tracking-wider text-green-700">
                     Income
                   </span>
-                  <span className="text-xs text-green-600">
+                  <span className="text-xs text-green-600/70">
                     {incomeParents.length} source{incomeParents.length !== 1 ? "s" : ""}
                   </span>
                 </div>
@@ -226,45 +166,34 @@ export function TrackerContainer({
                 </span>
               </div>
 
-              <DndContext
-                sensors={sensors}
-                collisionDetection={closestCenter}
-                onDragEnd={handleIncomeDragEnd}
-              >
-                <SortableContext items={incomeOrder} strategy={verticalListSortingStrategy}>
-                  {incomeParents.map(
-                    (p) =>
-                      p && (
-                        <TrackerParentRow
-                          key={p.id}
-                          dndId={p.id}
-                          type="income"
-                          name={p.name}
-                          interval={p.interval}
-                          defaultAmountCents={p.amountCents}
-                          periodTotal={p.periodTotal}
-                          categoryName={p.categoryName}
-                          categoryColor={p.categoryColor}
-                          vendorName={p.vendorName}
-                          occurrences={p.occurrences}
-                        />
-                      )
-                  )}
-                </SortableContext>
-              </DndContext>
+              {incomeParents.map((p) => (
+                <TrackerParentRow
+                  key={p.id}
+                  id={p.id}
+                  type="income"
+                  name={p.name}
+                  interval={p.interval}
+                  defaultAmountCents={p.amountCents}
+                  periodTotal={p.periodTotal}
+                  categoryName={p.categoryName}
+                  categoryColor={p.categoryColor}
+                  vendorName={p.vendorName}
+                  occurrences={p.occurrences}
+                />
+              ))}
             </section>
           )}
 
           {/* ── Expenses section ── */}
           {billParents.length > 0 && (
             <section>
-              <div className="flex items-center justify-between border-b bg-red-50/70 px-4 py-1.5">
+              <div className="flex items-center justify-between border-b bg-red-50 px-4 py-2.5">
                 <div className="flex items-center gap-2">
                   <Receipt className="h-3.5 w-3.5 text-red-600" />
-                  <span className="text-xs font-bold uppercase tracking-wider text-red-700">
+                  <span className="text-xs font-semibold uppercase tracking-wider text-red-700">
                     Expenses
                   </span>
-                  <span className="text-xs text-red-600">
+                  <span className="text-xs text-red-600/70">
                     {billParents.length} item{billParents.length !== 1 ? "s" : ""}
                   </span>
                 </div>
@@ -272,18 +201,19 @@ export function TrackerContainer({
                   <button
                     onClick={() => setShowPaid((v) => !v)}
                     className={cn(
-                      "inline-flex items-center gap-1 rounded border px-1.5 py-0.5 text-[11px] font-medium transition-colors",
+                      "inline-flex items-center gap-1.5 rounded-md border px-2.5 py-1 text-xs font-medium transition-colors",
                       showPaid
-                        ? "border-green-200 bg-green-50 text-green-700 hover:bg-green-100"
-                        : "border-muted bg-background text-muted-foreground hover:text-foreground"
+                        ? "border-green-200 bg-green-100 text-green-700 hover:bg-green-200"
+                        : "border-gray-200 bg-white text-gray-500 hover:text-gray-700"
                     )}
                   >
                     {showPaid ? (
-                      <Eye className="h-3 w-3" />
+                      <Eye className="h-3.5 w-3.5" />
                     ) : (
-                      <EyeOff className="h-3 w-3" />
+                      <EyeOff className="h-3.5 w-3.5" />
                     )}
-                    {showPaid ? "Showing All" : "Unpaid Only"}
+                    <span className="hidden sm:inline">{showPaid ? "Showing All" : "Unpaid Only"}</span>
+                    <span className="sm:hidden">{showPaid ? "All" : "Unpaid"}</span>
                   </button>
                   <span className="text-sm font-semibold tabular-nums text-red-700">
                     {formatCurrency(expenseTotal)}
@@ -291,33 +221,25 @@ export function TrackerContainer({
                 </div>
               </div>
 
-              <DndContext
-                sensors={sensors}
-                collisionDetection={closestCenter}
-                onDragEnd={handleBillDragEnd}
-              >
-                <SortableContext items={billOrder} strategy={verticalListSortingStrategy}>
-                  {billParents.map(
-                    (p) =>
-                      p && (
-                        <TrackerParentRow
-                          key={p.id}
-                          dndId={p.id}
-                          type="bill"
-                          name={p.name}
-                          interval={p.interval}
-                          defaultAmountCents={p.amountCents}
-                          periodTotal={p.periodTotal}
-                          categoryName={p.categoryName}
-                          categoryColor={p.categoryColor}
-                          vendorName={p.vendorName}
-                          occurrences={p.occurrences}
-                          paymentsByOccurrenceId={billPaymentsByOccurrenceMap}
-                        />
-                      )
-                  )}
-                </SortableContext>
-              </DndContext>
+              {billParents.map(
+                (p) =>
+                  p && (
+                    <TrackerParentRow
+                      key={p.id}
+                      id={p.id}
+                      type="bill"
+                      name={p.name}
+                      interval={p.interval}
+                      defaultAmountCents={p.amountCents}
+                      periodTotal={p.periodTotal}
+                      categoryName={p.categoryName}
+                      categoryColor={p.categoryColor}
+                      vendorName={p.vendorName}
+                      occurrences={p.occurrences}
+                      paymentsByOccurrenceId={billPaymentsByOccurrenceMap}
+                    />
+                  )
+              )}
             </section>
           )}
         </div>

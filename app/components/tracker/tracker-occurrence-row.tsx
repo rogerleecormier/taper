@@ -8,6 +8,9 @@ import {
   Trash2,
   X,
   Loader2,
+  ArrowRight,
+  ArrowLeft,
+  Minus,
 } from "lucide-react";
 import { cn } from "~/lib/utils";
 import { formatCurrency } from "~/lib/currency";
@@ -16,6 +19,7 @@ import { Button } from "~/components/ui/button";
 import { Input } from "~/components/ui/input";
 import {
   useCarryForwardOccurrence,
+  useReverseCarryForward,
   useDeleteBillPayment,
   useMarkIncomeReceived,
   useMarkIncomeSkipped,
@@ -60,7 +64,7 @@ function PaymentRow({
 }) {
   const deletePayment = useDeleteBillPayment();
   return (
-    <div className="flex items-center gap-2 px-4 pl-14 py-1 text-xs border-b border-dashed border-muted last:border-0 hover:bg-muted/10">
+    <div className="flex flex-wrap items-center gap-2 px-4 pl-10 sm:pl-14 py-1 text-xs border-b border-dashed border-muted last:border-0 hover:bg-muted/10">
       <CornerDownRight className="h-3 w-3 flex-shrink-0 text-muted-foreground" />
       <span className="w-20 flex-shrink-0 tabular-nums text-muted-foreground">
         {payment.paidDate}
@@ -77,7 +81,7 @@ function PaymentRow({
       <Button
         size="sm"
         variant="ghost"
-        className="ml-auto h-5 w-5 p-0 flex-shrink-0 text-muted-foreground hover:text-destructive"
+        className="sm:ml-auto h-7 w-7 p-0 flex-shrink-0 text-muted-foreground hover:text-destructive"
         disabled={deletePayment.isPending}
         onClick={() =>
           deletePayment.mutate({ id: payment.id, occurrenceId })
@@ -117,6 +121,7 @@ export function TrackerOccurrenceRow({ occurrence, type, billName, interval, pay
   );
 
   const carryForward = useCarryForwardOccurrence();
+  const reverseCarry = useReverseCarryForward();
   const markReceived = useMarkIncomeReceived();
   const skipIncome = useMarkIncomeSkipped();
   const updateBill = useUpdateBillOccurrence();
@@ -124,6 +129,7 @@ export function TrackerOccurrenceRow({ occurrence, type, billName, interval, pay
 
   const isBusy =
     carryForward.isPending ||
+    reverseCarry.isPending ||
     markReceived.isPending ||
     skipIncome.isPending ||
     updateBill.isPending ||
@@ -188,7 +194,7 @@ export function TrackerOccurrenceRow({ occurrence, type, billName, interval, pay
 
       {/* Carry-forward mode — full-width row replacement */}
       {mode === "carry" && (
-        <div className="flex items-center gap-2 px-4 pl-10 py-1.5 bg-amber-50/60 border-b border-dashed border-amber-200">
+        <div className="flex flex-wrap items-center gap-2 px-4 pl-8 sm:pl-10 py-2 bg-amber-50 border-b border-dashed border-amber-200">
           <span className="text-xs text-amber-700 flex-shrink-0 font-medium">
             Carry {formatCurrency(remaining)} to:
           </span>
@@ -198,10 +204,10 @@ export function TrackerOccurrenceRow({ occurrence, type, billName, interval, pay
             onChange={(e) => setCarryDate(e.target.value)}
             className="h-7 w-36 text-xs flex-shrink-0"
           />
-          <div className="ml-auto flex items-center gap-1 flex-shrink-0">
+          <div className="sm:ml-auto flex items-center gap-1 flex-shrink-0">
             <Button
               size="sm"
-              className="h-6 px-2 text-xs bg-amber-600 hover:bg-amber-700 text-white"
+              className="h-7 px-2 text-xs bg-amber-600 hover:bg-amber-700 text-white"
               disabled={carryForward.isPending}
               onClick={async () => {
                 try {
@@ -224,7 +230,7 @@ export function TrackerOccurrenceRow({ occurrence, type, billName, interval, pay
             <Button
               size="sm"
               variant="ghost"
-              className="h-6 w-6 p-0"
+              className="h-7 w-7 p-0"
               onClick={() => setMode("view")}
             >
               <X className="h-3 w-3" />
@@ -235,7 +241,7 @@ export function TrackerOccurrenceRow({ occurrence, type, billName, interval, pay
 
       {/* Occurrence row */}
       {mode !== "carry" && (
-      <div className="flex items-center gap-2 px-4 pl-10 py-1.5 text-sm hover:bg-muted/10 transition-colors">
+      <div className="flex flex-wrap items-center gap-2 px-4 pl-8 sm:pl-10 py-1.5 text-sm hover:bg-muted/10 transition-colors">
         {/* Date column */}
         {mode === "edit" ? (
           <Input
@@ -328,12 +334,12 @@ export function TrackerOccurrenceRow({ occurrence, type, billName, interval, pay
         )}
 
         {/* Actions */}
-        <div className="ml-auto flex items-center gap-1 flex-shrink-0">
+        <div className="w-full sm:w-auto sm:ml-auto flex items-center gap-1 flex-wrap sm:flex-nowrap">
           {mode === "edit" && (
             <>
               <Button
                 size="sm"
-                className="h-6 px-2 text-xs"
+                className="h-7 px-2 text-xs"
                 onClick={handleSaveEdit}
                 disabled={isBusy}
               >
@@ -349,7 +355,7 @@ export function TrackerOccurrenceRow({ occurrence, type, billName, interval, pay
               <Button
                 size="sm"
                 variant="ghost"
-                className="h-6 w-6 p-0"
+                className="h-7 w-7 p-0"
                 onClick={() => setMode("view")}
               >
                 <X className="h-3 w-3" />
@@ -361,7 +367,7 @@ export function TrackerOccurrenceRow({ occurrence, type, billName, interval, pay
             <>
               <Button
                 size="sm"
-                className="h-6 px-2 text-xs bg-green-600 hover:bg-green-700"
+                className="h-7 px-2 text-xs bg-green-600 hover:bg-green-700"
                 onClick={handleIncomeReceive}
                 disabled={isBusy}
               >
@@ -377,7 +383,7 @@ export function TrackerOccurrenceRow({ occurrence, type, billName, interval, pay
               <Button
                 size="sm"
                 variant="ghost"
-                className="h-6 w-6 p-0"
+                className="h-7 w-7 p-0"
                 onClick={() => setMode("view")}
               >
                 <X className="h-3 w-3" />
@@ -390,7 +396,7 @@ export function TrackerOccurrenceRow({ occurrence, type, billName, interval, pay
               size="sm"
               variant="outline"
               className={cn(
-                "h-6 px-2 text-xs",
+                "h-7 px-2.5 text-xs",
                 isIncome
                   ? "border-green-200 text-green-700 hover:bg-green-50"
                   : "border-blue-200 text-blue-700 hover:bg-blue-50"
@@ -427,12 +433,29 @@ export function TrackerOccurrenceRow({ occurrence, type, billName, interval, pay
             remaining > 0 && (
               <Button
                 size="sm"
-                variant="ghost"
-                className="h-6 px-2 text-xs text-muted-foreground hover:text-foreground"
+                variant="outline"
+                className="h-7 px-2.5 text-xs border-amber-200 text-amber-700 hover:bg-amber-50"
                 onClick={() => setMode("carry")}
                 disabled={isBusy}
               >
+                <ArrowRight className="h-3 w-3 mr-1" />
                 Carry Fwd
+              </Button>
+            )}
+
+          {mode === "view" &&
+            isBill(occurrence) &&
+            occurrence.carriedFromId &&
+            !(occurrence.paidAmountCents && occurrence.paidAmountCents > 0) && (
+              <Button
+                size="sm"
+                variant="outline"
+                className="h-7 px-2.5 text-xs border-orange-200 text-orange-700 hover:bg-orange-50"
+                onClick={() => reverseCarry.mutate(occurrence.id)}
+                disabled={isBusy}
+              >
+                <ArrowLeft className="h-3 w-3 mr-1" />
+                Undo Carry
               </Button>
             )}
 
@@ -442,11 +465,12 @@ export function TrackerOccurrenceRow({ occurrence, type, billName, interval, pay
             status !== "skipped" && (
               <Button
                 size="sm"
-                variant="ghost"
-                className="h-6 px-2 text-xs text-muted-foreground hover:text-foreground"
+                variant="outline"
+                className="h-7 px-2.5 text-xs border-gray-200 text-gray-500 hover:bg-gray-50 hover:text-gray-700"
                 onClick={() => skipIncome.mutateAsync(occurrence.id)}
                 disabled={isBusy}
               >
+                <Minus className="h-3 w-3 mr-1" />
                 Skip
               </Button>
             )}
@@ -455,7 +479,7 @@ export function TrackerOccurrenceRow({ occurrence, type, billName, interval, pay
             <Button
               size="sm"
               variant="ghost"
-              className="h-6 w-6 p-0 text-muted-foreground hover:text-foreground"
+              className="h-7 w-7 p-0 text-muted-foreground hover:text-foreground"
               onClick={() => setMode("edit")}
             >
               <Pencil className="h-3 w-3" />

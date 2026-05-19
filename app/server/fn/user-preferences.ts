@@ -27,7 +27,7 @@ export const getUserPreferences = createServerFn()
       return {
         trackerDefaultMode: (row?.trackerDefaultMode ?? "board") as "board" | "list",
         trackerDefaultScope: (row?.trackerDefaultScope ?? "month") as "month" | "year",
-        trackerDefaultMonthInterval: (row?.trackerDefaultMonthInterval ?? "week") as "day" | "week" | "biweek" | "month",
+        trackerDefaultMonthInterval: (row?.trackerDefaultMonthInterval ?? "week") as "day" | "week" | "biweek" | "month" | "pay-period",
         trackerDefaultYearInterval: (row?.trackerDefaultYearInterval ?? "month") as "month" | "quarter" | "half" | "year",
         paydayInterval: (row?.paydayInterval ?? "biweekly") as "weekly" | "biweekly",
         paydayAnchorDate: row?.paydayAnchorDate ?? null,
@@ -43,7 +43,7 @@ export const updateUserPreferences = createServerFn()
     z.object({
       trackerDefaultMode: z.enum(["board", "list"]).optional(),
       trackerDefaultScope: z.enum(["month", "year"]).optional(),
-      trackerDefaultMonthInterval: z.enum(["day", "week", "biweek", "month"]).optional(),
+      trackerDefaultMonthInterval: z.enum(["day", "week", "biweek", "month", "pay-period"]).optional(),
       trackerDefaultYearInterval: z.enum(["month", "quarter", "half", "year"]).optional(),
       paydayInterval: z.enum(["weekly", "biweekly"]).optional(),
       paydayAnchorDate: z.string().regex(/^\d{4}-\d{2}-\d{2}$/).nullable().optional(),

@@ -16,7 +16,7 @@ import {
   subWeeks,
   subYears,
 } from "date-fns";
-import { AlertCircle } from "lucide-react";
+import { AlertCircle, ChevronLeft, ChevronRight } from "lucide-react";
 import { Link } from "@tanstack/react-router";
 import { Button } from "~/components/ui/button";
 import { cn } from "~/lib/utils";
@@ -211,23 +211,23 @@ function TrackerContent({ prefs }: { prefs: UserPreferences }) {
       <div>
         <h1 className="text-2xl font-bold text-gray-900">Budget Tracker</h1>
         <p className="mt-1 text-sm text-gray-500">
-          Drag and schedule budget occurrences by period, then manage details in list mode.
+          View and manage budget occurrences by period.
         </p>
       </div>
 
-      <div className="space-y-3 rounded-md border bg-background p-3">
-        <div className="flex flex-wrap items-end gap-4">
+      <div className="rounded-xl border border-gray-200 bg-white overflow-hidden">
+        <div className="flex flex-wrap items-end gap-x-6 gap-y-3 px-4 py-3">
           {/* View toggle */}
           <div className="space-y-1.5">
-            <p className="text-xs font-semibold uppercase tracking-wide text-muted-foreground">View</p>
-            <div className="inline-flex rounded-md border bg-muted p-0.5">
+            <p className="text-xs font-semibold uppercase tracking-wide text-gray-400">View</p>
+            <div className="inline-flex rounded-md border border-gray-200 bg-gray-50 p-0.5">
               {(["board", "list"] as const).map((v) => (
                 <button
                   key={v}
                   onClick={() => setMode(v)}
                   className={cn(
                     "rounded px-3 py-1.5 text-sm font-medium transition-colors",
-                    mode === v ? "bg-background text-foreground shadow" : "text-muted-foreground"
+                    mode === v ? "bg-white text-gray-900 shadow-sm" : "text-gray-500 hover:text-gray-700"
                   )}
                 >
                   {v === "board" ? "Board" : "List"}
@@ -238,15 +238,15 @@ function TrackerContent({ prefs }: { prefs: UserPreferences }) {
 
           {/* Scope toggle */}
           <div className="space-y-1.5">
-            <p className="text-xs font-semibold uppercase tracking-wide text-muted-foreground">Scope</p>
-            <div className="inline-flex rounded-md border bg-muted p-0.5">
+            <p className="text-xs font-semibold uppercase tracking-wide text-gray-400">Scope</p>
+            <div className="inline-flex rounded-md border border-gray-200 bg-gray-50 p-0.5">
               {(["month", "year"] as const).map((s) => (
                 <button
                   key={s}
                   onClick={() => onScopeChange(s)}
                   className={cn(
                     "rounded px-3 py-1.5 text-sm font-medium transition-colors",
-                    scope === s ? "bg-background text-foreground shadow" : "text-muted-foreground"
+                    scope === s ? "bg-white text-gray-900 shadow-sm" : "text-gray-500 hover:text-gray-700"
                   )}
                 >
                   {s === "month" ? "Month" : "Year"}
@@ -258,39 +258,41 @@ function TrackerContent({ prefs }: { prefs: UserPreferences }) {
           {/* Interval toggle — hidden in list+year (the window is always the full year) */}
           {!(mode === "list" && scope === "year") && (
             <div className="space-y-1.5">
-              <p className="text-xs font-semibold uppercase tracking-wide text-muted-foreground">
+              <p className="text-xs font-semibold uppercase tracking-wide text-gray-400">
                 {mode === "board" ? "Column size" : "Date range"}
               </p>
-              <div className="inline-flex rounded-md border bg-muted p-0.5">
-                {activeIntervals.map((opt) => (
-                  <button
-                    key={opt.value}
-                    onClick={() => {
-                      if (scope === "month") {
-                        setMonthInterval(opt.value);
-                        if (
-                          mode === "list" &&
-                          (opt.value === "day" || opt.value === "week" || opt.value === "biweek")
-                        ) {
-                          setPeriodStart(getRangeStartContainingToday(opt.value));
+              <div className="overflow-x-auto">
+                <div className="inline-flex rounded-md border border-gray-200 bg-gray-50 p-0.5">
+                  {activeIntervals.map((opt) => (
+                    <button
+                      key={opt.value}
+                      onClick={() => {
+                        if (scope === "month") {
+                          setMonthInterval(opt.value);
+                          if (
+                            mode === "list" &&
+                            (opt.value === "day" || opt.value === "week" || opt.value === "biweek")
+                          ) {
+                            setPeriodStart(getRangeStartContainingToday(opt.value));
+                          }
+                          if (opt.value === "pay-period") {
+                            setPeriodStart(
+                              getRangeStartContainingToday("pay-period", prefs.paydayInterval, prefs.paydayAnchorDate)
+                            );
+                          }
+                          return;
                         }
-                        if (opt.value === "pay-period") {
-                          setPeriodStart(
-                            getRangeStartContainingToday("pay-period", prefs.paydayInterval, prefs.paydayAnchorDate)
-                          );
-                        }
-                        return;
-                      }
-                      setYearInterval(opt.value);
-                    }}
-                    className={cn(
-                      "rounded px-3 py-1.5 text-sm font-medium transition-colors",
-                      interval === opt.value ? "bg-background text-foreground shadow" : "text-muted-foreground"
-                    )}
-                  >
-                    {opt.label}
-                  </button>
-                ))}
+                        setYearInterval(opt.value);
+                      }}
+                      className={cn(
+                        "rounded px-3 py-1.5 text-sm font-medium transition-colors whitespace-nowrap",
+                        interval === opt.value ? "bg-white text-gray-900 shadow-sm" : "text-gray-500 hover:text-gray-700"
+                      )}
+                    >
+                      {opt.label}
+                    </button>
+                  ))}
+                </div>
               </div>
             </div>
           )}
@@ -298,7 +300,7 @@ function TrackerContent({ prefs }: { prefs: UserPreferences }) {
 
         {/* Pay Period not configured nudge */}
         {payPeriodNotConfigured && (
-          <div className="flex items-center gap-2 rounded-md border border-amber-200 bg-amber-50 px-3 py-2 text-sm text-amber-800">
+          <div className="mx-4 mb-3 flex items-center gap-2 rounded-md border border-amber-200 bg-amber-50 px-3 py-2 text-sm text-amber-800">
             <AlertCircle className="h-4 w-4 flex-shrink-0" />
             <span>
               Configure your payday in{" "}
@@ -310,23 +312,27 @@ function TrackerContent({ prefs }: { prefs: UserPreferences }) {
           </div>
         )}
 
-        <div className="flex items-center gap-2 border-t pt-3">
+        <div className="flex items-center gap-1 border-t px-3 py-2">
           <Button
             size="sm"
             variant="ghost"
             disabled={payPeriodNotConfigured}
             onClick={() => setPeriodStart(navigatePeriod(scope, interval, periodStart, "prev", prefs.paydayInterval))}
+            aria-label="Previous period"
+            className="h-8 w-8 p-0 flex-shrink-0"
           >
-            Prev
+            <ChevronLeft className="h-4 w-4" />
           </Button>
-          <span className="min-w-48 text-center text-sm font-medium">{periodLabel}</span>
+          <span className="flex-1 text-center text-sm font-medium">{periodLabel}</span>
           <Button
             size="sm"
             variant="ghost"
             disabled={payPeriodNotConfigured}
             onClick={() => setPeriodStart(navigatePeriod(scope, interval, periodStart, "next", prefs.paydayInterval))}
+            aria-label="Next period"
+            className="h-8 w-8 p-0 flex-shrink-0"
           >
-            Next
+            <ChevronRight className="h-4 w-4" />
           </Button>
         </div>
       </div>
