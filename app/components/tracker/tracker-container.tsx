@@ -11,6 +11,13 @@ import type { BillOccurrence } from "~/db/schema/bill-occurrences";
 import type { IncomeOccurrence } from "~/db/schema/income-occurrences";
 import { TrackerToolbar } from "./tracker-toolbar";
 import { TrackerParentRow } from "./tracker-parent-row";
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from "~/components/ui/select";
 
 const UNPAID_STATUSES = new Set(["pending", "partial", "overdue"]);
 const TOTALLED_BILL_STATUSES = new Set(["pending", "partial", "overdue", "paid"]);
@@ -35,6 +42,7 @@ export function TrackerContainer({
   } = useTrackerData(interval, periodStart);
 
   const [showPaid, setShowPaid] = useState(false);
+  const [selectedVendor, setSelectedVendor] = useState<string>("__all__");
 
   const billRows = useMemo(() => rows.filter((r) => r.type === "bill"), [rows]);
   const incomeRows = useMemo(() => rows.filter((r) => r.type === "income"), [rows]);
@@ -76,8 +84,30 @@ export function TrackerContainer({
     [billRows, billOccurrenceMap, showPaid]
   );
 
+  const vendorOptions = useMemo(() => {
+    return Array.from(
+      new Set(
+        billParents
+          .map((p) => p?.vendorName)
+          .filter((v): v is string => Boolean(v))
+      )
+    ).sort((a, b) => a.localeCompare(b));
+  }, [billParents]);
+
+  const filteredBillParents = useMemo(() => {
+    if (selectedVendor === "__all__") return billParents;
+    if (selectedVendor === "__none__") {
+      return billParents.filter((p) => p && !p.vendorName);
+    }
+    return billParents.filter((p) => p?.vendorName === selectedVendor);
+  }, [billParents, selectedVendor]);
+
   const incomeTotal = incomeParents.reduce((s, p) => s + p!.periodTotal, 0);
   const expenseTotal = billParents.reduce((s, p) => s + p!.periodTotal, 0);
+  const filteredExpenseTotal = filteredBillParents.reduce(
+    (s, p) => s + p!.periodTotal,
+    0
+  );
   const balance = incomeTotal - expenseTotal;
 
   if (isLoading) {
@@ -198,6 +228,25 @@ export function TrackerContainer({
                   </span>
                 </div>
                 <div className="flex items-center gap-3">
+                  <div className="w-44">
+                    <Select
+                      value={selectedVendor}
+                      onValueChange={setSelectedVendor}
+                    >
+                      <SelectTrigger className="h-7 border-red-200 bg-white text-xs">
+                        <SelectValue placeholder="All vendors" />
+                      </SelectTrigger>
+                      <SelectContent>
+                        <SelectItem value="__all__">All vendors</SelectItem>
+                        <SelectItem value="__none__">No vendor</SelectItem>
+                        {vendorOptions.map((vendor) => (
+                          <SelectItem key={vendor} value={vendor}>
+                            {vendor}
+                          </SelectItem>
+                        ))}
+                      </SelectContent>
+                    </Select>
+                  </div>
                   <button
                     onClick={() => setShowPaid((v) => !v)}
                     className={cn(
@@ -216,12 +265,25 @@ export function TrackerContainer({
                     <span className="sm:hidden">{showPaid ? "All" : "Unpaid"}</span>
                   </button>
                   <span className="text-sm font-semibold tabular-nums text-red-700">
-                    {formatCurrency(expenseTotal)}
+                    {formatCurrency(
+                      selectedVendor === "__all__"
+                        ? expenseTotal
+                        : filteredExpenseTotal
+                    )}
                   </span>
                 </div>
               </div>
 
-              {billParents.map(
+              {selectedVendor !== "__all__" && (
+                <div className="border-b bg-red-50/40 px-4 py-1.5 text-xs text-red-700">
+                  Vendor total:{" "}
+                  <span className="font-semibold tabular-nums">
+                    {formatCurrency(filteredExpenseTotal)}
+                  </span>
+                </div>
+              )}
+
+              {filteredBillParents.map(
                 (p) =>
                   p && (
                     <TrackerParentRow
