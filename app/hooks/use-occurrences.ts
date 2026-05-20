@@ -72,10 +72,12 @@ export function useBillPaymentsForPeriod(
   });
 }
 
-export function useScheduledPaymentsForPage() {
+export function useScheduledPaymentsForPage(
+  filters: Parameters<typeof getScheduledPaymentsForPage>[0]["data"]
+) {
   return useQuery({
-    queryKey: ["payments-page-scheduled"] as const,
-    queryFn: () => getScheduledPaymentsForPage(),
+    queryKey: ["payments-page-scheduled", filters] as const,
+    queryFn: () => getScheduledPaymentsForPage({ data: filters }),
     staleTime: PERIOD_STALE_MS,
   });
 }

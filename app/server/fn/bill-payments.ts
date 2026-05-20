@@ -226,10 +226,16 @@ export const deleteBillPayment = createServerFn()
     return { occurrenceId: payment.occurrenceId };
   });
 
-// All pending / partial / overdue occurrences with expense + vendor + category context.
+// All pending / partial / overdue occurrences within [today, endDate], plus any overdue
+// from before today (those are always included regardless of range).
 export const getScheduledPaymentsForPage = createServerFn()
   .middleware([authMiddleware])
-  .handler(async ({ context }) => {
+  .inputValidator(
+    z.object({
+      endDate: z.string().regex(/^\d{4}-\d{2}-\d{2}$/),
+    })
+  )
+  .handler(async ({ data, context }) => {
     const { db, user } = context;
 
     return db
@@ -256,7 +262,8 @@ export const getScheduledPaymentsForPage = createServerFn()
       .where(
         and(
           eq(billOccurrences.userId, user.id),
-          inArray(billOccurrences.status, ["pending", "partial", "overdue"])
+          inArray(billOccurrences.status, ["pending", "partial", "overdue"]),
+          lte(billOccurrences.dueDate, data.endDate)
         )
       )
       .orderBy(asc(billOccurrences.dueDate))

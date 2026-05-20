@@ -1,6 +1,6 @@
 import { createFileRoute, Link } from "@tanstack/react-router";
 import { useMemo, useState } from "react";
-import { format, parseISO, subMonths } from "date-fns";
+import { format, parseISO, subMonths, addMonths } from "date-fns";
 import { CreditCard, ExternalLink } from "lucide-react";
 import {
   useScheduledPaymentsForPage,
@@ -46,10 +46,11 @@ function PaymentsPage() {
   const [vendorFilter, setVendorFilter] = useState<string>("all");
 
   const today = toDateStr(new Date());
+  const rangeEnd = toDateStr(addMonths(new Date(), rangeMonths));
   const rangeStart = toDateStr(subMonths(new Date(), rangeMonths));
 
   const { data: scheduled = [], isLoading: scheduledLoading, isError: scheduledError } =
-    useScheduledPaymentsForPage();
+    useScheduledPaymentsForPage({ endDate: rangeEnd });
 
   const { data: paidPayments = [], isLoading: paidLoading, isError: paidError } =
     usePaidPaymentsForPage({ startDate: rangeStart, endDate: today });
