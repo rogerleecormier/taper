@@ -124,28 +124,26 @@ function PaymentsPage() {
           Show paid payments
         </label>
 
-        {/* Date range toggles — only shown when paid section is visible */}
-        {showPaid && (
-          <div className="flex items-center gap-1">
-            <span className="text-sm text-gray-500 mr-1">Range:</span>
-            <div className="inline-flex rounded-md border border-gray-200 bg-gray-50 p-0.5">
-              {RANGE_OPTIONS.map((opt) => (
-                <button
-                  key={opt.months}
-                  onClick={() => setRangeMonths(opt.months)}
-                  className={cn(
-                    "rounded px-3 py-1 text-sm font-medium transition-colors",
-                    rangeMonths === opt.months
-                      ? "bg-white text-gray-900 shadow-sm"
-                      : "text-gray-500 hover:text-gray-700"
-                  )}
-                >
-                  {opt.label}
-                </button>
-              ))}
-            </div>
+        {/* Date range toggles — always visible */}
+        <div className="flex items-center gap-1">
+          <span className="text-sm text-gray-500 mr-1">Range:</span>
+          <div className="inline-flex rounded-md border border-gray-200 bg-gray-50 p-0.5">
+            {RANGE_OPTIONS.map((opt) => (
+              <button
+                key={opt.months}
+                onClick={() => setRangeMonths(opt.months)}
+                className={cn(
+                  "rounded px-3 py-1 text-sm font-medium transition-colors",
+                  rangeMonths === opt.months
+                    ? "bg-white text-gray-900 shadow-sm"
+                    : "text-gray-500 hover:text-gray-700"
+                )}
+              >
+                {opt.label}
+              </button>
+            ))}
           </div>
-        )}
+        </div>
       </div>
 
       {isLoading && (
