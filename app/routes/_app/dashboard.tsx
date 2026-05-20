@@ -67,7 +67,7 @@ function DashboardPage() {
         <div className="grid grid-cols-1 xl:grid-cols-2 gap-6">
           <Card>
             <CardContent className="p-6">
-              <IncomeExpenseChart monthlyTrend={data.monthlyTrend} />
+              <IncomeExpenseChart />
             </CardContent>
           </Card>
           <Card>

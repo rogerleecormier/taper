@@ -51,11 +51,14 @@ export type DashboardData = {
     totalCents: number;
     percentage: number;
   }>;
-  monthlyTrend: Array<{
-    month: string;
-    incomeCents: number;
-    expensesCents: number;
-  }>;
+};
+
+export type TrendPeriod = 1 | 3 | 6 | 12;
+
+export type TrendDataPoint = {
+  month: string;
+  incomeCents: number;
+  expensesCents: number;
 };
 
 export const getDashboardData = createServerFn()
@@ -241,57 +244,6 @@ export const getDashboardData = createServerFn()
         })
       );
 
-      // Monthly trend (last 6 months)
-      const monthlyTrend = [];
-      for (let i = 5; i >= 0; i--) {
-        const monthDate = addMonths(new Date(), -i);
-        const monthStart = toDateStr(startOfMonth(monthDate));
-        const monthEnd = toDateStr(endOfMonth(monthDate));
-        const monthLabel = format(monthDate, "MMM yyyy");
-
-        const [billPaid, incomeReceived] = await Promise.all([
-          db
-            .select({ amountCents: billOccurrences.paidAmountCents, baseAmount: billOccurrences.amountCents })
-            .from(billOccurrences)
-            .where(
-              and(
-                eq(billOccurrences.userId, user.id),
-                eq(billOccurrences.status, "paid"),
-                gte(billOccurrences.paidDate, monthStart),
-                lte(billOccurrences.paidDate, monthEnd)
-              )
-            )
-            .all(),
-
-          db
-            .select({ amountCents: incomeOccurrences.receivedAmountCents, baseAmount: incomeOccurrences.amountCents })
-            .from(incomeOccurrences)
-            .where(
-              and(
-                eq(incomeOccurrences.userId, user.id),
-                eq(incomeOccurrences.status, "received"),
-                gte(incomeOccurrences.receivedDate, monthStart),
-                lte(incomeOccurrences.receivedDate, monthEnd)
-              )
-            )
-            .all(),
-        ]);
-
-        monthlyTrend.push({
-          month: monthLabel,
-          expensesCents: billPaid.reduce(
-            (sum: number, r: { amountCents: number | null; baseAmount: number }) =>
-              sum + (r.amountCents ?? r.baseAmount),
-            0
-          ),
-          incomeCents: incomeReceived.reduce(
-            (sum: number, r: { amountCents: number | null; baseAmount: number }) =>
-              sum + (r.amountCents ?? r.baseAmount),
-            0
-          ),
-        });
-      }
-
       return {
         totalMonthlyIncomeCents,
         totalMonthlyExpensesCents,
@@ -323,7 +275,74 @@ export const getDashboardData = createServerFn()
           vendorName: r.vendor?.name ?? null,
         })),
         categoryBreakdown,
-        monthlyTrend,
       };
     });
+  });
+
+export const getTrendData = createServerFn()
+  .middleware([authMiddleware])
+  .inputValidator(
+    z.object({
+      months: z.union([
+        z.literal(1),
+        z.literal(3),
+        z.literal(6),
+        z.literal(12),
+      ]).default(1),
+    })
+  )
+  .handler(async ({ data, context }): Promise<TrendDataPoint[]> => {
+    const { db, user } = context;
+    const trend: TrendDataPoint[] = [];
+
+    for (let i = data.months - 1; i >= 0; i--) {
+      const monthDate = addMonths(new Date(), -i);
+      const monthStart = toDateStr(startOfMonth(monthDate));
+      const monthEnd = toDateStr(endOfMonth(monthDate));
+      const monthLabel = data.months <= 3
+        ? format(monthDate, "MMM yyyy")
+        : format(monthDate, "MMM yy");
+
+      const [billPaid, incomeReceived] = await Promise.all([
+        db
+          .select({ paidCents: billOccurrences.paidAmountCents, baseCents: billOccurrences.amountCents })
+          .from(billOccurrences)
+          .where(
+            and(
+              eq(billOccurrences.userId, user.id),
+              eq(billOccurrences.status, "paid"),
+              gte(billOccurrences.paidDate, monthStart),
+              lte(billOccurrences.paidDate, monthEnd)
+            )
+          )
+          .all(),
+
+        db
+          .select({ receivedCents: incomeOccurrences.receivedAmountCents, baseCents: incomeOccurrences.amountCents })
+          .from(incomeOccurrences)
+          .where(
+            and(
+              eq(incomeOccurrences.userId, user.id),
+              eq(incomeOccurrences.status, "received"),
+              gte(incomeOccurrences.receivedDate, monthStart),
+              lte(incomeOccurrences.receivedDate, monthEnd)
+            )
+          )
+          .all(),
+      ]);
+
+      trend.push({
+        month: monthLabel,
+        expensesCents: billPaid.reduce(
+          (sum, r) => sum + (r.paidCents ?? r.baseCents),
+          0
+        ),
+        incomeCents: incomeReceived.reduce(
+          (sum, r) => sum + (r.receivedCents ?? r.baseCents),
+          0
+        ),
+      });
+    }
+
+    return trend;
   });
