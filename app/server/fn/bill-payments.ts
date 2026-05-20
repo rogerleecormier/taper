@@ -11,6 +11,10 @@ import { vendors } from "~/db/schema/vendors";
 import { categories } from "~/db/schema/categories";
 import { invalidateUserDashboard } from "~/lib/kv-cache";
 import { toDateStr } from "~/lib/dates";
+import {
+  generateOccurrenceDates,
+  type RecurrenceRule,
+} from "~/lib/occurrence-generator";
 
 function deriveStatus(
   paidTotal: number,
@@ -228,6 +232,7 @@ export const deleteBillPayment = createServerFn()
 
 // All pending / partial / overdue occurrences within [today, endDate], plus any overdue
 // from before today (those are always included regardless of range).
+// Generates any missing occurrences up to endDate before querying.
 export const getScheduledPaymentsForPage = createServerFn()
   .middleware([authMiddleware])
   .inputValidator(
@@ -237,6 +242,53 @@ export const getScheduledPaymentsForPage = createServerFn()
   )
   .handler(async ({ data, context }) => {
     const { db, user } = context;
+
+    // Ensure occurrences exist up to endDate for every active bill.
+    const activeBills = await db
+      .select()
+      .from(bills)
+      .where(and(eq(bills.userId, user.id), eq(bills.isActive, true)))
+      .all();
+
+    const now = new Date();
+    for (const bill of activeBills) {
+      if (bill.interval === "standalone") continue;
+
+      const rule: RecurrenceRule = {
+        interval: bill.interval as RecurrenceRule["interval"],
+        startDate: bill.startDate,
+        endDate: bill.endDate ?? null,
+        dayOfMonth: bill.dayOfMonth ?? null,
+        dayOfWeek: bill.dayOfWeek ?? null,
+      };
+
+      const allDates = generateOccurrenceDates(rule, bill.startDate, data.endDate);
+      if (allDates.length === 0) continue;
+
+      const existing = await db
+        .select({ dueDate: billOccurrences.dueDate })
+        .from(billOccurrences)
+        .where(eq(billOccurrences.billId, bill.id))
+        .all();
+
+      const existingSet = new Set(existing.map((e) => e.dueDate));
+      const newDates = allDates.filter((d) => !existingSet.has(d));
+
+      if (newDates.length > 0) {
+        await db.insert(billOccurrences).values(
+          newDates.map((dueDate) => ({
+            id: nanoid(),
+            userId: user.id,
+            billId: bill.id,
+            dueDate,
+            amountCents: bill.amountCents,
+            status: "pending" as const,
+            createdAt: now,
+            updatedAt: now,
+          }))
+        );
+      }
+    }
 
     return db
       .select({
