@@ -12,6 +12,7 @@ import {
   getBillPayments,
   getBillPaymentsForPeriod,
   deleteBillPayment,
+  getPaymentsPageData,
 } from "~/server/fn/bill-payments";
 import {
   getIncomeOccurrences,
@@ -66,6 +67,16 @@ export function useBillPaymentsForPeriod(
     queryKey: ["bill-payments-period", filters] as const,
     queryFn: () => getBillPaymentsForPeriod({ data: filters }),
     enabled: !!filters.startDate && !!filters.endDate,
+    staleTime: PERIOD_STALE_MS,
+  });
+}
+
+export function usePaymentsPageData(
+  filters: Parameters<typeof getPaymentsPageData>[0]["data"]
+) {
+  return useQuery({
+    queryKey: ["payments-page", filters] as const,
+    queryFn: () => getPaymentsPageData({ data: filters }),
     staleTime: PERIOD_STALE_MS,
   });
 }

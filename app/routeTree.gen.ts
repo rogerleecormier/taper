@@ -21,6 +21,7 @@ import { Route as AppVendorsIndexRouteImport } from './routes/_app/vendors/index
 import { Route as AppIncomeIndexRouteImport } from './routes/_app/income/index'
 import { Route as AppCategoriesIndexRouteImport } from './routes/_app/categories/index'
 import { Route as AppBillsIndexRouteImport } from './routes/_app/bills/index'
+import { Route as AppPaymentsIndexRouteImport } from './routes/_app/payments/index'
 import { Route as AppIncomeIdRouteImport } from './routes/_app/income/$id'
 import { Route as AppBillsIdRouteImport } from './routes/_app/bills/$id'
 
@@ -82,6 +83,11 @@ const AppBillsIndexRoute = AppBillsIndexRouteImport.update({
   path: '/bills/',
   getParentRoute: () => AppRoute,
 } as any)
+const AppPaymentsIndexRoute = AppPaymentsIndexRouteImport.update({
+  id: '/payments/',
+  path: '/payments/',
+  getParentRoute: () => AppRoute,
+} as any)
 const AppIncomeIdRoute = AppIncomeIdRouteImport.update({
   id: '/income/$id',
   path: '/income/$id',
@@ -105,6 +111,7 @@ export interface FileRoutesByFullPath {
   '/bills/': typeof AppBillsIndexRoute
   '/categories/': typeof AppCategoriesIndexRoute
   '/income/': typeof AppIncomeIndexRoute
+  '/payments/': typeof AppPaymentsIndexRoute
   '/vendors/': typeof AppVendorsIndexRoute
 }
 export interface FileRoutesByTo {
@@ -119,6 +126,7 @@ export interface FileRoutesByTo {
   '/bills': typeof AppBillsIndexRoute
   '/categories': typeof AppCategoriesIndexRoute
   '/income': typeof AppIncomeIndexRoute
+  '/payments': typeof AppPaymentsIndexRoute
   '/vendors': typeof AppVendorsIndexRoute
 }
 export interface FileRoutesById {
@@ -136,6 +144,7 @@ export interface FileRoutesById {
   '/_app/bills/': typeof AppBillsIndexRoute
   '/_app/categories/': typeof AppCategoriesIndexRoute
   '/_app/income/': typeof AppIncomeIndexRoute
+  '/_app/payments/': typeof AppPaymentsIndexRoute
   '/_app/vendors/': typeof AppVendorsIndexRoute
 }
 export interface FileRouteTypes {
@@ -152,6 +161,7 @@ export interface FileRouteTypes {
     | '/bills/'
     | '/categories/'
     | '/income/'
+    | '/payments/'
     | '/vendors/'
   fileRoutesByTo: FileRoutesByTo
   to:
@@ -166,6 +176,7 @@ export interface FileRouteTypes {
     | '/bills'
     | '/categories'
     | '/income'
+    | '/payments'
     | '/vendors'
   id:
     | '__root__'
@@ -182,6 +193,7 @@ export interface FileRouteTypes {
     | '/_app/bills/'
     | '/_app/categories/'
     | '/_app/income/'
+    | '/_app/payments/'
     | '/_app/vendors/'
   fileRoutesById: FileRoutesById
 }
@@ -277,6 +289,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof AppBillsIndexRouteImport
       parentRoute: typeof AppRoute
     }
+    '/_app/payments/': {
+      id: '/_app/payments/'
+      path: '/payments'
+      fullPath: '/payments/'
+      preLoaderRoute: typeof AppPaymentsIndexRouteImport
+      parentRoute: typeof AppRoute
+    }
     '/_app/income/$id': {
       id: '/_app/income/$id'
       path: '/income/$id'
@@ -303,6 +322,7 @@ interface AppRouteChildren {
   AppBillsIndexRoute: typeof AppBillsIndexRoute
   AppCategoriesIndexRoute: typeof AppCategoriesIndexRoute
   AppIncomeIndexRoute: typeof AppIncomeIndexRoute
+  AppPaymentsIndexRoute: typeof AppPaymentsIndexRoute
   AppVendorsIndexRoute: typeof AppVendorsIndexRoute
 }
 
@@ -315,6 +335,7 @@ const AppRouteChildren: AppRouteChildren = {
   AppBillsIndexRoute: AppBillsIndexRoute,
   AppCategoriesIndexRoute: AppCategoriesIndexRoute,
   AppIncomeIndexRoute: AppIncomeIndexRoute,
+  AppPaymentsIndexRoute: AppPaymentsIndexRoute,
   AppVendorsIndexRoute: AppVendorsIndexRoute,
 }
 

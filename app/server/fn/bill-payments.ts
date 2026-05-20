@@ -1,11 +1,14 @@
 import { createServerFn } from "@tanstack/react-start";
 import { z } from "zod";
 import { nanoid } from "nanoid";
-import { eq, and, gte, lte, asc, desc } from "drizzle-orm";
+import { eq, and, gte, lte, asc, desc, inArray } from "drizzle-orm";
 import { authMiddleware } from "~/server/middleware";
 import { billPayments } from "~/db/schema/bill-payments";
 import { billOccurrences } from "~/db/schema/bill-occurrences";
 import type { OccurrenceStatus } from "~/db/schema/bill-occurrences";
+import { bills } from "~/db/schema/bills";
+import { vendors } from "~/db/schema/vendors";
+import { categories } from "~/db/schema/categories";
 import { invalidateUserDashboard } from "~/lib/kv-cache";
 import { toDateStr } from "~/lib/dates";
 
@@ -221,4 +224,51 @@ export const deleteBillPayment = createServerFn()
     await invalidateUserDashboard(env.KV, user.id, payment.paidDate.slice(0, 7));
 
     return { occurrenceId: payment.occurrenceId };
+  });
+
+export const getPaymentsPageData = createServerFn()
+  .middleware([authMiddleware])
+  .inputValidator(
+    z.object({
+      includePaid: z.boolean().optional().default(false),
+    })
+  )
+  .handler(async ({ data, context }) => {
+    const { db, user } = context;
+
+    const conditions = [eq(billOccurrences.userId, user.id)];
+
+    if (!data.includePaid) {
+      conditions.push(
+        inArray(billOccurrences.status, ["pending", "partial", "overdue"])
+      );
+    }
+
+    const rows = await db
+      .select({
+        id: billOccurrences.id,
+        billId: billOccurrences.billId,
+        dueDate: billOccurrences.dueDate,
+        amountCents: billOccurrences.amountCents,
+        paidAmountCents: billOccurrences.paidAmountCents,
+        status: billOccurrences.status,
+        paidDate: billOccurrences.paidDate,
+        notes: billOccurrences.notes,
+        carriedFromId: billOccurrences.carriedFromId,
+        billName: bills.name,
+        billInterval: bills.interval,
+        vendorId: vendors.id,
+        vendorName: vendors.name,
+        categoryName: categories.name,
+        categoryColor: categories.color,
+      })
+      .from(billOccurrences)
+      .innerJoin(bills, eq(billOccurrences.billId, bills.id))
+      .leftJoin(vendors, eq(bills.vendorId, vendors.id))
+      .leftJoin(categories, eq(bills.categoryId, categories.id))
+      .where(and(...conditions))
+      .orderBy(asc(billOccurrences.dueDate))
+      .all();
+
+    return rows;
   });

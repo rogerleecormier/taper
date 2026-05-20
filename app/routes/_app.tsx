@@ -21,6 +21,7 @@ import {
   Menu,
   X,
   DollarSign,
+  CreditCard,
 } from "lucide-react";
 
 export const Route = createFileRoute("/_app")({
@@ -37,6 +38,7 @@ const navItems = [
   { label: "Dashboard", to: "/dashboard", icon: LayoutDashboard },
   { label: "Budget Tracker", to: "/tracker", icon: CalendarDays },
   { label: "Expenses", to: "/bills", icon: Receipt },
+  { label: "Payments", to: "/payments", icon: CreditCard },
   { label: "Income", to: "/income", icon: Wallet },
   { label: "Vendors", to: "/vendors", icon: Store },
   { label: "Categories", to: "/categories", icon: Tag },
