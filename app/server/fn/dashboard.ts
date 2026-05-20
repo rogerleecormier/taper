@@ -305,14 +305,13 @@ export const getTrendData = createServerFn()
 
       const [billPaid, incomeReceived] = await Promise.all([
         db
-          .select({ paidCents: billOccurrences.paidAmountCents, baseCents: billOccurrences.amountCents })
-          .from(billOccurrences)
+          .select({ paidCents: billPayments.amountCents })
+          .from(billPayments)
           .where(
             and(
-              eq(billOccurrences.userId, user.id),
-              eq(billOccurrences.status, "paid"),
-              gte(billOccurrences.paidDate, monthStart),
-              lte(billOccurrences.paidDate, monthEnd)
+              eq(billPayments.userId, user.id),
+              gte(billPayments.paidDate, monthStart),
+              lte(billPayments.paidDate, monthEnd)
             )
           )
           .all(),
@@ -333,10 +332,7 @@ export const getTrendData = createServerFn()
 
       trend.push({
         month: monthLabel,
-        expensesCents: billPaid.reduce(
-          (sum, r) => sum + (r.paidCents ?? r.baseCents),
-          0
-        ),
+        expensesCents: billPaid.reduce((sum, r) => sum + r.paidCents, 0),
         incomeCents: incomeReceived.reduce(
           (sum, r) => sum + (r.receivedCents ?? r.baseCents),
           0
