@@ -226,33 +226,20 @@ export const deleteBillPayment = createServerFn()
     return { occurrenceId: payment.occurrenceId };
   });
 
-export const getPaymentsPageData = createServerFn()
+// All pending / partial / overdue occurrences with expense + vendor + category context.
+export const getScheduledPaymentsForPage = createServerFn()
   .middleware([authMiddleware])
-  .inputValidator(
-    z.object({
-      includePaid: z.boolean().optional().default(false),
-    })
-  )
-  .handler(async ({ data, context }) => {
+  .handler(async ({ context }) => {
     const { db, user } = context;
 
-    const conditions = [eq(billOccurrences.userId, user.id)];
-
-    if (!data.includePaid) {
-      conditions.push(
-        inArray(billOccurrences.status, ["pending", "partial", "overdue"])
-      );
-    }
-
-    const rows = await db
+    return db
       .select({
-        id: billOccurrences.id,
-        billId: billOccurrences.billId,
+        occurrenceId: billOccurrences.id,
+        billId: bills.id,
         dueDate: billOccurrences.dueDate,
         amountCents: billOccurrences.amountCents,
         paidAmountCents: billOccurrences.paidAmountCents,
         status: billOccurrences.status,
-        paidDate: billOccurrences.paidDate,
         notes: billOccurrences.notes,
         carriedFromId: billOccurrences.carriedFromId,
         billName: bills.name,
@@ -266,9 +253,60 @@ export const getPaymentsPageData = createServerFn()
       .innerJoin(bills, eq(billOccurrences.billId, bills.id))
       .leftJoin(vendors, eq(bills.vendorId, vendors.id))
       .leftJoin(categories, eq(bills.categoryId, categories.id))
-      .where(and(...conditions))
+      .where(
+        and(
+          eq(billOccurrences.userId, user.id),
+          inArray(billOccurrences.status, ["pending", "partial", "overdue"])
+        )
+      )
       .orderBy(asc(billOccurrences.dueDate))
       .all();
+  });
 
-    return rows;
+// Actual payment records from bill_payments, joined back to the occurrence and expense.
+// startDate / endDate filter on paidDate (the date the payment was recorded).
+export const getPaidPaymentsForPage = createServerFn()
+  .middleware([authMiddleware])
+  .inputValidator(
+    z.object({
+      startDate: z.string().regex(/^\d{4}-\d{2}-\d{2}$/),
+      endDate: z.string().regex(/^\d{4}-\d{2}-\d{2}$/),
+    })
+  )
+  .handler(async ({ data, context }) => {
+    const { db, user } = context;
+
+    return db
+      .select({
+        paymentId: billPayments.id,
+        paymentAmountCents: billPayments.amountCents,
+        paidDate: billPayments.paidDate,
+        paymentNotes: billPayments.notes,
+        occurrenceId: billOccurrences.id,
+        occurrenceDueDate: billOccurrences.dueDate,
+        occurrenceAmountCents: billOccurrences.amountCents,
+        occurrencePaidAmountCents: billOccurrences.paidAmountCents,
+        occurrenceStatus: billOccurrences.status,
+        billId: bills.id,
+        billName: bills.name,
+        billInterval: bills.interval,
+        vendorId: vendors.id,
+        vendorName: vendors.name,
+        categoryName: categories.name,
+        categoryColor: categories.color,
+      })
+      .from(billPayments)
+      .innerJoin(billOccurrences, eq(billPayments.occurrenceId, billOccurrences.id))
+      .innerJoin(bills, eq(billOccurrences.billId, bills.id))
+      .leftJoin(vendors, eq(bills.vendorId, vendors.id))
+      .leftJoin(categories, eq(bills.categoryId, categories.id))
+      .where(
+        and(
+          eq(billPayments.userId, user.id),
+          gte(billPayments.paidDate, data.startDate),
+          lte(billPayments.paidDate, data.endDate)
+        )
+      )
+      .orderBy(desc(billPayments.paidDate))
+      .all();
   });

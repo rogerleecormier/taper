@@ -12,7 +12,8 @@ import {
   getBillPayments,
   getBillPaymentsForPeriod,
   deleteBillPayment,
-  getPaymentsPageData,
+  getScheduledPaymentsForPage,
+  getPaidPaymentsForPage,
 } from "~/server/fn/bill-payments";
 import {
   getIncomeOccurrences,
@@ -71,12 +72,20 @@ export function useBillPaymentsForPeriod(
   });
 }
 
-export function usePaymentsPageData(
-  filters: Parameters<typeof getPaymentsPageData>[0]["data"]
+export function useScheduledPaymentsForPage() {
+  return useQuery({
+    queryKey: ["payments-page-scheduled"] as const,
+    queryFn: () => getScheduledPaymentsForPage(),
+    staleTime: PERIOD_STALE_MS,
+  });
+}
+
+export function usePaidPaymentsForPage(
+  filters: Parameters<typeof getPaidPaymentsForPage>[0]["data"]
 ) {
   return useQuery({
-    queryKey: ["payments-page", filters] as const,
-    queryFn: () => getPaymentsPageData({ data: filters }),
+    queryKey: ["payments-page-paid", filters] as const,
+    queryFn: () => getPaidPaymentsForPage({ data: filters }),
     staleTime: PERIOD_STALE_MS,
   });
 }

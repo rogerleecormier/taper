@@ -1,9 +1,13 @@
-import { createFileRoute } from "@tanstack/react-router";
+import { createFileRoute, Link } from "@tanstack/react-router";
 import { useMemo, useState } from "react";
-import { format, parseISO } from "date-fns";
-import { CreditCard } from "lucide-react";
-import { usePaymentsPageData } from "~/hooks/use-occurrences";
+import { format, parseISO, subMonths } from "date-fns";
+import { CreditCard, ExternalLink } from "lucide-react";
+import {
+  useScheduledPaymentsForPage,
+  usePaidPaymentsForPage,
+} from "~/hooks/use-occurrences";
 import { formatCurrency } from "~/lib/currency";
+import { toDateStr } from "~/lib/dates";
 import { cn } from "~/lib/utils";
 import type { OccurrenceStatus } from "~/db/schema/bill-occurrences";
 
@@ -29,46 +33,62 @@ function StatusBadge({ status }: { status: OccurrenceStatus }) {
   );
 }
 
+const RANGE_OPTIONS = [
+  { months: 1,  label: "1 Mo" },
+  { months: 3,  label: "3 Mo" },
+  { months: 6,  label: "6 Mo" },
+  { months: 12, label: "12 Mo" },
+] as const;
+
 function PaymentsPage() {
   const [showPaid, setShowPaid] = useState(false);
+  const [rangeMonths, setRangeMonths] = useState<1 | 3 | 6 | 12>(3);
   const [vendorFilter, setVendorFilter] = useState<string>("all");
 
-  const { data = [], isLoading, isError } = usePaymentsPageData({ includePaid: showPaid });
+  const today = toDateStr(new Date());
+  const rangeStart = toDateStr(subMonths(new Date(), rangeMonths));
 
+  const { data: scheduled = [], isLoading: scheduledLoading, isError: scheduledError } =
+    useScheduledPaymentsForPage();
+
+  const { data: paidPayments = [], isLoading: paidLoading, isError: paidError } =
+    usePaidPaymentsForPage({ startDate: rangeStart, endDate: today });
+
+  // Build vendor list from both data sources for the dropdown
   const vendors = useMemo(() => {
     const seen = new Map<string, string>();
-    for (const row of data) {
-      if (row.vendorId && row.vendorName) {
-        seen.set(row.vendorId, row.vendorName);
-      }
+    for (const r of scheduled) {
+      if (r.vendorId && r.vendorName) seen.set(r.vendorId, r.vendorName);
+    }
+    for (const r of paidPayments) {
+      if (r.vendorId && r.vendorName) seen.set(r.vendorId, r.vendorName);
     }
     return Array.from(seen.entries())
       .map(([id, name]) => ({ id, name }))
       .sort((a, b) => a.name.localeCompare(b.name));
-  }, [data]);
+  }, [scheduled, paidPayments]);
 
-  const filtered = useMemo(() => {
-    if (vendorFilter === "all") return data;
-    if (vendorFilter === "__none__") return data.filter((r) => !r.vendorId);
-    return data.filter((r) => r.vendorId === vendorFilter);
-  }, [data, vendorFilter]);
+  const filteredScheduled = useMemo(() => {
+    if (vendorFilter === "all") return scheduled;
+    if (vendorFilter === "__none__") return scheduled.filter((r) => !r.vendorId);
+    return scheduled.filter((r) => r.vendorId === vendorFilter);
+  }, [scheduled, vendorFilter]);
 
-  const scheduled = useMemo(
-    () => filtered.filter((r) => r.status === "pending" || r.status === "partial" || r.status === "overdue"),
-    [filtered]
-  );
+  const filteredPaid = useMemo(() => {
+    if (vendorFilter === "all") return paidPayments;
+    if (vendorFilter === "__none__") return paidPayments.filter((r) => !r.vendorId);
+    return paidPayments.filter((r) => r.vendorId === vendorFilter);
+  }, [paidPayments, vendorFilter]);
 
-  const paid = useMemo(
-    () => filtered.filter((r) => r.status === "paid" || r.status === "skipped" || r.status === "carried"),
-    [filtered]
-  );
+  const isLoading = scheduledLoading || (showPaid && paidLoading);
+  const isError = scheduledError || (showPaid && paidError);
 
   return (
     <div className="p-6 space-y-6">
       <div>
         <h1 className="text-2xl font-bold text-gray-900">Payments</h1>
         <p className="mt-1 text-sm text-gray-500">
-          All scheduled and completed bill payments.
+          Scheduled and recorded payments across all expenses.
         </p>
       </div>
 
@@ -87,9 +107,7 @@ function PaymentsPage() {
           >
             <option value="all">All vendors</option>
             {vendors.map((v) => (
-              <option key={v.id} value={v.id}>
-                {v.name}
-              </option>
+              <option key={v.id} value={v.id}>{v.name}</option>
             ))}
             <option value="__none__">No vendor</option>
           </select>
@@ -103,8 +121,31 @@ function PaymentsPage() {
             onChange={(e) => setShowPaid(e.target.checked)}
             className="h-4 w-4 rounded border-gray-300 text-blue-600 focus:ring-blue-500"
           />
-          Show paid / completed
+          Show paid payments
         </label>
+
+        {/* Date range toggles — only shown when paid section is visible */}
+        {showPaid && (
+          <div className="flex items-center gap-1">
+            <span className="text-sm text-gray-500 mr-1">Range:</span>
+            <div className="inline-flex rounded-md border border-gray-200 bg-gray-50 p-0.5">
+              {RANGE_OPTIONS.map((opt) => (
+                <button
+                  key={opt.months}
+                  onClick={() => setRangeMonths(opt.months)}
+                  className={cn(
+                    "rounded px-3 py-1 text-sm font-medium transition-colors",
+                    rangeMonths === opt.months
+                      ? "bg-white text-gray-900 shadow-sm"
+                      : "text-gray-500 hover:text-gray-700"
+                  )}
+                >
+                  {opt.label}
+                </button>
+              ))}
+            </div>
+          </div>
+        )}
       </div>
 
       {isLoading && (
@@ -122,29 +163,13 @@ function PaymentsPage() {
       )}
 
       {!isLoading && !isError && (
-        <div className="space-y-8">
+        <div className="space-y-10">
           {/* Scheduled section */}
-          <Section
-            title="Scheduled"
-            rows={scheduled}
-            emptyMessage={
-              vendorFilter !== "all"
-                ? "No scheduled payments for this vendor."
-                : "No pending, partial, or overdue payments."
-            }
-          />
+          <ScheduledSection rows={filteredScheduled} />
 
-          {/* Paid / completed section — only when toggle is on */}
+          {/* Paid payments section */}
           {showPaid && (
-            <Section
-              title="Paid & Completed"
-              rows={paid}
-              emptyMessage={
-                vendorFilter !== "all"
-                  ? "No paid payments for this vendor."
-                  : "No paid or completed payments."
-              }
-            />
+            <PaidSection rows={filteredPaid} rangeMonths={rangeMonths} />
           )}
         </div>
       )}
@@ -152,14 +177,15 @@ function PaymentsPage() {
   );
 }
 
-type PaymentRow = {
-  id: string;
+// ─── Scheduled ───────────────────────────────────────────────────────────────
+
+type ScheduledRow = {
+  occurrenceId: string;
   billId: string;
   dueDate: string;
   amountCents: number;
   paidAmountCents: number | null;
   status: OccurrenceStatus;
-  paidDate: string | null;
   notes: string | null;
   carriedFromId: string | null;
   billName: string;
@@ -170,46 +196,65 @@ type PaymentRow = {
   categoryColor: string | null;
 };
 
-function Section({ title, rows, emptyMessage }: { title: string; rows: PaymentRow[]; emptyMessage: string }) {
+function ScheduledSection({ rows }: { rows: ScheduledRow[] }) {
   return (
     <div>
       <h2 className="mb-3 text-sm font-semibold uppercase tracking-wide text-gray-400">
-        {title} <span className="ml-1 text-gray-300 font-normal normal-case">({rows.length})</span>
+        Scheduled{" "}
+        <span className="font-normal normal-case text-gray-300">({rows.length})</span>
       </h2>
 
       {rows.length === 0 ? (
-        <div className="flex flex-col items-center justify-center rounded-lg border border-dashed py-10 text-center">
-          <CreditCard className="mb-3 h-8 w-8 text-gray-300" />
-          <p className="text-sm text-gray-500">{emptyMessage}</p>
-        </div>
+        <EmptyState message="No pending or overdue payments." />
       ) : (
         <div className="overflow-hidden rounded-lg border border-gray-200 bg-white">
           <table className="min-w-full divide-y divide-gray-200">
             <thead className="bg-gray-50">
               <tr>
-                <th className="px-4 py-3 text-left text-xs font-medium uppercase tracking-wide text-gray-500">
-                  Expense
-                </th>
-                <th className="px-4 py-3 text-left text-xs font-medium uppercase tracking-wide text-gray-500">
-                  Vendor
-                </th>
-                <th className="px-4 py-3 text-left text-xs font-medium uppercase tracking-wide text-gray-500">
-                  Due Date
-                </th>
-                <th className="px-4 py-3 text-right text-xs font-medium uppercase tracking-wide text-gray-500">
-                  Amount Due
-                </th>
-                <th className="px-4 py-3 text-right text-xs font-medium uppercase tracking-wide text-gray-500">
-                  Paid
-                </th>
-                <th className="px-4 py-3 text-left text-xs font-medium uppercase tracking-wide text-gray-500">
-                  Status
-                </th>
+                <Th>Expense</Th>
+                <Th>Vendor</Th>
+                <Th>Due Date</Th>
+                <Th right>Amount Due</Th>
+                <Th right>Paid So Far</Th>
+                <Th>Status</Th>
               </tr>
             </thead>
             <tbody className="divide-y divide-gray-100 bg-white">
               {rows.map((row) => (
-                <PaymentTableRow key={row.id} row={row} />
+                <tr key={row.occurrenceId} className="hover:bg-gray-50 transition-colors">
+                  <td className="px-4 py-3">
+                    <Link
+                      to="/bills/$id"
+                      params={{ id: row.billId }}
+                      className="inline-flex items-center gap-1 font-medium text-sm text-blue-600 hover:underline"
+                    >
+                      {row.billName}
+                      <ExternalLink className="h-3 w-3 flex-shrink-0" />
+                    </Link>
+                    {row.notes && (
+                      <div className="text-xs text-gray-400 truncate max-w-xs">{row.notes}</div>
+                    )}
+                  </td>
+                  <td className="px-4 py-3 text-sm text-gray-600">
+                    {row.vendorName ?? <Dash />}
+                  </td>
+                  <td className="px-4 py-3 text-sm text-gray-700 whitespace-nowrap">
+                    {format(parseISO(row.dueDate), "MMM d, yyyy")}
+                  </td>
+                  <td className="px-4 py-3 text-right text-sm text-gray-900 whitespace-nowrap">
+                    {formatCurrency(row.amountCents)}
+                  </td>
+                  <td className="px-4 py-3 text-right text-sm whitespace-nowrap">
+                    {row.paidAmountCents && row.paidAmountCents > 0 ? (
+                      <span className="text-amber-600">{formatCurrency(row.paidAmountCents)}</span>
+                    ) : (
+                      <Dash />
+                    )}
+                  </td>
+                  <td className="px-4 py-3">
+                    <StatusBadge status={row.status} />
+                  </td>
+                </tr>
               ))}
             </tbody>
           </table>
@@ -219,38 +264,119 @@ function Section({ title, rows, emptyMessage }: { title: string; rows: PaymentRo
   );
 }
 
-function PaymentTableRow({ row }: { row: PaymentRow }) {
-  const remaining = row.amountCents - (row.paidAmountCents ?? 0);
+// ─── Paid ─────────────────────────────────────────────────────────────────────
 
+type PaidRow = {
+  paymentId: string;
+  paymentAmountCents: number;
+  paidDate: string;
+  paymentNotes: string | null;
+  occurrenceId: string;
+  occurrenceDueDate: string;
+  occurrenceAmountCents: number;
+  occurrencePaidAmountCents: number | null;
+  occurrenceStatus: OccurrenceStatus;
+  billId: string;
+  billName: string;
+  billInterval: string;
+  vendorId: string | null;
+  vendorName: string | null;
+  categoryName: string | null;
+  categoryColor: string | null;
+};
+
+function PaidSection({ rows, rangeMonths }: { rows: PaidRow[]; rangeMonths: number }) {
   return (
-    <tr className="hover:bg-gray-50 transition-colors">
-      <td className="px-4 py-3">
-        <div className="font-medium text-sm text-gray-900">{row.billName}</div>
-        {row.notes && (
-          <div className="text-xs text-gray-400 truncate max-w-xs">{row.notes}</div>
-        )}
-      </td>
-      <td className="px-4 py-3 text-sm text-gray-600">
-        {row.vendorName ?? <span className="text-gray-300">—</span>}
-      </td>
-      <td className="px-4 py-3 text-sm text-gray-700 whitespace-nowrap">
-        {format(parseISO(row.dueDate), "MMM d, yyyy")}
-      </td>
-      <td className="px-4 py-3 text-right text-sm text-gray-900 whitespace-nowrap">
-        {formatCurrency(row.amountCents)}
-      </td>
-      <td className="px-4 py-3 text-right text-sm whitespace-nowrap">
-        {row.paidAmountCents && row.paidAmountCents > 0 ? (
-          <span className={remaining > 0 ? "text-amber-600" : "text-green-600"}>
-            {formatCurrency(row.paidAmountCents)}
-          </span>
-        ) : (
-          <span className="text-gray-300">—</span>
-        )}
-      </td>
-      <td className="px-4 py-3">
-        <StatusBadge status={row.status} />
-      </td>
-    </tr>
+    <div>
+      <h2 className="mb-3 text-sm font-semibold uppercase tracking-wide text-gray-400">
+        Paid Payments — last {rangeMonths} {rangeMonths === 1 ? "month" : "months"}{" "}
+        <span className="font-normal normal-case text-gray-300">({rows.length})</span>
+      </h2>
+
+      {rows.length === 0 ? (
+        <EmptyState message={`No payments recorded in the last ${rangeMonths} ${rangeMonths === 1 ? "month" : "months"}.`} />
+      ) : (
+        <div className="overflow-hidden rounded-lg border border-gray-200 bg-white">
+          <table className="min-w-full divide-y divide-gray-200">
+            <thead className="bg-gray-50">
+              <tr>
+                <Th>Expense</Th>
+                <Th>Vendor</Th>
+                <Th>Due Date</Th>
+                <Th>Payment Date</Th>
+                <Th right>Amount Paid</Th>
+                <Th right>Occurrence Total</Th>
+                <Th>Occurrence Status</Th>
+              </tr>
+            </thead>
+            <tbody className="divide-y divide-gray-100 bg-white">
+              {rows.map((row) => (
+                <tr key={row.paymentId} className="hover:bg-gray-50 transition-colors">
+                  <td className="px-4 py-3">
+                    <Link
+                      to="/bills/$id"
+                      params={{ id: row.billId }}
+                      className="inline-flex items-center gap-1 font-medium text-sm text-blue-600 hover:underline"
+                    >
+                      {row.billName}
+                      <ExternalLink className="h-3 w-3 flex-shrink-0" />
+                    </Link>
+                    {row.paymentNotes && (
+                      <div className="text-xs text-gray-400 truncate max-w-xs">{row.paymentNotes}</div>
+                    )}
+                  </td>
+                  <td className="px-4 py-3 text-sm text-gray-600">
+                    {row.vendorName ?? <Dash />}
+                  </td>
+                  <td className="px-4 py-3 text-sm text-gray-700 whitespace-nowrap">
+                    {format(parseISO(row.occurrenceDueDate), "MMM d, yyyy")}
+                  </td>
+                  <td className="px-4 py-3 text-sm font-medium text-gray-900 whitespace-nowrap">
+                    {format(parseISO(row.paidDate), "MMM d, yyyy")}
+                  </td>
+                  <td className="px-4 py-3 text-right text-sm font-semibold text-green-700 whitespace-nowrap">
+                    {formatCurrency(row.paymentAmountCents)}
+                  </td>
+                  <td className="px-4 py-3 text-right text-sm text-gray-700 whitespace-nowrap">
+                    {formatCurrency(row.occurrenceAmountCents)}
+                  </td>
+                  <td className="px-4 py-3">
+                    <StatusBadge status={row.occurrenceStatus} />
+                  </td>
+                </tr>
+              ))}
+            </tbody>
+          </table>
+        </div>
+      )}
+    </div>
+  );
+}
+
+// ─── Shared helpers ───────────────────────────────────────────────────────────
+
+function Th({ children, right }: { children: React.ReactNode; right?: boolean }) {
+  return (
+    <th
+      className={cn(
+        "px-4 py-3 text-xs font-medium uppercase tracking-wide text-gray-500",
+        right ? "text-right" : "text-left"
+      )}
+    >
+      {children}
+    </th>
+  );
+}
+
+function Dash() {
+  return <span className="text-gray-300">—</span>;
+}
+
+function EmptyState({ message }: { message: string }) {
+  return (
+    <div className="flex flex-col items-center justify-center rounded-lg border border-dashed py-10 text-center">
+      <CreditCard className="mb-3 h-8 w-8 text-gray-300" />
+      <p className="text-sm text-gray-500">{message}</p>
+    </div>
   );
 }
