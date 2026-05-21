@@ -93,12 +93,10 @@ function OccurrenceCard({
   occurrence,
   creditName,
   interval,
-  seriesAmountCents,
 }: {
   occurrence: CreditOccurrence & { receipts: CreditReceipt[] };
   creditName: string;
   interval: string;
-  seriesAmountCents: number;
 }) {
   const [receiptModalOpen, setReceiptModalOpen] = useState(false);
   const [editMode, setEditMode] = useState(false);
@@ -124,7 +122,6 @@ function OccurrenceCard({
     0
   );
   const remaining = occurrence.amountCents - receivedTotal;
-  const isCarryForwardInstance = occurrence.amountCents !== seriesAmountCents;
 
   async function handleSaveEdit() {
     const cents = Math.round(parseFloat(editAmount) * 100);
@@ -216,9 +213,9 @@ function OccurrenceCard({
             >
               {occurrence.status}
             </span>
-            {isCarryForwardInstance && (
-              <span className="inline-flex rounded border border-blue-200 bg-blue-50 px-1.5 py-0.5 text-[11px] font-medium text-blue-700">
-                Carry-forward
+            {occurrence.carriedFromId && (
+              <span className="inline-flex rounded border border-orange-200 bg-orange-50 px-1.5 py-0.5 text-[11px] font-medium text-orange-700">
+                Deferred
               </span>
             )}
             <span
@@ -441,13 +438,16 @@ function CreditDetailPage() {
 
   const { credit, occurrences } = data;
 
-  const totalExpected = occurrences.reduce((s, o) => s + o.amountCents, 0);
+  // Exclude "carried" occurrences from totals — their balance is already represented
+  // by the destination occurrence, so counting both would double the amount.
+  const nonCarried = occurrences.filter((o) => o.status !== "carried");
+  const totalExpected = nonCarried.reduce((s, o) => s + o.amountCents, 0);
   const totalReceived = occurrences.reduce(
     (s, o) => s + o.receipts.reduce((rs, r) => rs + r.amountCents, 0),
     0
   );
   const outstanding = totalExpected - totalReceived;
-  const activeOccurrences = occurrences.filter(
+  const activeOccurrences = nonCarried.filter(
     (o) => o.status !== "skipped" && o.status !== "received"
   ).length;
 
@@ -559,7 +559,6 @@ function CreditDetailPage() {
               occurrence={occ}
               creditName={credit.name}
               interval={credit.interval}
-              seriesAmountCents={credit.amountCents}
             />
           ))
         )}

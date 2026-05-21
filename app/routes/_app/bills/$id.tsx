@@ -22,6 +22,7 @@ import { useBillHistory } from "~/hooks/use-bills";
 import {
   useDeleteBillPayment,
   useCarryForwardOccurrence,
+  useReverseCarryForward,
   useReopenOccurrence,
   useUpdateBillOccurrence,
   useDeleteOccurrence,
@@ -93,12 +94,10 @@ function OccurrenceCard({
   occurrence,
   billName,
   interval,
-  seriesAmountCents,
 }: {
   occurrence: BillOccurrence & { payments: BillPayment[] };
   billName: string;
   interval: string;
-  seriesAmountCents: number;
 }) {
   const [payModalOpen, setPayModalOpen] = useState(false);
   const [editMode, setEditMode] = useState(false);
@@ -115,6 +114,7 @@ function OccurrenceCard({
 
   const updateOccurrence = useUpdateBillOccurrence();
   const carryForward = useCarryForwardOccurrence();
+  const reverseCarry = useReverseCarryForward();
   const reopen = useReopenOccurrence();
   const deleteOcc = useDeleteOccurrence();
   const [carryError, setCarryError] = useState<string | null>(null);
@@ -124,7 +124,6 @@ function OccurrenceCard({
     0
   );
   const remaining = occurrence.amountCents - paidTotal;
-  const isCarryForwardInstance = occurrence.amountCents !== seriesAmountCents;
 
   async function handleSaveEdit() {
     const cents = Math.round(parseFloat(editAmount) * 100);
@@ -216,9 +215,9 @@ function OccurrenceCard({
             >
               {occurrence.status}
             </span>
-            {isCarryForwardInstance && (
-              <span className="inline-flex rounded border border-blue-200 bg-blue-50 px-1.5 py-0.5 text-[11px] font-medium text-blue-700">
-                Carry-forward
+            {occurrence.carriedFromId && (
+              <span className="inline-flex rounded border border-orange-200 bg-orange-50 px-1.5 py-0.5 text-[11px] font-medium text-orange-700">
+                Deferred
               </span>
             )}
             <span
@@ -405,6 +404,17 @@ function OccurrenceCard({
               Carry Forward
             </Button>
           )}
+          {occurrence.carriedFromId && paidTotal === 0 && (
+            <Button
+              size="sm"
+              variant="ghost"
+              className="h-7 px-2.5 text-xs text-orange-700 hover:text-orange-900"
+              disabled={reverseCarry.isPending}
+              onClick={() => reverseCarry.mutate(occurrence.id)}
+            >
+              Undo Carry
+            </Button>
+          )}
         </div>
       )}
 
@@ -449,14 +459,16 @@ function BillDetailPage() {
 
   const { bill, occurrences } = data;
 
-  // Summary stats across all instances
-  const totalBilled = occurrences.reduce((s, o) => s + o.amountCents, 0);
+  // Exclude "carried" occurrences from totals — their balance is already represented
+  // by the destination occurrence, so counting both would double the amount.
+  const nonCarried = occurrences.filter((o) => o.status !== "carried");
+  const totalBilled = nonCarried.reduce((s, o) => s + o.amountCents, 0);
   const totalPaid = occurrences.reduce(
     (s, o) => s + o.payments.reduce((ps, p) => ps + p.amountCents, 0),
     0
   );
   const outstanding = totalBilled - totalPaid;
-  const activeOccurrences = occurrences.filter(
+  const activeOccurrences = nonCarried.filter(
     (o) => o.status !== "skipped" && o.status !== "paid"
   ).length;
 
@@ -568,7 +580,6 @@ function BillDetailPage() {
               occurrence={occ}
               billName={bill.name}
               interval={bill.interval}
-              seriesAmountCents={bill.amountCents}
             />
           ))
         )}
