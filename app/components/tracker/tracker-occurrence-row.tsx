@@ -25,21 +25,32 @@ import {
   useMarkIncomeSkipped,
   useUpdateBillOccurrence,
   useUpdateIncomeOccurrence,
+  useCarryForwardCreditOccurrence,
+  useReverseCreditCarryForward,
+  useDeleteCreditReceipt,
+  useUpdateCreditOccurrence,
 } from "~/hooks/use-occurrences";
 import { PaymentModal } from "./payment-modal";
+import { CreditReceiptModal } from "./credit-receipt-modal";
 import type { BillOccurrence } from "~/db/schema/bill-occurrences";
 import type { BillPayment } from "~/db/schema/bill-payments";
 import type { IncomeOccurrence } from "~/db/schema/income-occurrences";
+import type { CreditOccurrence } from "~/db/schema/credit-occurrences";
+import type { CreditReceipt } from "~/db/schema/credit-receipts";
 
-type AnyOcc = BillOccurrence | IncomeOccurrence;
+type AnyOcc = BillOccurrence | IncomeOccurrence | CreditOccurrence;
 
 function isBill(occ: AnyOcc): occ is BillOccurrence {
-  return "dueDate" in occ;
+  return "billId" in occ;
+}
+
+function isCredit(occ: AnyOcc): occ is CreditOccurrence {
+  return "creditId" in occ;
 }
 
 const STATUS_STYLES: Record<string, string> = {
   paid: "border-green-200 bg-green-100 text-green-800",
-  received: "border-green-200 bg-green-100 text-green-800",
+  received: "border-teal-200 bg-teal-100 text-teal-800",
   partial: "border-blue-200 bg-blue-50 text-blue-800",
   pending: "border-amber-200 bg-amber-50 text-amber-700",
   overdue: "border-red-200 bg-red-100 text-red-800",
@@ -49,10 +60,11 @@ const STATUS_STYLES: Record<string, string> = {
 
 interface Props {
   occurrence: AnyOcc;
-  type: "bill" | "income";
+  type: "bill" | "income" | "credit";
   billName: string;
   interval: string;
   payments?: BillPayment[];
+  receipts?: CreditReceipt[];
 }
 
 function PaymentRow({
@@ -93,18 +105,64 @@ function PaymentRow({
   );
 }
 
-export function TrackerOccurrenceRow({ occurrence, type, billName, interval, payments = [] }: Props) {
+function ReceiptRow({
+  receipt,
+  occurrenceId,
+}: {
+  receipt: CreditReceipt;
+  occurrenceId: string;
+}) {
+  const deleteReceipt = useDeleteCreditReceipt();
+  return (
+    <div className="flex flex-wrap items-center gap-2 px-4 pl-10 sm:pl-14 py-1 text-xs border-b border-dashed border-muted last:border-0 hover:bg-muted/10">
+      <CornerDownRight className="h-3 w-3 flex-shrink-0 text-muted-foreground" />
+      <span className="w-20 flex-shrink-0 tabular-nums text-muted-foreground">
+        {receipt.receivedDate}
+      </span>
+      <span className="w-24 flex-shrink-0 tabular-nums font-medium text-teal-700">
+        {formatCurrency(receipt.amountCents)}
+      </span>
+      <span className="rounded border border-teal-200 bg-teal-50 px-1.5 py-0.5 text-[11px] text-teal-700 flex-shrink-0">
+        received
+      </span>
+      {receipt.notes && (
+        <span className="truncate text-muted-foreground">{receipt.notes}</span>
+      )}
+      <Button
+        size="sm"
+        variant="ghost"
+        className="sm:ml-auto h-7 w-7 p-0 flex-shrink-0 text-muted-foreground hover:text-destructive"
+        disabled={deleteReceipt.isPending}
+        onClick={() =>
+          deleteReceipt.mutate({ id: receipt.id, occurrenceId })
+        }
+      >
+        <Trash2 className="h-3 w-3" />
+      </Button>
+    </div>
+  );
+}
+
+export function TrackerOccurrenceRow({ occurrence, type, billName, interval, payments = [], receipts = [] }: Props) {
   const [mode, setMode] = useState<"view" | "edit" | "income-pay" | "carry">("view");
   const [payModalOpen, setPayModalOpen] = useState(false);
+  const [receiptModalOpen, setReceiptModalOpen] = useState(false);
   const today = toDateStr(new Date());
 
-  const dateStr = isBill(occurrence) ? occurrence.dueDate : occurrence.expectedDate;
+  const isIncome = type === "income";
+  const isCredit_ = type === "credit";
+
+  const dateStr = isBill(occurrence)
+    ? occurrence.dueDate
+    : isCredit(occurrence)
+      ? occurrence.dueDate
+      : (occurrence as IncomeOccurrence).expectedDate;
+
   const [editAmount, setEditAmount] = useState(
     String(occurrence.amountCents / 100)
   );
   const [editDate, setEditDate] = useState(dateStr);
 
-  const isIncome = type === "income";
   const status = occurrence.status;
 
   const paidSoFar = isBill(occurrence) ? (occurrence.paidAmountCents ?? 0) : 0;
@@ -112,28 +170,41 @@ export function TrackerOccurrenceRow({ occurrence, type, billName, interval, pay
     ? occurrence.amountCents - paidSoFar
     : 0;
 
+  const receivedSoFar = isCredit(occurrence) ? (occurrence.receivedAmountCents ?? 0) : 0;
+  const creditRemaining = isCredit(occurrence)
+    ? occurrence.amountCents - receivedSoFar
+    : 0;
+
   const [incomePayAmount, setIncomePayAmount] = useState(
     String(occurrence.amountCents / 100)
   );
   const [incomePayDate, setIncomePayDate] = useState(today);
   const [carryDate, setCarryDate] = useState(() =>
-    isBill(occurrence) ? nextOccurrenceDate(occurrence.dueDate, interval) : today
+    (isBill(occurrence) || isCredit(occurrence))
+      ? nextOccurrenceDate(occurrence.dueDate, interval)
+      : today
   );
 
   const carryForward = useCarryForwardOccurrence();
   const reverseCarry = useReverseCarryForward();
+  const carryForwardCredit = useCarryForwardCreditOccurrence();
+  const reverseCarryCredit = useReverseCreditCarryForward();
   const markReceived = useMarkIncomeReceived();
   const skipIncome = useMarkIncomeSkipped();
   const updateBill = useUpdateBillOccurrence();
   const updateIncome = useUpdateIncomeOccurrence();
+  const updateCredit = useUpdateCreditOccurrence();
 
   const isBusy =
     carryForward.isPending ||
     reverseCarry.isPending ||
+    carryForwardCredit.isPending ||
+    reverseCarryCredit.isPending ||
     markReceived.isPending ||
     skipIncome.isPending ||
     updateBill.isPending ||
-    updateIncome.isPending;
+    updateIncome.isPending ||
+    updateCredit.isPending;
 
   async function handleIncomeReceive() {
     const cents =
@@ -151,6 +222,12 @@ export function TrackerOccurrenceRow({ occurrence, type, billName, interval, pay
     if (!cents || cents <= 0) return;
     if (type === "bill") {
       await updateBill.mutateAsync({
+        id: occurrence.id,
+        amountCents: cents,
+        dueDate: editDate,
+      });
+    } else if (type === "credit") {
+      await updateCredit.mutateAsync({
         id: occurrence.id,
         amountCents: cents,
         dueDate: editDate,
@@ -174,6 +251,8 @@ export function TrackerOccurrenceRow({ occurrence, type, billName, interval, pay
         }`
       : null;
 
+  const carryAmount = isCredit_ ? creditRemaining : remaining;
+
   return (
     <div
       className={cn(
@@ -192,11 +271,22 @@ export function TrackerOccurrenceRow({ occurrence, type, billName, interval, pay
         />
       )}
 
+      {/* Credit receipt modal */}
+      {type === "credit" && isCredit(occurrence) && (
+        <CreditReceiptModal
+          open={receiptModalOpen}
+          onClose={() => setReceiptModalOpen(false)}
+          occurrence={occurrence}
+          creditName={billName}
+          interval={interval}
+        />
+      )}
+
       {/* Carry-forward mode — full-width row replacement */}
       {mode === "carry" && (
         <div className="flex flex-wrap items-center gap-2 px-4 pl-8 sm:pl-10 py-2 bg-amber-50 border-b border-dashed border-amber-200">
           <span className="text-xs text-amber-700 flex-shrink-0 font-medium">
-            Carry {formatCurrency(remaining)} to:
+            Carry {formatCurrency(carryAmount)} to:
           </span>
           <Input
             type="date"
@@ -208,17 +298,21 @@ export function TrackerOccurrenceRow({ occurrence, type, billName, interval, pay
             <Button
               size="sm"
               className="h-7 px-2 text-xs bg-amber-600 hover:bg-amber-700 text-white"
-              disabled={carryForward.isPending}
+              disabled={isCredit_ ? carryForwardCredit.isPending : carryForward.isPending}
               onClick={async () => {
                 try {
-                  await carryForward.mutateAsync({ id: occurrence.id, targetDate: carryDate });
+                  if (isCredit_) {
+                    await carryForwardCredit.mutateAsync({ id: occurrence.id, targetDate: carryDate });
+                  } else {
+                    await carryForward.mutateAsync({ id: occurrence.id, targetDate: carryDate });
+                  }
                   setMode("view");
                 } catch (e) {
-                  // error will surface via mutation error state; stay in carry mode
+                  // error surfaces via mutation error state; stay in carry mode
                 }
               }}
             >
-              {carryForward.isPending ? (
+              {(isCredit_ ? carryForwardCredit.isPending : carryForward.isPending) ? (
                 <Loader2 className="h-3 w-3 animate-spin" />
               ) : (
                 <>
@@ -279,7 +373,7 @@ export function TrackerOccurrenceRow({ occurrence, type, billName, interval, pay
           <span
             className={cn(
               "w-24 tabular-nums font-medium flex-shrink-0 text-xs",
-              isIncome ? "text-green-700" : "text-red-600"
+              isIncome ? "text-green-700" : isCredit_ ? "text-teal-700" : "text-red-600"
             )}
           >
             {formatCurrency(occurrence.amountCents)}
@@ -303,6 +397,12 @@ export function TrackerOccurrenceRow({ occurrence, type, billName, interval, pay
           </span>
         )}
 
+        {mode === "view" && isCredit(occurrence) && receivedSoFar > 0 && status !== "received" && (
+          <span className="text-xs tabular-nums text-teal-600 flex-shrink-0">
+            {formatCurrency(creditRemaining)} left
+          </span>
+        )}
+
         {/* Status badge */}
         {mode === "view" && (
           <span
@@ -321,13 +421,13 @@ export function TrackerOccurrenceRow({ occurrence, type, billName, interval, pay
           </span>
         )}
 
-        {mode === "view" && type === "bill" && (status === "skipped" || status === "carried") && (
+        {mode === "view" && (type === "bill" || type === "credit") && (status === "skipped" || status === "carried") && (
           <span className="inline-flex rounded border border-purple-200 bg-purple-50 px-1.5 py-0.5 text-[11px] font-medium text-purple-700 flex-shrink-0">
             Balance carried forward
           </span>
         )}
 
-        {mode === "view" && isBill(occurrence) && occurrence.carriedFromId && (
+        {mode === "view" && (isBill(occurrence) || isCredit(occurrence)) && occurrence.carriedFromId && (
           <span className="inline-flex rounded border border-orange-200 bg-orange-50 px-1.5 py-0.5 text-[11px] font-medium text-orange-700 flex-shrink-0">
             Carried balance
           </span>
@@ -393,6 +493,7 @@ export function TrackerOccurrenceRow({ occurrence, type, billName, interval, pay
 
           {mode === "view" && (
             <div className="grid grid-cols-4 gap-1">
+              {/* Pay / Receive / Receive Credit button */}
               <Button
                 size="sm"
                 variant="outline"
@@ -401,7 +502,9 @@ export function TrackerOccurrenceRow({ occurrence, type, billName, interval, pay
                   status !== "skipped" && status !== "carried"
                     ? isIncome
                       ? "border-green-200 text-green-700 hover:bg-green-50"
-                      : "border-blue-200 text-blue-700 hover:bg-blue-50"
+                      : isCredit_
+                        ? "border-teal-200 text-teal-700 hover:bg-teal-50"
+                        : "border-blue-200 text-blue-700 hover:bg-blue-50"
                     : "invisible"
                 )}
                 onClick={() => {
@@ -409,6 +512,8 @@ export function TrackerOccurrenceRow({ occurrence, type, billName, interval, pay
                     setIncomePayAmount(String(occurrence.amountCents / 100));
                     setIncomePayDate(today);
                     setMode("income-pay");
+                  } else if (isCredit_) {
+                    setReceiptModalOpen(true);
                   } else {
                     setPayModalOpen(true);
                   }
@@ -416,42 +521,61 @@ export function TrackerOccurrenceRow({ occurrence, type, billName, interval, pay
                 disabled={isBusy || status === "skipped" || status === "carried"}
               >
                 <Check className="h-3 w-3 mr-1" />
-                <span className="sm:hidden">Pay</span>
+                <span className="sm:hidden">
+                  {isCredit_ ? "Recv" : "Pay"}
+                </span>
                 <span className="hidden sm:inline">
                   {isIncome
                     ? status === "received"
                       ? "Add"
                       : "Receive"
-                    : status === "paid"
-                      ? "Add Payment"
-                      : status === "partial"
-                        ? `Pay ${formatCurrency(remaining)}`
-                        : "Pay"}
+                    : isCredit_
+                      ? status === "received"
+                        ? "Add Receipt"
+                        : status === "partial"
+                          ? `Receive ${formatCurrency(creditRemaining)}`
+                          : "Receive"
+                      : status === "paid"
+                        ? "Add Payment"
+                        : status === "partial"
+                          ? `Pay ${formatCurrency(remaining)}`
+                          : "Pay"}
                 </span>
               </Button>
 
+              {/* Carry Forward button */}
               <Button
                 size="sm"
                 variant="outline"
                 className={cn(
                   "h-7 px-2 text-[11px] sm:text-xs border-amber-200 text-amber-700 hover:bg-amber-50",
                   !(
-                    type === "bill" &&
-                    status !== "paid" &&
-                    status !== "skipped" &&
-                    status !== "carried" &&
-                    remaining > 0
+                    (type === "bill" &&
+                      status !== "paid" &&
+                      status !== "skipped" &&
+                      status !== "carried" &&
+                      remaining > 0) ||
+                    (type === "credit" &&
+                      status !== "received" &&
+                      status !== "skipped" &&
+                      status !== "carried" &&
+                      creditRemaining > 0)
                   ) && "invisible"
                 )}
                 onClick={() => setMode("carry")}
                 disabled={
                   isBusy ||
                   !(
-                    type === "bill" &&
-                    status !== "paid" &&
-                    status !== "skipped" &&
-                    status !== "carried" &&
-                    remaining > 0
+                    (type === "bill" &&
+                      status !== "paid" &&
+                      status !== "skipped" &&
+                      status !== "carried" &&
+                      remaining > 0) ||
+                    (type === "credit" &&
+                      status !== "received" &&
+                      status !== "skipped" &&
+                      status !== "carried" &&
+                      creditRemaining > 0)
                   )
                 }
               >
@@ -460,6 +584,7 @@ export function TrackerOccurrenceRow({ occurrence, type, billName, interval, pay
                 <span className="hidden sm:inline">Carry Fwd</span>
               </Button>
 
+              {/* Undo Carry / Skip Income button */}
               <Button
                 size="sm"
                 variant="outline"
@@ -474,12 +599,17 @@ export function TrackerOccurrenceRow({ occurrence, type, billName, interval, pay
                       status !== "skipped") ||
                     (isBill(occurrence) &&
                       occurrence.carriedFromId &&
-                      !(occurrence.paidAmountCents && occurrence.paidAmountCents > 0))
+                      !(occurrence.paidAmountCents && occurrence.paidAmountCents > 0)) ||
+                    (isCredit(occurrence) &&
+                      occurrence.carriedFromId &&
+                      !(occurrence.receivedAmountCents && occurrence.receivedAmountCents > 0))
                   ) && "invisible"
                 )}
                 onClick={() => {
                   if (isIncome) {
                     void skipIncome.mutateAsync(occurrence.id);
+                  } else if (isCredit_) {
+                    reverseCarryCredit.mutate(occurrence.id);
                   } else {
                     reverseCarry.mutate(occurrence.id);
                   }
@@ -492,7 +622,10 @@ export function TrackerOccurrenceRow({ occurrence, type, billName, interval, pay
                       status !== "skipped") ||
                     (isBill(occurrence) &&
                       occurrence.carriedFromId &&
-                      !(occurrence.paidAmountCents && occurrence.paidAmountCents > 0))
+                      !(occurrence.paidAmountCents && occurrence.paidAmountCents > 0)) ||
+                    (isCredit(occurrence) &&
+                      occurrence.carriedFromId &&
+                      !(occurrence.receivedAmountCents && occurrence.receivedAmountCents > 0))
                   )
                 }
               >
@@ -529,6 +662,15 @@ export function TrackerOccurrenceRow({ occurrence, type, billName, interval, pay
         <div className="bg-muted/5">
           {payments.map((p) => (
             <PaymentRow key={p.id} payment={p} occurrenceId={occurrence.id} />
+          ))}
+        </div>
+      )}
+
+      {/* Receipts for this credit occurrence */}
+      {receipts.length > 0 && (
+        <div className="bg-muted/5">
+          {receipts.map((r) => (
+            <ReceiptRow key={r.id} receipt={r} occurrenceId={occurrence.id} />
           ))}
         </div>
       )}

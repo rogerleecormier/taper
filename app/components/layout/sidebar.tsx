@@ -9,6 +9,7 @@ import {
   Tag,
   DollarSign,
   LogOut,
+  BadgeDollarSign,
 } from "lucide-react";
 import { cn } from "~/lib/utils";
 import { authClient } from "~/auth/client";
@@ -18,6 +19,7 @@ const navItems = [
   { href: "/dashboard", label: "Dashboard", icon: LayoutDashboard },
   { href: "/tracker", label: "Budget Tracker", icon: CalendarDays },
   { href: "/bills", label: "Bills", icon: Receipt },
+  { href: "/credits", label: "Credits", icon: BadgeDollarSign },
   { href: "/income", label: "Income", icon: Wallet },
   { href: "/vendors", label: "Vendors", icon: Building2 },
   { href: "/categories", label: "Categories", icon: Tag },

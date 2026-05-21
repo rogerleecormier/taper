@@ -2,7 +2,7 @@
 
 import { useState } from "react";
 import { Link } from "@tanstack/react-router";
-import { ChevronDown, ChevronRight, Wallet, Receipt, ChevronUp } from "lucide-react";
+import { ChevronDown, ChevronRight, Wallet, Receipt, ChevronUp, BadgeDollarSign } from "lucide-react";
 import { cn } from "~/lib/utils";
 import { formatCurrency } from "~/lib/currency";
 import { Button } from "~/components/ui/button";
@@ -10,6 +10,8 @@ import { TrackerOccurrenceRow } from "./tracker-occurrence-row";
 import type { BillOccurrence } from "~/db/schema/bill-occurrences";
 import type { BillPayment } from "~/db/schema/bill-payments";
 import type { IncomeOccurrence } from "~/db/schema/income-occurrences";
+import type { CreditOccurrence } from "~/db/schema/credit-occurrences";
+import type { CreditReceipt } from "~/db/schema/credit-receipts";
 
 const INTERVAL_LABELS: Record<string, string> = {
   daily: "Daily",
@@ -23,7 +25,7 @@ const DEFAULT_VISIBLE = 3;
 
 interface TrackerParentRowProps {
   id: string;
-  type: "income" | "bill";
+  type: "income" | "bill" | "credit";
   name: string;
   interval: string;
   defaultAmountCents: number;
@@ -31,8 +33,9 @@ interface TrackerParentRowProps {
   categoryName: string | null;
   categoryColor: string | null;
   vendorName: string | null;
-  occurrences: BillOccurrence[] | IncomeOccurrence[];
+  occurrences: BillOccurrence[] | IncomeOccurrence[] | CreditOccurrence[];
   paymentsByOccurrenceId?: Map<string, BillPayment[]>;
+  receiptsByOccurrenceId?: Map<string, CreditReceipt[]>;
 }
 
 export function TrackerParentRow({
@@ -47,12 +50,14 @@ export function TrackerParentRow({
   vendorName,
   occurrences,
   paymentsByOccurrenceId,
+  receiptsByOccurrenceId,
 }: TrackerParentRowProps) {
   const [expanded, setExpanded] = useState(true);
   const [showCount, setShowCount] = useState(DEFAULT_VISIBLE);
   const isIncome = type === "income";
+  const isCredit = type === "credit";
 
-  const Icon = isIncome ? Wallet : Receipt;
+  const Icon = isIncome ? Wallet : isCredit ? BadgeDollarSign : Receipt;
   const displayTotal = periodTotal > 0 ? periodTotal : defaultAmountCents;
 
   const meta = [vendorName, categoryName].filter(Boolean).join(" · ");
@@ -68,7 +73,7 @@ export function TrackerParentRow({
         className="flex flex-wrap items-center gap-2 px-3 py-2 hover:bg-muted/30 cursor-pointer select-none"
         onClick={() => setExpanded((v) => !v)}
       >
-        <Icon className={cn("h-4 w-4 flex-shrink-0", isIncome ? "text-green-500" : "text-red-400")} />
+        <Icon className={cn("h-4 w-4 flex-shrink-0", isIncome ? "text-green-500" : isCredit ? "text-teal-500" : "text-red-400")} />
 
         {categoryColor && (
           <span
@@ -91,6 +96,12 @@ export function TrackerParentRow({
                 Edit Series
               </Link>
             </Button>
+          ) : isCredit ? (
+            <Button variant="ghost" size="sm" className="h-7 px-2 text-xs text-muted-foreground" asChild>
+              <Link to="/credits">
+                Edit Series
+              </Link>
+            </Button>
           ) : (
             <Button variant="ghost" size="sm" className="h-7 px-2 text-xs text-muted-foreground" asChild>
               <Link to="/bills">
@@ -104,7 +115,7 @@ export function TrackerParentRow({
           {INTERVAL_LABELS[interval] ?? interval}
         </span>
 
-        <span className={cn("order-4 sm:order-none flex-shrink-0 tabular-nums text-sm font-semibold", isIncome ? "text-green-600" : "text-red-600")}>
+        <span className={cn("order-4 sm:order-none flex-shrink-0 tabular-nums text-sm font-semibold", isIncome ? "text-green-600" : isCredit ? "text-teal-600" : "text-red-600")}>
           {formatCurrency(displayTotal)}
         </span>
 
@@ -139,6 +150,11 @@ export function TrackerParentRow({
                   payments={
                     type === "bill" && paymentsByOccurrenceId
                       ? (paymentsByOccurrenceId.get(occ.id) ?? [])
+                      : []
+                  }
+                  receipts={
+                    type === "credit" && receiptsByOccurrenceId
+                      ? (receiptsByOccurrenceId.get(occ.id) ?? [])
                       : []
                   }
                 />

@@ -9,3 +9,6 @@ export * from "../app/db/schema/income-occurrences";
 export * from "../app/db/schema/paystubs";
 export * from "../app/db/schema/paystub-deductions";
 export * from "../app/db/schema/user-preferences";
+export * from "../app/db/schema/credits";
+export * from "../app/db/schema/credit-occurrences";
+export * from "../app/db/schema/credit-receipts";

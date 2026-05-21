@@ -1,7 +1,7 @@
 "use client";
 
 import { useMemo, useState } from "react";
-import { TrendingUp, Receipt, Loader2, Eye, EyeOff } from "lucide-react";
+import { TrendingUp, Receipt, Loader2, Eye, EyeOff, BadgeDollarSign } from "lucide-react";
 import { useTrackerData } from "~/hooks/use-tracker";
 import { setTrackerInterval, setTrackerPeriodStart } from "~/store/tracker-store";
 import { formatCurrency } from "~/lib/currency";
@@ -9,6 +9,7 @@ import { cn } from "~/lib/utils";
 import type { TrackerInterval } from "~/lib/dates";
 import type { BillOccurrence } from "~/db/schema/bill-occurrences";
 import type { IncomeOccurrence } from "~/db/schema/income-occurrences";
+import type { CreditOccurrence } from "~/db/schema/credit-occurrences";
 import { TrackerToolbar } from "./tracker-toolbar";
 import { TrackerParentRow } from "./tracker-parent-row";
 import {
@@ -21,6 +22,7 @@ import {
 
 const UNPAID_STATUSES = new Set(["pending", "partial", "overdue"]);
 const TOTALLED_BILL_STATUSES = new Set(["pending", "partial", "overdue", "paid"]);
+const TOTALLED_CREDIT_STATUSES = new Set(["pending", "partial", "overdue", "received"]);
 
 interface TrackerContainerProps {
   interval: TrackerInterval;
@@ -37,15 +39,19 @@ export function TrackerContainer({
     rows,
     billOccurrenceMap,
     incomeOccurrenceMap,
+    creditOccurrenceMap,
     billPaymentsByOccurrenceMap,
+    creditReceiptsByOccurrenceMap,
     isLoading,
   } = useTrackerData(interval, periodStart);
 
   const [showPaid, setShowPaid] = useState(false);
+  const [showReceived, setShowReceived] = useState(false);
   const [selectedVendor, setSelectedVendor] = useState<string>("__all__");
 
   const billRows = useMemo(() => rows.filter((r) => r.type === "bill"), [rows]);
   const incomeRows = useMemo(() => rows.filter((r) => r.type === "income"), [rows]);
+  const creditRows = useMemo(() => rows.filter((r) => r.type === "credit"), [rows]);
 
   // Build parent items — attach their occurrence arrays for the current period
   const incomeParents = useMemo(
@@ -102,13 +108,38 @@ export function TrackerContainer({
     return billParents.filter((p) => p?.vendorName === selectedVendor);
   }, [billParents, selectedVendor]);
 
+  // Build credit parents
+  const creditParents = useMemo(
+    () =>
+      creditRows
+        .map((row) => {
+          const entityId = row.id.split(":")[1];
+          const allOccs = Array.from(
+            creditOccurrenceMap.get(entityId)?.values() ?? []
+          ).sort((a, b) =>
+            a.dueDate.localeCompare(b.dueDate)
+          ) as CreditOccurrence[];
+          const visibleOccs = showReceived
+            ? allOccs
+            : allOccs.filter((o) => UNPAID_STATUSES.has(o.status));
+          if (visibleOccs.length === 0) return null;
+          const periodTotal = allOccs
+            .filter((o) => TOTALLED_CREDIT_STATUSES.has(o.status))
+            .reduce((s, o) => s + o.amountCents, 0);
+          return { ...row, entityId, occurrences: visibleOccs, periodTotal };
+        })
+        .filter(Boolean),
+    [creditRows, creditOccurrenceMap, showReceived]
+  );
+
   const incomeTotal = incomeParents.reduce((s, p) => s + p!.periodTotal, 0);
   const expenseTotal = billParents.reduce((s, p) => s + p!.periodTotal, 0);
+  const creditTotal = creditParents.reduce((s, p) => s + p!.periodTotal, 0);
   const filteredExpenseTotal = filteredBillParents.reduce(
     (s, p) => s + p!.periodTotal,
     0
   );
-  const balance = incomeTotal - expenseTotal;
+  const balance = incomeTotal + creditTotal - expenseTotal;
 
   if (isLoading) {
     return (
@@ -133,7 +164,7 @@ export function TrackerContainer({
       )}
 
       {/* Summary bar */}
-      <div className="grid grid-cols-3 divide-x border-b bg-gray-50">
+      <div className={cn("divide-x border-b bg-gray-50", creditTotal > 0 ? "grid grid-cols-4" : "grid grid-cols-3")}>
         <div className="flex flex-col items-center py-4">
           <span className="text-[11px] font-semibold uppercase tracking-wider text-gray-400">
             Income
@@ -142,6 +173,16 @@ export function TrackerContainer({
             {formatCurrency(incomeTotal)}
           </span>
         </div>
+        {creditTotal > 0 && (
+          <div className="flex flex-col items-center py-4">
+            <span className="text-[11px] font-semibold uppercase tracking-wider text-gray-400">
+              Credits
+            </span>
+            <span className="mt-1 text-xl font-bold tabular-nums text-teal-600">
+              {formatCurrency(creditTotal)}
+            </span>
+          </div>
+        )}
         <div className="flex flex-col items-center py-4">
           <span className="text-[11px] font-semibold uppercase tracking-wider text-gray-400">
             Expenses
@@ -172,8 +213,8 @@ export function TrackerContainer({
           </div>
           <h3 className="font-semibold">Nothing to track yet</h3>
           <p className="mt-1 max-w-xs text-sm text-muted-foreground">
-            Add income sources and expenses — they'll appear here with their
-            scheduled occurrences for each period.
+            Add income sources, expenses, and credits — they'll appear here with
+            their scheduled occurrences for each period.
           </p>
         </div>
       ) : (
@@ -302,6 +343,65 @@ export function TrackerContainer({
                       vendorName={p.vendorName}
                       occurrences={p.occurrences}
                       paymentsByOccurrenceId={billPaymentsByOccurrenceMap}
+                    />
+                  )
+              )}
+            </section>
+          )}
+
+          {/* ── Credits section ── */}
+          {creditParents.length > 0 && (
+            <section>
+              <div className="flex items-center justify-between border-b bg-teal-50 px-4 py-2.5">
+                <div className="flex items-center gap-2">
+                  <BadgeDollarSign className="h-3.5 w-3.5 text-teal-600" />
+                  <span className="text-xs font-semibold uppercase tracking-wider text-teal-700">
+                    Credits
+                  </span>
+                  <span className="text-xs text-teal-600/70">
+                    {creditParents.length} item{creditParents.length !== 1 ? "s" : ""}
+                  </span>
+                </div>
+                <div className="flex items-center gap-2">
+                  <span className="text-sm font-semibold tabular-nums text-teal-700">
+                    {formatCurrency(creditTotal)}
+                  </span>
+                  <button
+                    onClick={() => setShowReceived((v) => !v)}
+                    className={cn(
+                      "inline-flex h-7 shrink-0 items-center gap-1.5 whitespace-nowrap rounded-md border px-2.5 py-1 text-xs font-medium transition-colors",
+                      showReceived
+                        ? "border-teal-200 bg-teal-100 text-teal-700 hover:bg-teal-200"
+                        : "border-gray-200 bg-white text-gray-500 hover:text-gray-700"
+                    )}
+                  >
+                    {showReceived ? (
+                      <Eye className="h-3.5 w-3.5" />
+                    ) : (
+                      <EyeOff className="h-3.5 w-3.5" />
+                    )}
+                    <span className="hidden sm:inline">{showReceived ? "Showing All" : "Pending Only"}</span>
+                    <span className="sm:hidden">{showReceived ? "All" : "Pending"}</span>
+                  </button>
+                </div>
+              </div>
+
+              {creditParents.map(
+                (p) =>
+                  p && (
+                    <TrackerParentRow
+                      key={p.id}
+                      id={p.id}
+                      type="credit"
+                      name={p.name}
+                      interval={p.interval}
+                      defaultAmountCents={p.amountCents}
+                      periodTotal={p.periodTotal}
+                      categoryName={p.categoryName}
+                      categoryColor={p.categoryColor}
+                      vendorName={p.vendorName}
+                      occurrences={p.occurrences}
+                      receiptsByOccurrenceId={creditReceiptsByOccurrenceMap}
                     />
                   )
               )}

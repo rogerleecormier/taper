@@ -21,12 +21,28 @@ import {
   markIncomeSkipped,
   updateIncomeOccurrence,
 } from "~/server/fn/income-occurrences";
+import {
+  getCreditOccurrences,
+  carryForwardCreditOccurrence,
+  reverseCreditCarryForward,
+  updateCreditOccurrence,
+  deleteCreditOccurrence,
+} from "~/server/fn/credit-occurrences";
+import {
+  addCreditReceipt,
+  getCreditReceipts,
+  getCreditReceiptsForPeriod,
+  deleteCreditReceipt,
+} from "~/server/fn/credit-receipts";
 
 export const occurrenceKeys = {
   bills: (filters: object) => ["bill-occurrences", filters] as const,
   income: (filters: object) => ["income-occurrences", filters] as const,
+  credits: (filters: object) => ["credit-occurrences", filters] as const,
   payments: (occurrenceId: string | null) =>
     ["bill-payments", occurrenceId] as const,
+  receipts: (occurrenceId: string | null) =>
+    ["credit-receipts", occurrenceId] as const,
 };
 
 const PERIOD_STALE_MS = 5 * 60 * 1000; // matches server KV cache TTL
@@ -225,6 +241,130 @@ export function useUpdateIncomeOccurrence() {
       updateIncomeOccurrence({ data }),
     onSuccess: () => {
       qc.invalidateQueries({ queryKey: ["income-occurrences"] });
+      qc.invalidateQueries({ queryKey: ["dashboard"] });
+    },
+  });
+}
+
+// ── Credit occurrence hooks ──────────────────────────────────────────────────
+
+export function useCreditOccurrences(
+  filters: Parameters<typeof getCreditOccurrences>[0]["data"]
+) {
+  return useQuery({
+    queryKey: occurrenceKeys.credits(filters),
+    queryFn: () => getCreditOccurrences({ data: filters }),
+    enabled: !!filters.startDate && !!filters.endDate,
+    staleTime: PERIOD_STALE_MS,
+  });
+}
+
+export function useCreditReceipts(occurrenceId: string | null) {
+  return useQuery({
+    queryKey: occurrenceKeys.receipts(occurrenceId),
+    queryFn: () => getCreditReceipts({ data: { occurrenceId: occurrenceId! } }),
+    enabled: !!occurrenceId,
+  });
+}
+
+export function useCreditReceiptsForPeriod(
+  filters: Parameters<typeof getCreditReceiptsForPeriod>[0]["data"]
+) {
+  return useQuery({
+    queryKey: ["credit-receipts-period", filters] as const,
+    queryFn: () => getCreditReceiptsForPeriod({ data: filters }),
+    enabled: !!filters.startDate && !!filters.endDate,
+    staleTime: PERIOD_STALE_MS,
+  });
+}
+
+export function useAddCreditReceipt() {
+  const qc = useQueryClient();
+  return useMutation({
+    mutationFn: (data: Parameters<typeof addCreditReceipt>[0]["data"]) =>
+      addCreditReceipt({ data }),
+    onSuccess: (_, variables) => {
+      qc.invalidateQueries({ queryKey: ["credit-occurrences"] });
+      qc.invalidateQueries({ queryKey: ["credit-receipts-period"] });
+      qc.invalidateQueries({ queryKey: ["credit-history"] });
+      qc.invalidateQueries({
+        queryKey: occurrenceKeys.receipts(variables.occurrenceId),
+      });
+      qc.invalidateQueries({ queryKey: ["dashboard"] });
+    },
+  });
+}
+
+export function useDeleteCreditReceipt() {
+  const qc = useQueryClient();
+  return useMutation({
+    mutationFn: ({
+      id,
+      occurrenceId: _occurrenceId,
+    }: {
+      id: string;
+      occurrenceId: string;
+    }) => deleteCreditReceipt({ data: { id } }),
+    onSuccess: (_, variables) => {
+      qc.invalidateQueries({ queryKey: ["credit-occurrences"] });
+      qc.invalidateQueries({ queryKey: ["credit-receipts-period"] });
+      qc.invalidateQueries({ queryKey: ["credit-history"] });
+      qc.invalidateQueries({
+        queryKey: occurrenceKeys.receipts(variables.occurrenceId),
+      });
+      qc.invalidateQueries({ queryKey: ["dashboard"] });
+    },
+  });
+}
+
+export function useCarryForwardCreditOccurrence() {
+  const qc = useQueryClient();
+  return useMutation({
+    mutationFn: (data: { id: string; targetDate: string }) =>
+      carryForwardCreditOccurrence({ data }),
+    onSuccess: () => {
+      qc.invalidateQueries({ queryKey: ["credit-occurrences"] });
+      qc.invalidateQueries({ queryKey: ["credit-receipts-period"] });
+      qc.invalidateQueries({ queryKey: ["credit-history"] });
+      qc.invalidateQueries({ queryKey: ["dashboard"] });
+    },
+  });
+}
+
+export function useReverseCreditCarryForward() {
+  const qc = useQueryClient();
+  return useMutation({
+    mutationFn: (id: string) => reverseCreditCarryForward({ data: { id } }),
+    onSuccess: () => {
+      qc.invalidateQueries({ queryKey: ["credit-occurrences"] });
+      qc.invalidateQueries({ queryKey: ["credit-receipts-period"] });
+      qc.invalidateQueries({ queryKey: ["credit-history"] });
+      qc.invalidateQueries({ queryKey: ["dashboard"] });
+    },
+  });
+}
+
+export function useUpdateCreditOccurrence() {
+  const qc = useQueryClient();
+  return useMutation({
+    mutationFn: (data: Parameters<typeof updateCreditOccurrence>[0]["data"]) =>
+      updateCreditOccurrence({ data }),
+    onSuccess: () => {
+      qc.invalidateQueries({ queryKey: ["credit-occurrences"] });
+      qc.invalidateQueries({ queryKey: ["credit-history"] });
+      qc.invalidateQueries({ queryKey: ["dashboard"] });
+    },
+  });
+}
+
+export function useDeleteCreditOccurrence() {
+  const qc = useQueryClient();
+  return useMutation({
+    mutationFn: (id: string) => deleteCreditOccurrence({ data: { id } }),
+    onSuccess: () => {
+      qc.invalidateQueries({ queryKey: ["credit-occurrences"] });
+      qc.invalidateQueries({ queryKey: ["credit-receipts-period"] });
+      qc.invalidateQueries({ queryKey: ["credit-history"] });
       qc.invalidateQueries({ queryKey: ["dashboard"] });
     },
   });
