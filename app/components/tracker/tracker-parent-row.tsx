@@ -116,7 +116,7 @@ export function TrackerParentRow({
         </span>
 
         <span className={cn("order-4 sm:order-none flex-shrink-0 tabular-nums text-sm font-semibold", isIncome ? "text-green-600" : isCredit ? "text-teal-600" : "text-red-600")}>
-          {formatCurrency(displayTotal)}
+          {(!isIncome && !isCredit) ? `-${formatCurrency(displayTotal)}` : formatCurrency(displayTotal)}
         </span>
 
         {occurrences.length > 0 && (

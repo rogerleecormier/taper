@@ -376,7 +376,7 @@ export function TrackerOccurrenceRow({ occurrence, type, billName, interval, pay
               isIncome ? "text-green-700" : isCredit_ ? "text-teal-700" : "text-red-600"
             )}
           >
-            {formatCurrency(occurrence.amountCents)}
+            {(!isIncome && !isCredit_) ? `-${formatCurrency(occurrence.amountCents)}` : formatCurrency(occurrence.amountCents)}
           </span>
         )}
 
