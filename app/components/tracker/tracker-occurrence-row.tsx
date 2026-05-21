@@ -421,15 +421,9 @@ export function TrackerOccurrenceRow({ occurrence, type, billName, interval, pay
           </span>
         )}
 
-        {mode === "view" && (type === "bill" || type === "credit") && (status === "skipped" || status === "carried") && (
-          <span className="inline-flex rounded border border-purple-200 bg-purple-50 px-1.5 py-0.5 text-[11px] font-medium text-purple-700 flex-shrink-0">
-            Balance carried forward
-          </span>
-        )}
-
         {mode === "view" && (isBill(occurrence) || isCredit(occurrence)) && occurrence.carriedFromId && (
           <span className="inline-flex rounded border border-orange-200 bg-orange-50 px-1.5 py-0.5 text-[11px] font-medium text-orange-700 flex-shrink-0">
-            Carried balance
+            Deferred
           </span>
         )}
 

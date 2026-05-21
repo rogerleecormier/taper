@@ -46,6 +46,7 @@ export function TrackerContainer({
   } = useTrackerData(interval, periodStart);
 
   const [showReceived, setShowReceived] = useState(false);
+  const [showCarried, setShowCarried] = useState(true);
   const [selectedVendor, setSelectedVendor] = useState<string>("__all__");
 
   const billRows = useMemo(() => rows.filter((r) => r.type === "bill"), [rows]);
@@ -73,14 +74,21 @@ export function TrackerContainer({
           const allOccs = Array.from(
             billOccurrenceMap.get(entityId)?.values() ?? []
           ).sort((a, b) => a.dueDate.localeCompare(b.dueDate)) as BillOccurrence[];
-          if (allOccs.length === 0) return null;
+          const visibleOccs = allOccs.filter((o) => {
+            // Intermediate carry: was itself deferred again — hide from all weeks
+            if (o.status === "carried" && o.carriedFromId) return false;
+            // Origin carry: the original occurrence that was deferred — hide when toggle is off
+            if (!showCarried && o.status === "carried") return false;
+            return true;
+          });
+          if (visibleOccs.length === 0) return null;
           const periodTotal = allOccs
             .filter((o) => TOTALLED_BILL_STATUSES.has(o.status))
             .reduce((s, o) => s + o.amountCents, 0);
-          return { ...row, entityId, occurrences: allOccs, periodTotal };
+          return { ...row, entityId, occurrences: visibleOccs, periodTotal };
         })
         .filter(Boolean),
-    [billRows, billOccurrenceMap]
+    [billRows, billOccurrenceMap, showCarried]
   );
 
   const creditParents = useMemo(
@@ -91,9 +99,13 @@ export function TrackerContainer({
           const allOccs = Array.from(
             creditOccurrenceMap.get(entityId)?.values() ?? []
           ).sort((a, b) => a.dueDate.localeCompare(b.dueDate)) as CreditOccurrence[];
-          const visibleOccs = showReceived
-            ? allOccs
-            : allOccs.filter((o) => UNPAID_STATUSES.has(o.status));
+          const visibleOccs = allOccs.filter((o) => {
+            // Intermediate carry: always hide
+            if (o.status === "carried" && o.carriedFromId) return false;
+            // Pending-only filter (hides received and origin carries)
+            if (!showReceived && !UNPAID_STATUSES.has(o.status)) return false;
+            return true;
+          });
           if (visibleOccs.length === 0) return null;
           const periodTotal = allOccs
             .filter((o) => TOTALLED_CREDIT_STATUSES.has(o.status))
@@ -291,9 +303,30 @@ export function TrackerContainer({
                     {filteredBillParents.length} item{filteredBillParents.length !== 1 ? "s" : ""}
                   </span>
                 </div>
-                <span className="text-sm font-semibold tabular-nums text-red-700">
-                  -{formatCurrency(expenseTotal)}
-                </span>
+                <div className="flex items-center gap-2">
+                  <span className="text-sm font-semibold tabular-nums text-red-700">
+                    -{formatCurrency(expenseTotal)}
+                  </span>
+                  <button
+                    onClick={() => setShowCarried((v) => !v)}
+                    className={cn(
+                      "inline-flex h-7 shrink-0 items-center gap-1.5 whitespace-nowrap rounded-md border px-2.5 py-1 text-xs font-medium transition-colors",
+                      !showCarried
+                        ? "border-amber-200 bg-amber-100 text-amber-700 hover:bg-amber-200"
+                        : "border-gray-200 bg-white text-gray-500 hover:text-gray-700"
+                    )}
+                  >
+                    {!showCarried ? (
+                      <Eye className="h-3.5 w-3.5" />
+                    ) : (
+                      <EyeOff className="h-3.5 w-3.5" />
+                    )}
+                    <span className="hidden sm:inline">
+                      {!showCarried ? "Show Carried" : "Hide Carried"}
+                    </span>
+                    <span className="sm:hidden">Carried</span>
+                  </button>
+                </div>
               </div>
 
               {filteredBillParents.map(
