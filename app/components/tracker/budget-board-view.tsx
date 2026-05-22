@@ -197,13 +197,13 @@ function DraggableCard({ item }: { item: BoardOccurrence }) {
       {...listeners}
       {...attributes}
       className={cn(
-        "cursor-grab rounded-md border bg-white p-2 text-xs shadow-sm",
-        isDragging && "opacity-60"
+        "cursor-grab rounded-md border border-border bg-card p-3 text-xs shadow-xs transition-all hover:border-accent/50 active:cursor-grabbing",
+        isDragging && "opacity-50 border-accent scale-95"
       )}
     >
-      <div className="font-medium">{item.name}</div>
-      <div className="mt-0.5 text-muted-foreground">{item.dateStr}</div>
-      <div className={cn("mt-1 font-semibold", item.type === "income" ? "text-green-700" : "text-red-700")}>
+      <div className="font-bold text-foreground">{item.name}</div>
+      <div className="mt-0.5 text-[10px] uppercase font-bold tracking-wider text-muted-foreground">{item.dateStr}</div>
+      <div className={cn("mt-1.5 font-extrabold text-sm tabular-nums", item.type === "income" ? "text-success" : "text-danger")}>
         {formatCurrency(item.amountCents)}
       </div>
     </div>
@@ -223,13 +223,13 @@ function DropBucket({
   });
 
   return (
-    <div className="min-w-64 flex-1">
-      <div className="mb-2 text-xs font-semibold text-muted-foreground">{bucket.label}</div>
+    <div className="min-w-72 flex-1">
+      <div className="mb-2 text-xs font-bold uppercase tracking-wider text-muted-foreground/90">{bucket.label}</div>
       <div
         ref={setNodeRef}
         className={cn(
-          "min-h-36 space-y-2 rounded-md border bg-muted/20 p-2",
-          isOver && "border-primary bg-primary/5"
+          "min-h-[300px] space-y-2.5 rounded-lg border border-border bg-muted/20 p-3 transition-colors",
+          isOver && "border-accent/50 bg-accent/5"
         )}
       >
         {items.map((item) => (

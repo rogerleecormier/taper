@@ -23,7 +23,7 @@ function DashboardPage() {
   if (isLoading) {
     return (
       <div className="flex items-center justify-center h-full p-8">
-        <p className="text-sm text-gray-500">Loading...</p>
+        <p className="text-sm text-muted-foreground animate-pulse">Loading...</p>
       </div>
     );
   }
@@ -31,7 +31,7 @@ function DashboardPage() {
   if (isError || !data) {
     return (
       <div className="flex items-center justify-center h-full p-8">
-        <p className="text-sm text-red-500">
+        <p className="text-sm text-destructive font-medium">
           Failed to load dashboard data. Please try again.
         </p>
       </div>
@@ -39,38 +39,38 @@ function DashboardPage() {
   }
 
   return (
-    <div className="p-6 space-y-6">
+    <div className="p-6 space-y-6 max-w-7xl mx-auto">
       <div>
-        <h1 className="text-2xl font-bold text-gray-900">Dashboard</h1>
-        <p className="mt-1 text-sm text-gray-500">
+        <h1 className="text-3xl font-extrabold font-heading text-foreground tracking-tight">Dashboard</h1>
+        <p className="mt-1 text-sm text-muted-foreground">
           Your budget overview at a glance
         </p>
       </div>
 
       <UnallocatedBanner data={data} />
 
-      <Separator />
+      <Separator className="bg-border" />
 
       <section className="space-y-4">
-        <h2 className="text-sm font-semibold uppercase tracking-wide text-gray-400">
+        <h2 className="text-xs font-bold uppercase tracking-wider text-muted-foreground">
           Overview
         </h2>
         <SummaryCards data={data} />
       </section>
 
-      <Separator />
+      <Separator className="bg-border" />
 
       <section className="space-y-4">
-        <h2 className="text-sm font-semibold uppercase tracking-wide text-gray-400">
+        <h2 className="text-xs font-bold uppercase tracking-wider text-muted-foreground">
           Trends
         </h2>
         <div className="grid grid-cols-1 xl:grid-cols-2 gap-6">
-          <Card>
+          <Card className="border border-border bg-card shadow-xs">
             <CardContent className="p-6">
               <IncomeExpenseChart />
             </CardContent>
           </Card>
-          <Card>
+          <Card className="border border-border bg-card shadow-xs">
             <CardContent className="p-6">
               <CategoryBreakdownChart categoryBreakdown={data.categoryBreakdown} />
             </CardContent>
@@ -78,24 +78,24 @@ function DashboardPage() {
         </div>
       </section>
 
-      <Separator />
+      <Separator className="bg-border" />
 
       <section className="space-y-4">
-        <h2 className="text-sm font-semibold uppercase tracking-wide text-gray-400">
+        <h2 className="text-xs font-bold uppercase tracking-wider text-muted-foreground">
           Activity
         </h2>
         <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
-          <Card>
+          <Card className="border border-border bg-card shadow-xs">
             <CardContent className="p-6">
               <OverdueBillsList overdueBills={data.overdueBills} />
             </CardContent>
           </Card>
-          <Card>
+          <Card className="border border-border bg-card shadow-xs">
             <CardContent className="p-6">
               <UpcomingBillsList upcomingBills={data.upcomingBills} />
             </CardContent>
           </Card>
-          <Card>
+          <Card className="border border-border bg-card shadow-xs">
             <CardContent className="p-6">
               <RecentPaymentsList
                 recentPayments={data.recentPayments}

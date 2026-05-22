@@ -111,7 +111,7 @@ export function BillList({ bills }: BillListProps) {
       header: "Status",
       cell: (info) =>
         info.getValue() ? (
-          <Badge className="border-green-200 bg-green-100 text-green-800">
+          <Badge className="border-success/20 bg-success/10 text-success">
             Active
           </Badge>
         ) : (
@@ -150,7 +150,7 @@ export function BillList({ bills }: BillListProps) {
             <Button
               variant="ghost"
               size="sm"
-              className="h-8 w-8 p-0 text-red-500 hover:text-red-700"
+              className="h-8 w-8 p-0 text-destructive hover:text-destructive/80"
               onClick={() => handleDelete(bill.id)}
               disabled={deletingId === bill.id}
             >
@@ -173,7 +173,7 @@ export function BillList({ bills }: BillListProps) {
     <>
       <div className="space-y-3 md:hidden">
         {bills.map((bill) => (
-          <div key={bill.id} className="rounded-md border p-3">
+          <div key={bill.id} className="rounded-md border border-border bg-card p-3 shadow-sm">
             <div className="flex items-start justify-between gap-3">
               <div className="min-w-0">
                 <Link
@@ -213,7 +213,7 @@ export function BillList({ bills }: BillListProps) {
                 <Button
                   variant="ghost"
                   size="sm"
-                  className="h-8 w-8 p-0 text-red-500 hover:text-red-700"
+                  className="h-8 w-8 p-0 text-destructive hover:text-destructive/80"
                   onClick={() => handleDelete(bill.id)}
                   disabled={deletingId === bill.id}
                 >
@@ -228,7 +228,7 @@ export function BillList({ bills }: BillListProps) {
                 {INTERVAL_LABELS[bill.interval] ?? bill.interval}
               </span>
               {bill.isActive ? (
-                <Badge className="border-green-200 bg-green-100 text-green-800">Active</Badge>
+                <Badge className="border-success/20 bg-success/10 text-success">Active</Badge>
               ) : (
                 <Badge variant="secondary">Inactive</Badge>
               )}
@@ -237,15 +237,15 @@ export function BillList({ bills }: BillListProps) {
         ))}
       </div>
 
-      <div className="hidden w-full overflow-x-auto rounded-md border md:block">
+      <div className="hidden w-full overflow-x-auto rounded-md border border-border bg-card shadow-sm md:block">
       <table className="w-full text-sm">
-        <thead className="border-b bg-muted/50">
+        <thead className="border-b border-border bg-secondary/30">
           {table.getHeaderGroups().map((hg) => (
             <tr key={hg.id}>
               {hg.headers.map((header) => (
                 <th
                   key={header.id}
-                  className="px-4 py-3 text-left text-xs font-semibold uppercase tracking-wide text-muted-foreground"
+                  className="px-4 py-3 text-left text-xs font-semibold uppercase tracking-wider text-muted-foreground"
                 >
                   {header.isPlaceholder
                     ? null
@@ -258,9 +258,9 @@ export function BillList({ bills }: BillListProps) {
             </tr>
           ))}
         </thead>
-        <tbody className="divide-y">
+        <tbody className="divide-y divide-border">
           {table.getRowModel().rows.map((row) => (
-            <tr key={row.id} className="hover:bg-muted/30">
+            <tr key={row.id} className="hover:bg-muted/10">
               {row.getVisibleCells().map((cell) => (
                 <td key={cell.id} className="px-4 py-3">
                   {flexRender(cell.column.columnDef.cell, cell.getContext())}

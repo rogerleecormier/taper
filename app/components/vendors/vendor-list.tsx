@@ -48,7 +48,7 @@ export function VendorList({ vendors }: VendorListProps) {
             href={url}
             target="_blank"
             rel="noopener noreferrer"
-            className="flex items-center gap-1 text-sm text-blue-600 hover:underline"
+            className="flex items-center gap-1 text-sm text-accent hover:underline"
           >
             {url.replace(/^https?:\/\//, "").split("/")[0]}
             <ExternalLink className="h-3 w-3" />
@@ -105,7 +105,7 @@ export function VendorList({ vendors }: VendorListProps) {
             <Button
               variant="ghost"
               size="sm"
-              className="h-8 w-8 p-0 text-red-500 hover:text-red-700"
+              className="h-8 w-8 p-0 text-danger hover:text-danger/80"
               onClick={() => handleDelete(vendor.id)}
               disabled={deletingId === vendor.id}
             >
@@ -155,7 +155,7 @@ export function VendorList({ vendors }: VendorListProps) {
                         href={vendor.website}
                         target="_blank"
                         rel="noopener noreferrer"
-                        className="inline-flex items-center gap-1 text-blue-600 hover:underline"
+                        className="inline-flex items-center gap-1 text-accent hover:underline"
                       >
                         {vendor.website.replace(/^https?:\/\//, "").split("/")[0]}
                         <ExternalLink className="h-3 w-3" />
@@ -185,7 +185,7 @@ export function VendorList({ vendors }: VendorListProps) {
                 <Button
                   variant="ghost"
                   size="sm"
-                  className="h-8 w-8 p-0 text-red-500 hover:text-red-700"
+                  className="h-8 w-8 p-0 text-danger hover:text-danger/80"
                   onClick={() => handleDelete(vendor.id)}
                   disabled={deletingId === vendor.id}
                 >

@@ -59,7 +59,7 @@ export function IncomeList({ incomeSources }: IncomeListProps) {
           <div className="flex items-center gap-2">
             <span className="font-medium">{info.getValue()}</span>
             {src.sourceType === "payroll" && (
-              <Badge className="border-violet-200 bg-violet-100 text-violet-800 text-xs">
+              <Badge className="border-accent/20 bg-accent/10 text-accent text-xs">
                 Payroll
               </Badge>
             )}
@@ -99,7 +99,7 @@ export function IncomeList({ incomeSources }: IncomeListProps) {
     columnHelper.accessor("amountCents", {
       header: "Amount",
       cell: (info) => (
-        <span className="font-medium tabular-nums text-green-700">
+        <span className="font-medium tabular-nums text-success">
           {formatCurrency(info.getValue())}
         </span>
       ),
@@ -116,7 +116,7 @@ export function IncomeList({ incomeSources }: IncomeListProps) {
       header: "Status",
       cell: (info) =>
         info.getValue() ? (
-          <Badge className="border-green-200 bg-green-100 text-green-800">
+          <Badge className="border-success/20 bg-success/10 text-success">
             Active
           </Badge>
         ) : (
@@ -156,7 +156,7 @@ export function IncomeList({ incomeSources }: IncomeListProps) {
                 <Tooltip>
                   <TooltipTrigger asChild>
                     <Link to="/income/$id" params={{ id: src.id }}>
-                      <Button variant="ghost" size="sm" className="h-8 w-8 p-0 text-violet-600 hover:text-violet-800">
+                      <Button variant="ghost" size="sm" className="h-8 w-8 p-0 text-accent hover:text-accent/80">
                         <ExternalLink className="h-3.5 w-3.5" />
                         <span className="sr-only">View Pay Cycles</span>
                       </Button>
@@ -169,7 +169,7 @@ export function IncomeList({ incomeSources }: IncomeListProps) {
             <Button
               variant="ghost"
               size="sm"
-              className="h-8 w-8 p-0 text-red-500 hover:text-red-700"
+              className="h-8 w-8 p-0 text-danger hover:text-danger/80"
               onClick={() => handleDelete(src.id)}
               disabled={deletingId === src.id}
             >
@@ -198,7 +198,7 @@ export function IncomeList({ incomeSources }: IncomeListProps) {
                 <div className="flex flex-wrap items-center gap-2">
                   <span className="font-medium break-words">{src.name}</span>
                   {src.sourceType === "payroll" && (
-                    <Badge className="border-violet-200 bg-violet-100 text-violet-800 text-xs">
+                    <Badge className="border-accent/20 bg-accent/10 text-accent text-xs">
                       Payroll
                     </Badge>
                   )}
@@ -231,7 +231,7 @@ export function IncomeList({ incomeSources }: IncomeListProps) {
                 />
                 {src.sourceType === "payroll" && (
                   <Link to="/income/$id" params={{ id: src.id }}>
-                    <Button variant="ghost" size="sm" className="h-8 w-8 p-0 text-violet-600 hover:text-violet-800">
+                    <Button variant="ghost" size="sm" className="h-8 w-8 p-0 text-accent hover:text-accent/80">
                       <ExternalLink className="h-3.5 w-3.5" />
                       <span className="sr-only">View Pay Cycles</span>
                     </Button>
@@ -240,7 +240,7 @@ export function IncomeList({ incomeSources }: IncomeListProps) {
                 <Button
                   variant="ghost"
                   size="sm"
-                  className="h-8 w-8 p-0 text-red-500 hover:text-red-700"
+                  className="h-8 w-8 p-0 text-danger hover:text-danger/80"
                   onClick={() => handleDelete(src.id)}
                   disabled={deletingId === src.id}
                 >
@@ -250,14 +250,14 @@ export function IncomeList({ incomeSources }: IncomeListProps) {
               </div>
             </div>
             <div className="mt-2 flex flex-wrap items-center gap-2 text-xs">
-              <span className="font-medium tabular-nums text-green-700">
+              <span className="font-medium tabular-nums text-success">
                 {formatCurrency(src.amountCents)}
               </span>
               <span className="text-muted-foreground">
                 {INTERVAL_LABELS[src.interval] ?? src.interval}
               </span>
               {src.isActive ? (
-                <Badge className="border-green-200 bg-green-100 text-green-800">Active</Badge>
+                <Badge className="border-success/20 bg-success/10 text-success">Active</Badge>
               ) : (
                 <Badge variant="secondary">Inactive</Badge>
               )}

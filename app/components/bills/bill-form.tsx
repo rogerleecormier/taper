@@ -260,7 +260,7 @@ export function BillForm({
           type="checkbox"
           checked={autoPay}
           onChange={(e) => setAutoPay(e.target.checked)}
-          className="h-4 w-4 rounded border-gray-300"
+          className="h-4 w-4 rounded border-input bg-card text-primary focus:ring-primary focus:ring-offset-background cursor-pointer"
         />
         <Label htmlFor="auto-pay" className="cursor-pointer font-normal">
           Auto-pay enabled
@@ -276,7 +276,7 @@ export function BillForm({
           placeholder="Any additional notes..."
           value={notes}
           onChange={(e) => setNotes(e.target.value)}
-          className="w-full rounded-md border border-input bg-transparent px-3 py-2 text-sm shadow-sm placeholder:text-muted-foreground focus:outline-none focus:ring-1 focus:ring-ring disabled:cursor-not-allowed disabled:opacity-50"
+          className="w-full rounded-md border border-input bg-card px-3 py-2 text-sm shadow-sm placeholder:text-muted-foreground focus:outline-none focus:ring-1 focus:ring-primary disabled:cursor-not-allowed disabled:opacity-50"
         />
       </div>
 

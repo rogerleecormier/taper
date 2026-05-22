@@ -301,8 +301,8 @@ function PipelineStep({
   return (
     <div className="flex items-start gap-3">
       <div className="mt-0.5 flex-shrink-0 w-5">
-        {status === "done" && <CheckCircle2 className="h-5 w-5 text-green-500" />}
-        {status === "active" && <Loader2 className="h-5 w-5 text-blue-500 animate-spin" />}
+        {status === "done" && <CheckCircle2 className="h-5 w-5 text-success" />}
+        {status === "active" && <Loader2 className="h-5 w-5 text-accent animate-spin" />}
         {status === "pending" && (
           <div className="h-5 w-5 rounded-full border-2 border-muted-foreground/30" />
         )}
@@ -406,11 +406,11 @@ function PaystubAnalysisModal({
               </div>
               <div className="rounded-lg border p-3 text-center">
                 <p className="text-xs text-muted-foreground mb-1">Deductions</p>
-                <p className="text-lg font-bold text-red-600">−{formatCurrency(totalDeductions)}</p>
+                <p className="text-lg font-bold text-danger">−{formatCurrency(totalDeductions)}</p>
               </div>
-              <div className="rounded-lg border bg-green-50 p-3 text-center">
+              <div className="rounded-lg border bg-success/10 border-success/20 p-3 text-center">
                 <p className="text-xs text-muted-foreground mb-1">Net Pay</p>
-                <p className="text-lg font-bold text-green-700">{formatCurrency(result.netPayCents)}</p>
+                <p className="text-lg font-bold text-success">{formatCurrency(result.netPayCents)}</p>
               </div>
             </div>
 
@@ -483,7 +483,7 @@ function PaystubAnalysisModal({
                 variant="outline"
                 onClick={onReject}
                 disabled={isRejecting}
-                className="text-red-600 hover:text-red-700 hover:border-red-300"
+                className="text-danger hover:text-danger/80 hover:border-danger/30"
               >
                 {isRejecting ? (
                   <Loader2 className="h-4 w-4 animate-spin mr-1.5" />
@@ -504,7 +504,7 @@ function PaystubAnalysisModal({
         {phase === "error" && (
           <>
             <DialogHeader>
-              <DialogTitle className="flex items-center gap-2 text-red-600">
+              <DialogTitle className="flex items-center gap-2 text-danger">
                 <AlertCircle className="h-5 w-5 flex-shrink-0" />
                 Analysis Failed
               </DialogTitle>
@@ -513,7 +513,7 @@ function PaystubAnalysisModal({
               </DialogDescription>
             </DialogHeader>
             {errorMessage && (
-              <div className="rounded-lg bg-red-50 border border-red-200 px-3 py-2.5 text-sm text-red-700">
+              <div className="rounded-lg bg-danger/10 border border-danger/20 px-3 py-2.5 text-sm text-danger">
                 {errorMessage}
               </div>
             )}
@@ -534,21 +534,21 @@ function PaystubAnalysisModal({
 function PaystubStatusBadge({ status }: { status: string }) {
   if (status === "analyzed")
     return (
-      <Badge className="border-green-200 bg-green-100 text-green-800 gap-1">
+      <Badge className="border-success/20 bg-success/10 text-success gap-1">
         <CheckCircle2 className="h-3 w-3" />
         Analyzed
       </Badge>
     );
   if (status === "analyzing")
     return (
-      <Badge className="border-blue-200 bg-blue-100 text-blue-800 gap-1">
+      <Badge className="border-accent/20 bg-accent/10 text-accent gap-1">
         <Loader2 className="h-3 w-3 animate-spin" />
         Analyzing
       </Badge>
     );
   if (status === "error")
     return (
-      <Badge className="border-red-200 bg-red-100 text-red-800 gap-1">
+      <Badge className="border-danger/20 bg-danger/10 text-danger gap-1">
         <AlertCircle className="h-3 w-3" />
         Error
       </Badge>
@@ -723,7 +723,7 @@ function OccurrenceRow({ incomeSourceId, occurrence, paystub }: OccurrenceRowPro
             {paystub?.status === "analyzed" && paystub.netPayCents != null && (
               <div className="text-right hidden sm:block">
                 <p className="text-xs text-muted-foreground">Net Pay</p>
-                <p className="font-semibold text-sm text-green-700">
+                <p className="font-semibold text-sm text-success">
                   {formatCurrency(paystub.netPayCents)}
                 </p>
               </div>
@@ -758,7 +758,7 @@ function OccurrenceRow({ incomeSourceId, occurrence, paystub }: OccurrenceRowPro
               <Button
                 size="sm"
                 variant="ghost"
-                className="h-8 w-8 p-0 text-red-400 hover:text-red-600"
+                className="h-8 w-8 p-0 text-danger hover:text-danger/80"
                 onClick={(e) => {
                   e.stopPropagation();
                   handleDelete();
@@ -781,15 +781,15 @@ function OccurrenceRow({ incomeSourceId, occurrence, paystub }: OccurrenceRowPro
               </div>
               <div className="rounded-md bg-muted/40 p-3 text-center">
                 <p className="text-xs text-muted-foreground mb-0.5">Total Deductions</p>
-                <p className="font-semibold text-sm text-red-600">
+                <p className="font-semibold text-sm text-danger">
                   {formatCurrency(
                     paystub.deductions.reduce((s, d) => s + d.amountCents, 0),
                   )}
                 </p>
               </div>
-              <div className="rounded-md bg-green-50 p-3 text-center">
+              <div className="rounded-md bg-success/10 border-success/20 border p-3 text-center">
                 <p className="text-xs text-muted-foreground mb-0.5">Net Pay</p>
-                <p className="font-semibold text-sm text-green-700">
+                <p className="font-semibold text-sm text-success">
                   {formatCurrency(paystub.netPayCents ?? 0)}
                 </p>
               </div>
@@ -834,7 +834,7 @@ function OccurrenceRow({ incomeSourceId, occurrence, paystub }: OccurrenceRowPro
         )}
 
         {expanded && paystub?.status === "error" && (
-          <div className="px-4 py-3 border-t bg-red-50 text-sm text-red-700">
+          <div className="px-4 py-3 border-t bg-danger/10 border-danger/20 border text-sm text-danger">
             {paystub.errorMessage ?? "An error occurred during analysis."}
           </div>
         )}
@@ -884,9 +884,9 @@ function PayrollDetailPage() {
         <div className="flex items-start justify-between gap-4">
           <div>
             <div className="flex items-center gap-2">
-              <h1 className="text-2xl font-bold">{source.name}</h1>
+              <h1 className="text-3xl font-extrabold font-heading text-foreground tracking-tight">{source.name}</h1>
               {source.sourceType === "payroll" && (
-                <Badge className="border-violet-200 bg-violet-100 text-violet-800">Payroll</Badge>
+                <Badge className="border-accent/20 bg-accent/10 text-accent">Payroll</Badge>
               )}
             </div>
             <p className="text-sm text-muted-foreground mt-1">
@@ -899,10 +899,10 @@ function PayrollDetailPage() {
       {projection ? (
         <Card>
           <CardHeader className="pb-3">
-            <CardTitle className="text-base flex items-center gap-2">
-              <TrendingUp className="h-4 w-4 text-blue-500" />
+            <CardTitle className="text-base flex items-center gap-2 font-heading">
+              <TrendingUp className="h-4 w-4 text-accent" />
               Paycheck Projection
-              <span className="text-xs font-normal text-muted-foreground">
+              <span className="text-xs font-normal text-muted-foreground font-sans">
                 based on last {projection.basedOnCount} paystub
                 {projection.basedOnCount !== 1 ? "s" : ""}
               </span>
@@ -914,9 +914,9 @@ function PayrollDetailPage() {
                 <p className="text-xs text-muted-foreground mb-1">Avg Gross Pay</p>
                 <p className="text-lg font-semibold">{formatCurrency(projection.avgGrossPayCents)}</p>
               </div>
-              <div className="rounded-md border bg-green-50 p-3">
+              <div className="rounded-md border bg-success/10 border-success/20 p-3">
                 <p className="text-xs text-muted-foreground mb-1">Avg Net Pay</p>
-                <p className="text-lg font-semibold text-green-700">
+                <p className="text-lg font-semibold text-success">
                   {formatCurrency(projection.avgNetPayCents)}
                 </p>
               </div>
@@ -935,7 +935,7 @@ function PayrollDetailPage() {
                         <span className="text-muted-foreground">
                           {DEDUCTION_CATEGORY_LABELS[d.category as DeductionCategory] ?? d.label}
                         </span>
-                        <span className="font-medium tabular-nums text-red-600">
+                        <span className="font-medium tabular-nums text-danger">
                           −{formatCurrency(d.avgAmountCents)}
                         </span>
                       </div>
@@ -957,7 +957,7 @@ function PayrollDetailPage() {
       )}
 
       <div>
-        <h2 className="text-base font-semibold mb-3">Pay Periods</h2>
+        <h2 className="text-base font-semibold font-heading mb-3 text-foreground">Pay Periods</h2>
         {occurrences.length === 0 ? (
           <p className="text-sm text-muted-foreground">No pay periods generated yet.</p>
         ) : (

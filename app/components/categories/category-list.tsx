@@ -59,7 +59,7 @@ export function CategoryList({ categories }: CategoryListProps) {
                 style={{ backgroundColor: cat.color }}
               />
             ) : (
-              <span className="h-4 w-4 flex-shrink-0 rounded-full bg-gray-200" />
+              <span className="h-4 w-4 flex-shrink-0 rounded-full bg-muted" />
             )}
             {cat.icon && (
               <span className="text-base leading-none">{cat.icon}</span>
@@ -75,11 +75,11 @@ export function CategoryList({ categories }: CategoryListProps) {
       cell: (info) => {
         const t = info.getValue();
         return t === "income" ? (
-          <Badge className="border-green-200 bg-green-100 text-green-800">
+          <Badge className="border-success/20 bg-success/10 text-success">
             Income
           </Badge>
         ) : (
-          <Badge className="border-red-200 bg-red-100 text-red-800">
+          <Badge className="border-danger/20 bg-danger/10 text-danger">
             Expense
           </Badge>
         );
@@ -122,7 +122,7 @@ export function CategoryList({ categories }: CategoryListProps) {
             <Button
               variant="ghost"
               size="sm"
-              className="h-8 w-8 p-0 text-red-500 hover:text-red-700"
+              className="h-8 w-8 p-0 text-danger hover:text-danger/80"
               onClick={() => handleDelete(cat.id)}
               disabled={deletingId === cat.id}
             >
@@ -171,16 +171,16 @@ export function CategoryList({ categories }: CategoryListProps) {
                   {cat.color ? (
                     <span className="h-4 w-4 flex-shrink-0 rounded-full" style={{ backgroundColor: cat.color }} />
                   ) : (
-                    <span className="h-4 w-4 flex-shrink-0 rounded-full bg-gray-200" />
+                    <span className="h-4 w-4 flex-shrink-0 rounded-full bg-muted" />
                   )}
                   {cat.icon && <span className="text-base leading-none">{cat.icon}</span>}
                   <span className="font-medium break-words">{cat.name}</span>
                 </div>
                 <div className="mt-2 flex flex-wrap items-center gap-2 text-xs">
                   {cat.type === "income" ? (
-                    <Badge className="border-green-200 bg-green-100 text-green-800">Income</Badge>
+                    <Badge className="border-success/20 bg-success/10 text-success">Income</Badge>
                   ) : (
-                    <Badge className="border-red-200 bg-red-100 text-red-800">Expense</Badge>
+                    <Badge className="border-danger/20 bg-danger/10 text-danger">Expense</Badge>
                   )}
                   <span className="font-mono text-muted-foreground">{cat.color ?? "—"}</span>
                 </div>
@@ -204,7 +204,7 @@ export function CategoryList({ categories }: CategoryListProps) {
                 <Button
                   variant="ghost"
                   size="sm"
-                  className="h-8 w-8 p-0 text-red-500 hover:text-red-700"
+                  className="h-8 w-8 p-0 text-danger hover:text-danger/80"
                   onClick={() => handleDelete(cat.id)}
                   disabled={deletingId === cat.id}
                 >

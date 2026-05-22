@@ -18,10 +18,10 @@ interface UpcomingBillsListProps {
 type DayFilter = 7 | 14 | 30;
 
 const STATUS_CLASSES: Record<string, string> = {
-  pending: "border-amber-200 bg-amber-50 text-amber-700",
-  paid: "border-green-200 bg-green-50 text-green-700",
-  overdue: "border-red-200 bg-red-50 text-red-700",
-  skipped: "border-gray-200 bg-gray-50 text-gray-500",
+  pending: "border-warning/20 bg-warning/10 text-warning",
+  paid: "border-success/20 bg-success/10 text-success",
+  overdue: "border-danger/20 bg-danger/10 text-danger",
+  skipped: "border-border bg-muted/50 text-muted-foreground",
 };
 
 function getFilteredBills(bills: UpcomingBill[], days: DayFilter, referenceDate: Date) {

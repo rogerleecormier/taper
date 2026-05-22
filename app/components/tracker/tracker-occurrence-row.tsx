@@ -49,13 +49,13 @@ function isCredit(occ: AnyOcc): occ is CreditOccurrence {
 }
 
 const STATUS_STYLES: Record<string, string> = {
-  paid: "border-green-200 bg-green-100 text-green-800",
-  received: "border-teal-200 bg-teal-100 text-teal-800",
-  partial: "border-blue-200 bg-blue-50 text-blue-800",
-  pending: "border-amber-200 bg-amber-50 text-amber-700",
-  overdue: "border-red-200 bg-red-100 text-red-800",
-  skipped: "border-gray-200 bg-gray-100 text-gray-500",
-  carried: "border-purple-200 bg-purple-50 text-purple-700",
+  paid: "border-success/20 bg-success/10 text-success",
+  received: "border-accent/20 bg-accent/10 text-accent",
+  partial: "border-accent/20 bg-accent/10 text-accent",
+  pending: "border-warning/20 bg-warning/10 text-warning",
+  overdue: "border-danger/20 bg-danger/10 text-danger",
+  skipped: "border-border bg-muted/50 text-muted-foreground",
+  carried: "border-accent/25 bg-accent/5 text-accent",
 };
 
 interface Props {
@@ -76,15 +76,15 @@ function PaymentRow({
 }) {
   const deletePayment = useDeleteBillPayment();
   return (
-    <div className="flex flex-wrap items-center gap-2 px-4 pl-10 sm:pl-14 py-1 text-xs border-b border-dashed border-muted last:border-0 hover:bg-muted/10">
+    <div className="flex flex-wrap items-center gap-2 px-4 pl-10 sm:pl-14 py-1.5 text-xs border-b border-dashed border-border last:border-0 hover:bg-muted/10">
       <CornerDownRight className="h-3 w-3 flex-shrink-0 text-muted-foreground" />
       <span className="w-20 flex-shrink-0 tabular-nums text-muted-foreground">
         {payment.paidDate}
       </span>
-      <span className="w-24 flex-shrink-0 tabular-nums font-medium text-green-700">
+      <span className="w-24 flex-shrink-0 tabular-nums font-bold text-success">
         {formatCurrency(payment.amountCents)}
       </span>
-      <span className="rounded border border-green-200 bg-green-50 px-1.5 py-0.5 text-[11px] text-green-700 flex-shrink-0">
+      <span className="rounded border border-success/20 bg-success/10 px-1.5 py-0.5 text-[11px] font-medium text-success flex-shrink-0">
         paid
       </span>
       {payment.notes && (
@@ -93,13 +93,13 @@ function PaymentRow({
       <Button
         size="sm"
         variant="ghost"
-        className="sm:ml-auto h-7 w-7 p-0 flex-shrink-0 text-muted-foreground hover:text-destructive"
+        className="sm:ml-auto h-7 w-7 p-0 flex-shrink-0 text-muted-foreground hover:text-destructive cursor-pointer"
         disabled={deletePayment.isPending}
         onClick={() =>
           deletePayment.mutate({ id: payment.id, occurrenceId })
         }
       >
-        <Trash2 className="h-3 w-3" />
+        <Trash2 className="h-3.5 w-3.5" />
       </Button>
     </div>
   );
@@ -114,15 +114,15 @@ function ReceiptRow({
 }) {
   const deleteReceipt = useDeleteCreditReceipt();
   return (
-    <div className="flex flex-wrap items-center gap-2 px-4 pl-10 sm:pl-14 py-1 text-xs border-b border-dashed border-muted last:border-0 hover:bg-muted/10">
+    <div className="flex flex-wrap items-center gap-2 px-4 pl-10 sm:pl-14 py-1.5 text-xs border-b border-dashed border-border last:border-0 hover:bg-muted/10">
       <CornerDownRight className="h-3 w-3 flex-shrink-0 text-muted-foreground" />
       <span className="w-20 flex-shrink-0 tabular-nums text-muted-foreground">
         {receipt.receivedDate}
       </span>
-      <span className="w-24 flex-shrink-0 tabular-nums font-medium text-teal-700">
+      <span className="w-24 flex-shrink-0 tabular-nums font-bold text-accent">
         {formatCurrency(receipt.amountCents)}
       </span>
-      <span className="rounded border border-teal-200 bg-teal-50 px-1.5 py-0.5 text-[11px] text-teal-700 flex-shrink-0">
+      <span className="rounded border border-accent/20 bg-accent/10 px-1.5 py-0.5 text-[11px] font-medium text-accent flex-shrink-0">
         received
       </span>
       {receipt.notes && (
@@ -131,13 +131,13 @@ function ReceiptRow({
       <Button
         size="sm"
         variant="ghost"
-        className="sm:ml-auto h-7 w-7 p-0 flex-shrink-0 text-muted-foreground hover:text-destructive"
+        className="sm:ml-auto h-7 w-7 p-0 flex-shrink-0 text-muted-foreground hover:text-destructive cursor-pointer"
         disabled={deleteReceipt.isPending}
         onClick={() =>
           deleteReceipt.mutate({ id: receipt.id, occurrenceId })
         }
       >
-        <Trash2 className="h-3 w-3" />
+        <Trash2 className="h-3.5 w-3.5" />
       </Button>
     </div>
   );
@@ -256,7 +256,7 @@ export function TrackerOccurrenceRow({ occurrence, type, billName, interval, pay
   return (
     <div
       className={cn(
-        "border-b border-dashed border-muted last:border-0",
+        "border-b border-dashed border-border last:border-0",
         isBusy && "opacity-60"
       )}
     >
@@ -284,20 +284,20 @@ export function TrackerOccurrenceRow({ occurrence, type, billName, interval, pay
 
       {/* Carry-forward mode — full-width row replacement */}
       {mode === "carry" && (
-        <div className="flex flex-wrap items-center gap-2 px-4 pl-8 sm:pl-10 py-2 bg-amber-50 border-b border-dashed border-amber-200">
-          <span className="text-xs text-amber-700 flex-shrink-0 font-medium">
+        <div className="flex flex-wrap items-center gap-2 px-4 pl-8 sm:pl-10 py-2 bg-warning/10 border-b border-dashed border-warning/20">
+          <span className="text-xs text-warning flex-shrink-0 font-bold">
             Carry {formatCurrency(carryAmount)} to:
           </span>
           <Input
             type="date"
             value={carryDate}
             onChange={(e) => setCarryDate(e.target.value)}
-            className="h-7 w-36 text-xs flex-shrink-0"
+            className="h-7 w-36 text-xs flex-shrink-0 border-input bg-card text-foreground focus:ring-ring"
           />
           <div className="sm:ml-auto flex items-center gap-1 flex-shrink-0">
             <Button
               size="sm"
-              className="h-7 px-2 text-xs bg-amber-600 hover:bg-amber-700 text-white"
+              className="h-7 px-2 text-xs bg-warning hover:bg-warning/90 text-white font-semibold cursor-pointer"
               disabled={isCredit_ ? carryForwardCredit.isPending : carryForward.isPending}
               onClick={async () => {
                 try {
@@ -324,7 +324,7 @@ export function TrackerOccurrenceRow({ occurrence, type, billName, interval, pay
             <Button
               size="sm"
               variant="ghost"
-              className="h-7 w-7 p-0"
+              className="h-7 w-7 p-0 cursor-pointer"
               onClick={() => setMode("view")}
             >
               <X className="h-3 w-3" />
@@ -342,7 +342,7 @@ export function TrackerOccurrenceRow({ occurrence, type, billName, interval, pay
             type="date"
             value={editDate}
             onChange={(e) => setEditDate(e.target.value)}
-            className="h-7 w-36 text-xs flex-shrink-0"
+            className="h-7 w-36 text-xs flex-shrink-0 border-input bg-card text-foreground"
           />
         ) : (
           <span className="w-20 flex-shrink-0 text-xs tabular-nums text-muted-foreground">
@@ -366,14 +366,14 @@ export function TrackerOccurrenceRow({ occurrence, type, billName, interval, pay
                   ? setEditAmount(e.target.value)
                   : setIncomePayAmount(e.target.value)
               }
-              className="h-7 pl-5 text-xs w-28"
+              className="h-7 pl-5 text-xs w-28 border-input bg-card text-foreground"
             />
           </div>
         ) : (
           <span
             className={cn(
-              "w-24 tabular-nums font-medium flex-shrink-0 text-xs",
-              isIncome ? "text-green-700" : isCredit_ ? "text-teal-700" : "text-red-600"
+              "w-24 tabular-nums font-bold flex-shrink-0 text-xs",
+              isIncome ? "text-success" : isCredit_ ? "text-accent" : "text-danger"
             )}
           >
             {(!isIncome && !isCredit_) ? `-${formatCurrency(occurrence.amountCents)}` : formatCurrency(occurrence.amountCents)}
@@ -386,19 +386,19 @@ export function TrackerOccurrenceRow({ occurrence, type, billName, interval, pay
             type="date"
             value={incomePayDate}
             onChange={(e) => setIncomePayDate(e.target.value)}
-            className="h-7 w-36 text-xs flex-shrink-0"
+            className="h-7 w-36 text-xs flex-shrink-0 border-input bg-card text-foreground"
           />
         )}
 
         {/* Remaining balance (partial/overdue with some payments) */}
         {mode === "view" && isBill(occurrence) && paidSoFar > 0 && status !== "paid" && (
-          <span className="text-xs tabular-nums text-blue-600 flex-shrink-0">
+          <span className="text-xs tabular-nums text-accent font-semibold flex-shrink-0">
             {formatCurrency(remaining)} left
           </span>
         )}
 
         {mode === "view" && isCredit(occurrence) && receivedSoFar > 0 && status !== "received" && (
-          <span className="text-xs tabular-nums text-teal-600 flex-shrink-0">
+          <span className="text-xs tabular-nums text-accent font-semibold flex-shrink-0">
             {formatCurrency(creditRemaining)} left
           </span>
         )}
@@ -407,7 +407,7 @@ export function TrackerOccurrenceRow({ occurrence, type, billName, interval, pay
         {mode === "view" && (
           <span
             className={cn(
-              "inline-flex rounded border px-1.5 py-0.5 text-[11px] font-medium capitalize flex-shrink-0",
+              "inline-flex rounded border px-1.5 py-0.5 text-[11px] font-bold capitalize flex-shrink-0",
               STATUS_STYLES[status] ?? STATUS_STYLES.pending
             )}
           >
@@ -422,7 +422,7 @@ export function TrackerOccurrenceRow({ occurrence, type, billName, interval, pay
         )}
 
         {mode === "view" && (isBill(occurrence) || isCredit(occurrence)) && occurrence.carriedFromId && (
-          <span className="inline-flex rounded border border-orange-200 bg-orange-50 px-1.5 py-0.5 text-[11px] font-medium text-orange-700 flex-shrink-0">
+          <span className="inline-flex rounded border border-warning/20 bg-warning/10 px-1.5 py-0.5 text-[11px] font-semibold text-warning flex-shrink-0">
             Deferred
           </span>
         )}
@@ -433,7 +433,7 @@ export function TrackerOccurrenceRow({ occurrence, type, billName, interval, pay
             <div className="flex items-center gap-1 justify-end">
               <Button
                 size="sm"
-                className="h-7 px-2 text-xs"
+                className="h-7 px-2 text-xs bg-primary hover:bg-primary/95 text-primary-foreground font-semibold cursor-pointer"
                 onClick={handleSaveEdit}
                 disabled={isBusy}
               >
@@ -449,7 +449,7 @@ export function TrackerOccurrenceRow({ occurrence, type, billName, interval, pay
               <Button
                 size="sm"
                 variant="ghost"
-                className="h-7 w-7 p-0"
+                className="h-7 w-7 p-0 cursor-pointer"
                 onClick={() => setMode("view")}
               >
                 <X className="h-3 w-3" />
@@ -461,7 +461,7 @@ export function TrackerOccurrenceRow({ occurrence, type, billName, interval, pay
             <div className="flex items-center gap-1 justify-end">
               <Button
                 size="sm"
-                className="h-7 px-2 text-xs bg-green-600 hover:bg-green-700"
+                className="h-7 px-2 text-xs bg-success hover:bg-success/90 text-white font-semibold cursor-pointer"
                 onClick={handleIncomeReceive}
                 disabled={isBusy}
               >
@@ -477,7 +477,7 @@ export function TrackerOccurrenceRow({ occurrence, type, billName, interval, pay
               <Button
                 size="sm"
                 variant="ghost"
-                className="h-7 w-7 p-0"
+                className="h-7 w-7 p-0 cursor-pointer"
                 onClick={() => setMode("view")}
               >
                 <X className="h-3 w-3" />
@@ -492,13 +492,13 @@ export function TrackerOccurrenceRow({ occurrence, type, billName, interval, pay
                 size="sm"
                 variant="outline"
                 className={cn(
-                  "h-7 px-2 text-[11px] sm:text-xs",
+                  "h-7 px-2 text-[11px] sm:text-xs font-semibold cursor-pointer",
                   status !== "skipped" && status !== "carried"
                     ? isIncome
-                      ? "border-green-200 text-green-700 hover:bg-green-50"
+                      ? "border-success/20 text-success hover:bg-success/10 hover:border-success/30"
                       : isCredit_
-                        ? "border-teal-200 text-teal-700 hover:bg-teal-50"
-                        : "border-blue-200 text-blue-700 hover:bg-blue-50"
+                        ? "border-accent/20 text-accent hover:bg-accent/10 hover:border-accent/30"
+                        : "border-accent/20 text-accent hover:bg-accent/10 hover:border-accent/30"
                     : "invisible"
                 )}
                 onClick={() => {
@@ -542,7 +542,7 @@ export function TrackerOccurrenceRow({ occurrence, type, billName, interval, pay
                 size="sm"
                 variant="outline"
                 className={cn(
-                  "h-7 px-2 text-[11px] sm:text-xs border-amber-200 text-amber-700 hover:bg-amber-50",
+                  "h-7 px-2 text-[11px] sm:text-xs font-semibold border-warning/20 text-warning hover:bg-warning/10 hover:border-warning/35 cursor-pointer",
                   !(
                     (type === "bill" &&
                       status !== "paid" &&
@@ -583,10 +583,10 @@ export function TrackerOccurrenceRow({ occurrence, type, billName, interval, pay
                 size="sm"
                 variant="outline"
                 className={cn(
-                  "h-7 px-2 text-[11px] sm:text-xs",
+                  "h-7 px-2 text-[11px] sm:text-xs font-semibold cursor-pointer",
                   isIncome
-                    ? "border-gray-200 text-gray-500 hover:bg-gray-50 hover:text-gray-700"
-                    : "border-orange-200 text-orange-700 hover:bg-orange-50",
+                    ? "border-border text-muted-foreground hover:bg-muted hover:text-foreground"
+                    : "border-warning/20 text-warning hover:bg-warning/10",
                   !(
                     (isIncome &&
                       status !== "received" &&
@@ -639,7 +639,7 @@ export function TrackerOccurrenceRow({ occurrence, type, billName, interval, pay
               <Button
                 size="sm"
                 variant="ghost"
-                className="h-7 px-2 text-[11px] sm:text-xs text-muted-foreground hover:text-foreground"
+                className="h-7 px-2 text-[11px] sm:text-xs text-muted-foreground hover:text-foreground hover:bg-muted cursor-pointer"
                 onClick={() => setMode("edit")}
               >
                 <Pencil className="h-3 w-3 mr-1" />
@@ -653,7 +653,7 @@ export function TrackerOccurrenceRow({ occurrence, type, billName, interval, pay
 
       {/* Payments for this occurrence — always visible when they exist */}
       {payments.length > 0 && (
-        <div className="bg-muted/5">
+        <div className="bg-muted/10 border-t border-border">
           {payments.map((p) => (
             <PaymentRow key={p.id} payment={p} occurrenceId={occurrence.id} />
           ))}
@@ -662,7 +662,7 @@ export function TrackerOccurrenceRow({ occurrence, type, billName, interval, pay
 
       {/* Receipts for this credit occurrence */}
       {receipts.length > 0 && (
-        <div className="bg-muted/5">
+        <div className="bg-muted/10 border-t border-border">
           {receipts.map((r) => (
             <ReceiptRow key={r.id} receipt={r} occurrenceId={occurrence.id} />
           ))}

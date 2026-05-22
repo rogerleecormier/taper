@@ -43,12 +43,12 @@ const INTERVAL_LABELS: Record<string, string> = {
 };
 
 const STATUS_STYLES: Record<string, string> = {
-  paid: "border-green-200 bg-green-100 text-green-800",
-  partial: "border-blue-200 bg-blue-50 text-blue-800",
-  pending: "border-amber-200 bg-amber-50 text-amber-700",
-  overdue: "border-red-200 bg-red-100 text-red-800",
-  skipped: "border-gray-200 bg-gray-100 text-gray-500",
-  carried: "border-purple-200 bg-purple-50 text-purple-700",
+  paid: "border-success/20 bg-success/10 text-success",
+  partial: "border-warning/20 bg-warning/10 text-warning",
+  pending: "border-border bg-muted/50 text-muted-foreground",
+  overdue: "border-danger/20 bg-danger/10 text-danger",
+  skipped: "border-border bg-muted/50 text-muted-foreground",
+  carried: "border-accent/20 bg-accent/10 text-accent",
 };
 
 // ─── Payment row with delete ───────────────────────────────────────────────
@@ -67,7 +67,7 @@ function PaymentRow({
       <span className="w-24 flex-shrink-0 tabular-nums text-muted-foreground">
         {payment.paidDate}
       </span>
-      <span className="w-28 flex-shrink-0 tabular-nums font-semibold text-green-700">
+      <span className="w-28 flex-shrink-0 tabular-nums font-semibold text-success">
         {formatCurrency(payment.amountCents)}
       </span>
       {payment.notes && (
@@ -216,7 +216,7 @@ function OccurrenceCard({
               {occurrence.status}
             </span>
             {occurrence.carriedFromId && (
-              <span className="inline-flex rounded border border-orange-200 bg-orange-50 px-1.5 py-0.5 text-[11px] font-medium text-orange-700">
+              <span className="inline-flex rounded border border-warning/20 bg-warning/10 px-1.5 py-0.5 text-[11px] font-medium text-warning">
                 Deferred
               </span>
             )}
@@ -225,7 +225,7 @@ function OccurrenceCard({
                 "ml-auto font-semibold tabular-nums",
                 occurrence.status === "skipped"
                   ? "text-muted-foreground"
-                  : "text-red-600"
+                  : "text-danger"
               )}
             >
               {formatCurrency(occurrence.amountCents)}
@@ -252,8 +252,8 @@ function OccurrenceCard({
 
       {/* Delete confirmation */}
       {confirmDelete && (
-        <div className="flex items-center gap-2 px-4 py-2.5 bg-red-50 border-b border-red-200">
-          <span className="text-xs text-red-800 font-medium">
+        <div className="flex items-center gap-2 px-4 py-2.5 bg-danger/5 border-b border-danger/20">
+          <span className="text-xs text-danger font-medium">
             Delete this instance{occurrence.payments.length > 0 ? " and its payments" : ""}?
           </span>
           <div className="ml-auto flex items-center gap-1.5">
@@ -296,14 +296,14 @@ function OccurrenceCard({
         <div className="flex items-center gap-4 px-4 py-2 bg-muted/10 text-xs text-muted-foreground border-b">
           <span>
             Paid:{" "}
-            <span className="font-semibold text-green-700">
+            <span className="font-semibold text-success">
               {formatCurrency(paidTotal)}
             </span>
           </span>
           {remaining > 0 && (
             <span>
               Remaining:{" "}
-              <span className="font-semibold text-red-600">
+              <span className="font-semibold text-danger">
                 {formatCurrency(remaining)}
               </span>
             </span>
@@ -313,7 +313,7 @@ function OccurrenceCard({
 
       {/* Skipped / carried notice */}
       {occurrence.status === "carried" && (
-        <div className="px-4 py-2 text-xs text-purple-700 bg-purple-50/50 border-b">
+        <div className="px-4 py-2 text-xs text-accent bg-accent/5 border-b">
           Balance of {formatCurrency(remaining)} carried forward to a new instance
         </div>
       )}
@@ -339,8 +339,8 @@ function OccurrenceCard({
 
       {/* Carry-forward inline form */}
       {carryMode && (
-        <div className="flex items-center gap-2 px-4 py-2.5 bg-amber-50/60 border-b border-dashed border-amber-200">
-          <span className="text-xs text-amber-800 font-medium flex-shrink-0">
+        <div className="flex items-center gap-2 px-4 py-2.5 bg-warning/5 border-b border-dashed border-warning/25">
+          <span className="text-xs text-warning font-medium flex-shrink-0">
             Carry {formatCurrency(remaining)} to:
           </span>
           <Input
@@ -351,7 +351,7 @@ function OccurrenceCard({
           />
           <Button
             size="sm"
-            className="h-7 px-2 text-xs bg-amber-600 hover:bg-amber-700 text-white flex-shrink-0"
+            className="h-7 px-2 text-xs bg-warning text-primary-foreground hover:bg-warning/90 flex-shrink-0"
             disabled={carryForward.isPending}
             onClick={handleCarryForward}
           >
@@ -384,7 +384,7 @@ function OccurrenceCard({
           <Button
             size="sm"
             variant="outline"
-            className="h-7 px-2.5 text-xs border-blue-200 text-blue-700 hover:bg-blue-50"
+            className="h-7 px-2.5 text-xs border-accent/20 text-accent hover:bg-accent/10"
             onClick={() => setPayModalOpen(true)}
           >
             <Check className="h-3 w-3 mr-1" />
@@ -408,7 +408,7 @@ function OccurrenceCard({
             <Button
               size="sm"
               variant="ghost"
-              className="h-7 px-2.5 text-xs text-orange-700 hover:text-orange-900"
+              className="h-7 px-2.5 text-xs text-warning hover:text-warning/80"
               disabled={reverseCarry.isPending}
               onClick={() => reverseCarry.mutate(occurrence.id)}
             >
@@ -486,11 +486,11 @@ function BillDetailPage() {
       {/* Bill header */}
       <div className="flex items-start justify-between gap-4">
         <div className="flex items-center gap-3">
-          <div className="rounded-full bg-red-100 p-2.5">
-            <Receipt className="h-5 w-5 text-red-600" />
+          <div className="rounded-full bg-danger/10 border border-danger/20 p-2.5">
+            <Receipt className="h-5 w-5 text-danger" />
           </div>
           <div>
-            <h1 className="text-2xl font-bold">{bill.name}</h1>
+            <h1 className="text-2xl font-bold font-heading">{bill.name}</h1>
             <div className="mt-1 flex flex-wrap items-center gap-x-3 gap-y-1 text-sm text-muted-foreground">
               <span className="font-semibold tabular-nums text-foreground">
                 {formatCurrency(bill.amountCents)}
@@ -511,8 +511,8 @@ function BillDetailPage() {
               <Badge
                 className={
                   bill.isActive
-                    ? "border-green-200 bg-green-100 text-green-800"
-                    : "border-gray-200 bg-gray-100 text-gray-600"
+                    ? "border-success/20 bg-success/10 text-success"
+                    : "border-border bg-muted/50 text-muted-foreground"
                 }
               >
                 {bill.isActive ? "Active" : "Inactive"}
@@ -539,12 +539,12 @@ function BillDetailPage() {
           {
             label: "Total Paid",
             value: formatCurrency(totalPaid),
-            valueClass: "text-green-700",
+            valueClass: "text-success",
           },
           {
             label: "Outstanding",
             value: formatCurrency(outstanding),
-            valueClass: outstanding > 0 ? "text-red-600" : "text-muted-foreground",
+            valueClass: outstanding > 0 ? "text-danger" : "text-muted-foreground",
           },
         ].map(({ label, value, valueClass }) => (
           <div

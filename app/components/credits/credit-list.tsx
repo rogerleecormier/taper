@@ -94,7 +94,7 @@ export function CreditList({ credits }: CreditListProps) {
     columnHelper.accessor("amountCents", {
       header: "Amount",
       cell: (info) => (
-        <span className="tabular-nums font-medium text-teal-700">
+        <span className="tabular-nums font-medium text-accent">
           {formatCurrency(info.getValue())}
         </span>
       ),
@@ -111,7 +111,7 @@ export function CreditList({ credits }: CreditListProps) {
       header: "Status",
       cell: (info) =>
         info.getValue() ? (
-          <Badge className="border-teal-200 bg-teal-100 text-teal-800">
+          <Badge className="border-accent/20 bg-accent/10 text-accent">
             Active
           </Badge>
         ) : (
@@ -149,7 +149,7 @@ export function CreditList({ credits }: CreditListProps) {
             <Button
               variant="ghost"
               size="sm"
-              className="h-8 w-8 p-0 text-red-500 hover:text-red-700"
+              className="h-8 w-8 p-0 text-danger hover:text-danger/80"
               onClick={() => handleDelete(credit.id)}
               disabled={deletingId === credit.id}
             >
@@ -211,7 +211,7 @@ export function CreditList({ credits }: CreditListProps) {
                 <Button
                   variant="ghost"
                   size="sm"
-                  className="h-8 w-8 p-0 text-red-500 hover:text-red-700"
+                  className="h-8 w-8 p-0 text-danger hover:text-danger/80"
                   onClick={() => handleDelete(credit.id)}
                   disabled={deletingId === credit.id}
                 >
@@ -221,14 +221,14 @@ export function CreditList({ credits }: CreditListProps) {
               </div>
             </div>
             <div className="mt-2 flex flex-wrap items-center gap-2 text-xs">
-              <span className="tabular-nums font-medium text-teal-700">
+              <span className="tabular-nums font-medium text-accent">
                 {formatCurrency(credit.amountCents)}
               </span>
               <span className="text-muted-foreground">
                 {INTERVAL_LABELS[credit.interval] ?? credit.interval}
               </span>
               {credit.isActive ? (
-                <Badge className="border-teal-200 bg-teal-100 text-teal-800">Active</Badge>
+                <Badge className="border-accent/20 bg-accent/10 text-accent">Active</Badge>
               ) : (
                 <Badge variant="secondary">Inactive</Badge>
               )}

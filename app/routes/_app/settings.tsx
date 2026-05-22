@@ -15,27 +15,29 @@ function SettingsPage() {
   const { data: session } = authClient.useSession();
 
   return (
-    <div className="p-6 max-w-2xl mx-auto">
-      <h1 className="text-2xl font-bold text-gray-900 mb-1">Settings</h1>
-      <p className="text-sm text-gray-500 mb-8">Manage your account preferences</p>
+    <div className="p-6 max-w-2xl mx-auto space-y-6">
+      <div>
+        <h1 className="text-3xl font-extrabold font-heading text-foreground tracking-tight">Settings</h1>
+        <p className="mt-1 text-sm text-muted-foreground">Manage your account preferences</p>
+      </div>
 
       <div className="space-y-6">
         {/* Profile card */}
-        <section className="rounded-xl border border-gray-200 bg-white overflow-hidden">
-          <div className="flex items-center gap-2 px-5 py-4 border-b border-gray-100 bg-gray-50">
-            <User className="h-4 w-4 text-gray-500" />
-            <h2 className="text-sm font-semibold text-gray-700">Profile</h2>
+        <section className="rounded-xl border border-border bg-card shadow-xs overflow-hidden">
+          <div className="flex items-center gap-2 px-5 py-4 border-b border-border bg-muted/20">
+            <User className="h-4 w-4 text-muted-foreground" />
+            <h2 className="text-sm font-bold font-heading text-foreground">Profile</h2>
           </div>
-          <div className="px-5 py-4 space-y-3">
+          <div className="px-5 py-4 space-y-4">
             <div>
-              <p className="text-xs font-medium text-gray-500 mb-1">Name</p>
-              <p className="text-sm font-semibold text-gray-900">
+              <p className="text-[10px] font-bold uppercase tracking-wider text-muted-foreground mb-1">Name</p>
+              <p className="text-sm font-semibold text-foreground">
                 {session?.user?.name ?? "—"}
               </p>
             </div>
             <div>
-              <p className="text-xs font-medium text-gray-500 mb-1">Email</p>
-              <p className="text-sm font-semibold text-gray-900">
+              <p className="text-[10px] font-bold uppercase tracking-wider text-muted-foreground mb-1">Email</p>
+              <p className="text-sm font-semibold text-foreground">
                 {session?.user?.email ?? "—"}
               </p>
             </div>
@@ -89,13 +91,13 @@ function PaydayCard() {
   }
 
   return (
-    <section className="rounded-xl border border-gray-200 bg-white overflow-hidden">
-      <div className="flex items-center gap-2 px-5 py-4 border-b border-gray-100 bg-gray-50">
-        <Wallet className="h-4 w-4 text-gray-500" />
-        <h2 className="text-sm font-semibold text-gray-700">Payday Settings</h2>
+    <section className="rounded-xl border border-border bg-card shadow-xs overflow-hidden">
+      <div className="flex items-center gap-2 px-5 py-4 border-b border-border bg-muted/20">
+        <Wallet className="h-4 w-4 text-muted-foreground" />
+        <h2 className="text-sm font-bold font-heading text-foreground">Payday Settings</h2>
       </div>
       <div className="px-5 py-4 space-y-5">
-        <p className="text-sm text-gray-500">
+        <p className="text-sm text-muted-foreground">
           Set your pay schedule so the budget tracker can align to your pay periods. Once configured, select "Pay Period" in the tracker interval selector.
         </p>
 
@@ -109,14 +111,14 @@ function PaydayCard() {
                 setSaveState("idle");
               }}
             >
-              {v === "weekly" ? "Weekly" : "Biweekly (every 2 weeks)"}
+              {v === "weekly" ? "Weekly" : "Biweekly"}
             </PrefButton>
           ))}
         </PrefRow>
 
-        <div className="flex items-start gap-4">
-          <span className="w-36 flex-shrink-0 pt-1 text-sm font-medium text-gray-700">Most Recent Payday</span>
-          <div className="space-y-1">
+        <div className="flex flex-col sm:flex-row sm:items-start gap-4">
+          <span className="w-36 flex-shrink-0 pt-1 text-sm font-semibold text-foreground/90">Most Recent Payday</span>
+          <div className="space-y-1.5 flex-1">
             <input
               type="date"
               value={anchorDate}
@@ -125,24 +127,24 @@ function PaydayCard() {
                 setAnchorDate(e.target.value);
                 setSaveState("idle");
               }}
-              className="rounded-md border border-gray-300 px-3 py-1.5 text-sm shadow-sm focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
+              className="rounded-md border border-input bg-card text-foreground px-3 py-1.5 text-sm shadow-xs focus:outline-none focus:ring-2 focus:ring-ring focus:border-primary"
             />
-            <p className="text-xs text-gray-400">Pick a date you were actually paid — all pay periods are calculated from this anchor.</p>
+            <p className="text-xs text-muted-foreground">Pick a date you were actually paid — all pay periods are calculated from this anchor.</p>
           </div>
         </div>
 
         <div className="pt-1">
           {saveState === "saved" && (
-            <p className="mb-2 text-sm text-green-700">Payday settings saved.</p>
+            <p className="mb-2 text-sm text-success font-semibold">Payday settings saved.</p>
           )}
           {saveState === "error" && (
-            <p className="mb-2 text-sm text-red-700">Couldn&apos;t save. Please try again.</p>
+            <p className="mb-2 text-sm text-destructive font-semibold">Couldn&apos;t save. Please try again.</p>
           )}
           <button
             type="button"
             onClick={handleSave}
             disabled={update.isPending || !hasChanges}
-            className="rounded-md bg-blue-600 px-4 py-2 text-sm font-semibold text-white hover:bg-blue-700 disabled:opacity-50 disabled:cursor-not-allowed transition-colors"
+            className="rounded-md bg-primary px-4 py-2 text-sm font-bold text-primary-foreground hover:bg-primary/95 disabled:opacity-50 disabled:cursor-not-allowed transition-colors cursor-pointer"
           >
             {update.isPending ? "Saving…" : "Save payday settings"}
           </button>
@@ -180,13 +182,13 @@ function TrackerDefaultsCard() {
   }
 
   return (
-    <section className="rounded-xl border border-gray-200 bg-white overflow-hidden">
-      <div className="flex items-center gap-2 px-5 py-4 border-b border-gray-100 bg-gray-50">
-        <CalendarDays className="h-4 w-4 text-gray-500" />
-        <h2 className="text-sm font-semibold text-gray-700">Budget Tracker Defaults</h2>
+    <section className="rounded-xl border border-border bg-card shadow-xs overflow-hidden">
+      <div className="flex items-center gap-2 px-5 py-4 border-b border-border bg-muted/20">
+        <CalendarDays className="h-4 w-4 text-muted-foreground" />
+        <h2 className="text-sm font-bold font-heading text-foreground">Budget Tracker Defaults</h2>
       </div>
       <div className="px-5 py-4 space-y-5">
-        <p className="text-sm text-gray-500">
+        <p className="text-sm text-muted-foreground">
           Choose which view and period the Budget Tracker opens to by default. Changes apply the next time you open the tracker.
         </p>
 
@@ -267,16 +269,16 @@ function TrackerDefaultsCard() {
 
         <div className="pt-1">
           {saveState === "saved" && (
-            <p className="mb-2 text-sm text-green-700">Tracker defaults saved.</p>
+            <p className="mb-2 text-sm text-success font-semibold">Tracker defaults saved.</p>
           )}
           {saveState === "error" && (
-            <p className="mb-2 text-sm text-red-700">Couldn&apos;t save tracker defaults. Please try again.</p>
+            <p className="mb-2 text-sm text-destructive font-semibold">Couldn&apos;t save tracker defaults. Please try again.</p>
           )}
           <button
             type="button"
             onClick={handleSave}
             disabled={update.isPending || !hasChanges}
-            className="rounded-md bg-blue-600 px-4 py-2 text-sm font-semibold text-white hover:bg-blue-700 disabled:opacity-50 disabled:cursor-not-allowed transition-colors"
+            className="rounded-md bg-primary px-4 py-2 text-sm font-bold text-primary-foreground hover:bg-primary/95 disabled:opacity-50 disabled:cursor-not-allowed transition-colors cursor-pointer"
           >
             {update.isPending ? "Saving…" : "Save defaults"}
           </button>
@@ -288,9 +290,9 @@ function TrackerDefaultsCard() {
 
 function PrefRow({ label, children }: { label: string; children: React.ReactNode }) {
   return (
-    <div className="flex items-center gap-4">
-      <span className="w-36 flex-shrink-0 text-sm font-medium text-gray-700">{label}</span>
-      <div className="inline-flex rounded-md border border-gray-200 bg-gray-50 p-0.5 gap-0.5">
+    <div className="flex flex-col sm:flex-row sm:items-center gap-2 sm:gap-4">
+      <span className="w-36 flex-shrink-0 text-sm font-semibold text-foreground/90">{label}</span>
+      <div className="inline-flex flex-wrap rounded-md border border-border bg-muted p-0.5 gap-0.5">
         {children}
       </div>
     </div>
@@ -311,10 +313,10 @@ function PrefButton({
       type="button"
       onClick={onClick}
       className={cn(
-        "rounded px-3 py-1.5 text-sm font-medium transition-colors",
+        "rounded px-3 py-1.5 text-sm font-semibold transition-all cursor-pointer whitespace-nowrap",
         active
-          ? "bg-white text-gray-900 shadow-sm"
-          : "text-gray-500 hover:text-gray-700"
+          ? "bg-card text-foreground shadow-xs"
+          : "text-muted-foreground hover:text-foreground"
       )}
     >
       {children}
@@ -333,32 +335,32 @@ function DefaultCategoriesCard() {
   }
 
   return (
-    <section className="rounded-xl border border-gray-200 bg-white overflow-hidden">
-      <div className="flex items-center gap-2 px-5 py-4 border-b border-gray-100 bg-gray-50">
-        <Tag className="h-4 w-4 text-gray-500" />
-        <h2 className="text-sm font-semibold text-gray-700">Default Categories</h2>
+    <section className="rounded-xl border border-border bg-card shadow-xs overflow-hidden">
+      <div className="flex items-center gap-2 px-5 py-4 border-b border-border bg-muted/20">
+        <Tag className="h-4 w-4 text-muted-foreground" />
+        <h2 className="text-sm font-bold font-heading text-foreground">Default Categories</h2>
       </div>
-      <div className="px-5 py-4 space-y-3">
-        <p className="text-sm text-gray-500">
+      <div className="px-5 py-4 space-y-4">
+        <p className="text-sm text-muted-foreground">
           Add the standard set of expense and income categories (Housing, Utilities, Groceries, Auto, Insurance, and more). Any categories you've already created or renamed won't be affected, and no duplicates will be added.
         </p>
 
         {inserted !== null && inserted > 0 && (
-          <div className="flex items-center gap-2 rounded-lg bg-green-50 border border-green-200 px-3 py-2.5 text-sm text-green-700">
+          <div className="flex items-center gap-2 rounded-lg bg-success/10 border border-success/20 px-3 py-2.5 text-sm text-success font-semibold">
             <CheckCircle2 className="h-4 w-4 flex-shrink-0" />
             Added {inserted} default categor{inserted === 1 ? "y" : "ies"}.
           </div>
         )}
 
         {inserted === 0 && (
-          <div className="flex items-center gap-2 rounded-lg bg-gray-50 border border-gray-200 px-3 py-2.5 text-sm text-gray-600">
+          <div className="flex items-center gap-2 rounded-lg bg-muted border border-border px-3 py-2.5 text-sm text-muted-foreground font-medium">
             <CheckCircle2 className="h-4 w-4 flex-shrink-0" />
             All default categories are already present.
           </div>
         )}
 
         {seed.isError && (
-          <div className="flex items-center gap-2 rounded-lg bg-red-50 border border-red-200 px-3 py-2.5 text-sm text-red-700">
+          <div className="flex items-center gap-2 rounded-lg bg-destructive/10 border border-destructive/20 px-3 py-2.5 text-sm text-destructive font-semibold">
             <AlertCircle className="h-4 w-4 flex-shrink-0" />
             Something went wrong. Please try again.
           </div>
@@ -367,7 +369,7 @@ function DefaultCategoriesCard() {
         <button
           onClick={handleSeed}
           disabled={seed.isPending}
-          className="rounded-md bg-blue-600 px-4 py-2 text-sm font-semibold text-white hover:bg-blue-700 disabled:opacity-50 disabled:cursor-not-allowed transition-colors"
+          className="rounded-md bg-primary px-4 py-2 text-sm font-bold text-primary-foreground hover:bg-primary/95 disabled:opacity-50 disabled:cursor-not-allowed transition-colors cursor-pointer"
         >
           {seed.isPending ? "Adding…" : "Add default categories"}
         </button>
@@ -420,22 +422,22 @@ function ChangePasswordCard() {
   }
 
   return (
-    <section className="rounded-xl border border-gray-200 bg-white overflow-hidden">
-      <div className="flex items-center gap-2 px-5 py-4 border-b border-gray-100 bg-gray-50">
-        <KeyRound className="h-4 w-4 text-gray-500" />
-        <h2 className="text-sm font-semibold text-gray-700">Change Password</h2>
+    <section className="rounded-xl border border-border bg-card shadow-xs overflow-hidden">
+      <div className="flex items-center gap-2 px-5 py-4 border-b border-border bg-muted/20">
+        <KeyRound className="h-4 w-4 text-muted-foreground" />
+        <h2 className="text-sm font-bold font-heading text-foreground">Change Password</h2>
       </div>
 
       <form onSubmit={handleSubmit} className="px-5 py-4 space-y-4">
         {status === "success" && (
-          <div className="flex items-center gap-2 rounded-lg bg-green-50 border border-green-200 px-3 py-2.5 text-sm text-green-700">
+          <div className="flex items-center gap-2 rounded-lg bg-success/10 border border-success/20 px-3 py-2.5 text-sm text-success font-semibold">
             <CheckCircle2 className="h-4 w-4 flex-shrink-0" />
             Password changed successfully.
           </div>
         )}
 
         {(status === "error" || errorMsg) && (
-          <div className="flex items-center gap-2 rounded-lg bg-red-50 border border-red-200 px-3 py-2.5 text-sm text-red-700">
+          <div className="flex items-center gap-2 rounded-lg bg-destructive/10 border border-destructive/20 px-3 py-2.5 text-sm text-destructive font-semibold">
             <AlertCircle className="h-4 w-4 flex-shrink-0" />
             {errorMsg}
           </div>
@@ -471,7 +473,7 @@ function ChangePasswordCard() {
           <button
             type="submit"
             disabled={status === "loading" || !current || !next || !confirm}
-            className="rounded-md bg-blue-600 px-4 py-2 text-sm font-semibold text-white hover:bg-blue-700 disabled:opacity-50 disabled:cursor-not-allowed transition-colors"
+            className="rounded-md bg-primary px-4 py-2 text-sm font-bold text-primary-foreground hover:bg-primary/95 disabled:opacity-50 disabled:cursor-not-allowed transition-colors cursor-pointer"
           >
             {status === "loading" ? "Saving…" : "Update password"}
           </button>
@@ -500,7 +502,7 @@ function Field({
 }) {
   return (
     <div>
-      <label htmlFor={id} className="block text-sm font-medium text-gray-700 mb-1">
+      <label htmlFor={id} className="block text-sm font-semibold text-foreground/90 mb-1">
         {label}
       </label>
       <input
@@ -510,9 +512,9 @@ function Field({
         autoComplete={autoComplete}
         value={value}
         onChange={(e) => onChange(e.target.value)}
-        className="w-full rounded-md border border-gray-300 px-3 py-2 text-sm shadow-sm placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
+        className="w-full rounded-md border border-input bg-card text-foreground px-3 py-2 text-sm shadow-xs placeholder-muted-foreground focus:outline-none focus:ring-2 focus:ring-ring focus:border-primary"
       />
-      {hint && <p className="mt-1 text-xs text-gray-400">{hint}</p>}
+      {hint && <p className="mt-1 text-xs text-muted-foreground">{hint}</p>}
     </div>
   );
 }
