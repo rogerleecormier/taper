@@ -1,6 +1,7 @@
 "use client";
 
 import { Pencil, Plus, Trash2, Target } from "lucide-react";
+import { useEffect, useMemo, useState } from "react";
 import { Button } from "~/components/ui/button";
 import { formatCurrency } from "~/lib/currency";
 import { GoalFormDialog } from "./goal-form-dialog";
@@ -13,6 +14,39 @@ interface GoalListProps {
 
 export function GoalList({ goals }: GoalListProps) {
   const deleteGoal = useDeleteGoal();
+  const [burstingGoalIds, setBurstingGoalIds] = useState<Record<string, boolean>>({});
+
+  const reachedGoals = useMemo(
+    () => goals.filter((g) => g.allocatedCents >= g.targetAmountCents && g.targetAmountCents > 0),
+    [goals]
+  );
+
+  useEffect(() => {
+    const newlyReached: string[] = [];
+    for (const goal of reachedGoals) {
+      const key = `goal-celebrated:${goal.id}`;
+      if (sessionStorage.getItem(key) === "1") continue;
+      sessionStorage.setItem(key, "1");
+      newlyReached.push(goal.id);
+    }
+    if (newlyReached.length === 0) return;
+
+    setBurstingGoalIds((prev) => {
+      const next = { ...prev };
+      for (const id of newlyReached) next[id] = true;
+      return next;
+    });
+
+    const timer = setTimeout(() => {
+      setBurstingGoalIds((prev) => {
+        const next = { ...prev };
+        for (const id of newlyReached) delete next[id];
+        return next;
+      });
+    }, 1800);
+
+    return () => clearTimeout(timer);
+  }, [reachedGoals]);
 
   async function handleDelete(goal: Goal) {
     if (goal.allocatedCents > 0) {
@@ -47,14 +81,30 @@ export function GoalList({ goals }: GoalListProps) {
           ? Math.round((goal.allocatedCents / goal.targetAmountCents) * 100)
           : 0;
         const width = Math.max(0, Math.min(100, progressPercent));
+        const isReached = progressPercent >= 100;
+        const isBursting = !!burstingGoalIds[goal.id];
 
         return (
-          <div key={goal.id} className="rounded-lg border bg-card p-4">
+          <div key={goal.id} className="relative rounded-lg border bg-card p-4">
+            {isBursting && (
+              <div className="goal-burst" aria-hidden="true">
+                <span className="goal-burst-piece" style={{ ["--burst-left" as string]: "18%", ["--burst-delay" as string]: "0ms", ["--burst-rot" as string]: "-14deg" }}>✨</span>
+                <span className="goal-burst-piece" style={{ ["--burst-left" as string]: "34%", ["--burst-delay" as string]: "60ms", ["--burst-rot" as string]: "-8deg" }}>🎉</span>
+                <span className="goal-burst-piece" style={{ ["--burst-left" as string]: "50%", ["--burst-delay" as string]: "120ms", ["--burst-rot" as string]: "10deg" }}>🏆</span>
+                <span className="goal-burst-piece" style={{ ["--burst-left" as string]: "66%", ["--burst-delay" as string]: "40ms", ["--burst-rot" as string]: "16deg" }}>🎊</span>
+                <span className="goal-burst-piece" style={{ ["--burst-left" as string]: "82%", ["--burst-delay" as string]: "100ms", ["--burst-rot" as string]: "8deg" }}>✨</span>
+              </div>
+            )}
             <div className="flex items-start justify-between gap-3">
               <div>
                 <div className="flex items-center gap-2">
                   <Target className="h-4 w-4 text-primary" />
                   <h3 className="font-semibold">{goal.name}</h3>
+                  {isReached && (
+                    <span className="goal-reached-badge rounded-full bg-success/15 px-2 py-0.5 text-[10px] font-semibold uppercase tracking-wide text-success">
+                      Goal reached
+                    </span>
+                  )}
                 </div>
                 {goal.notes && (
                   <p className="mt-1 text-xs text-muted-foreground">{goal.notes}</p>

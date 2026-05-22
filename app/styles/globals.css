@@ -64,3 +64,41 @@
 .font-heading {
   font-family: var(--font-heading);
 }
+
+@keyframes goal-badge-pop {
+  0%,
+  100% { transform: scale(1); }
+  50% { transform: scale(1.06); }
+}
+
+@keyframes goal-burst-rise {
+  0% {
+    opacity: 0;
+    transform: translateY(6px) scale(0.7) rotate(0deg);
+  }
+  15% {
+    opacity: 1;
+  }
+  100% {
+    opacity: 0;
+    transform: translateY(-30px) scale(1.1) rotate(var(--burst-rot, 12deg));
+  }
+}
+
+.goal-reached-badge {
+  animation: goal-badge-pop 1.6s ease-in-out infinite;
+}
+
+.goal-burst {
+  pointer-events: none;
+  position: absolute;
+  inset: 0;
+}
+
+.goal-burst-piece {
+  position: absolute;
+  bottom: 22px;
+  left: var(--burst-left, 50%);
+  animation: goal-burst-rise 900ms ease-out forwards;
+  animation-delay: var(--burst-delay, 0ms);
+}

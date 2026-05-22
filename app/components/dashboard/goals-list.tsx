@@ -22,12 +22,18 @@ export function GoalsList({ goals }: GoalsListProps) {
       <div className="mt-3 space-y-3">
         {goals.map((goal) => {
           const width = Math.max(0, Math.min(100, goal.progressPercent));
+          const isReached = goal.progressPercent >= 100;
           return (
             <div key={goal.id} className="rounded-lg border p-3">
               <div className="flex items-center justify-between gap-2">
                 <div className="flex items-center gap-2">
                   <Target className="h-4 w-4 text-primary" />
                   <span className="font-medium">{goal.name}</span>
+                  {isReached && (
+                    <span className="goal-reached-badge rounded-full bg-success/15 px-2 py-0.5 text-[10px] font-semibold uppercase tracking-wide text-success">
+                      Reached
+                    </span>
+                  )}
                 </div>
                 <span className="text-xs text-muted-foreground">{goal.progressPercent}%</span>
               </div>
