@@ -21,7 +21,7 @@ bucket_name = "budget-receipts"
 binding = "AI"
 
 [vars]
-BETTER_AUTH_URL = "https://zero-dollar-budget-tracker.rcormier.workers.dev"
+BETTER_AUTH_URL = "https://fether.rcormier.dev"
 
 [observability]
 enabled = true

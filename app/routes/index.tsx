@@ -93,7 +93,7 @@ function LandingPage() {
               <div className="h-3 w-3 rounded-full bg-yellow-400" />
               <div className="h-3 w-3 rounded-full bg-green-400" />
               <div className="ml-4 flex-1 rounded-md bg-card border border-border h-5 max-w-xs text-xs text-muted-foreground/60 flex items-center px-2">
-                fether.rcormier.workers.dev
+                fether.rcormier.dev
               </div>
             </div>
 
