@@ -32,6 +32,8 @@ export function OverdueBillsList({ overdueBills }: OverdueBillsListProps) {
       <ul className="divide-y border-border">
         {overdueBills.map((bill) => {
           const days = daysOverdue(bill.dueDate);
+          const isPartial = bill.status === "partial";
+          const remainingCents = bill.amountCents - bill.paidAmountCents;
           return (
             <li key={bill.id} className="flex items-center gap-3 py-3">
               <AlertCircle className="h-4 w-4 flex-shrink-0 text-danger" />
@@ -42,16 +44,21 @@ export function OverdueBillsList({ overdueBills }: OverdueBillsListProps) {
                 <p className="text-xs font-medium text-danger">
                   {days === 0 ? "Due today" : `${days} day${days !== 1 ? "s" : ""} overdue`}
                 </p>
+                {isPartial && (
+                  <p className="text-xs text-muted-foreground">
+                    {formatCurrency(bill.paidAmountCents)} of {formatCurrency(bill.amountCents)} paid
+                  </p>
+                )}
               </div>
 
               {/* Amount */}
               <span className="flex-shrink-0 text-sm font-bold tabular-nums text-danger">
-                {formatCurrency(bill.amountCents)}
+                {formatCurrency(isPartial ? remainingCents : bill.amountCents)}
               </span>
 
               {/* Badge */}
               <span className="flex-shrink-0 rounded-md border border-danger/20 bg-danger/10 px-2 py-0.5 text-xs font-semibold text-danger">
-                Overdue
+                {isPartial ? "Partial" : "Overdue"}
               </span>
             </li>
           );

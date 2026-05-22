@@ -36,6 +36,8 @@ export type DashboardData = {
     billName: string;
     dueDate: string;
     amountCents: number;
+    paidAmountCents: number;
+    status: string;
   }>;
   recentPayments: Array<{
     id: string;
@@ -266,6 +268,8 @@ export const getDashboardData = createServerFn()
           billName: r.bill?.name ?? "Unknown",
           dueDate: r.occurrence.dueDate,
           amountCents: r.occurrence.amountCents,
+          paidAmountCents: r.occurrence.paidAmountCents ?? 0,
+          status: r.occurrence.status,
         })),
         recentPayments: recentPayments.map((r) => ({
           id: r.payment.id,
