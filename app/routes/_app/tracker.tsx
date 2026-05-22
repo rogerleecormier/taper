@@ -1,5 +1,5 @@
 import { createFileRoute } from "@tanstack/react-router";
-import { useEffect, useState } from "react";
+import { useEffect, useMemo } from "react";
 import {
   addDays,
   addMonths,
@@ -17,7 +17,7 @@ import {
   subYears,
 } from "date-fns";
 import { AlertCircle, ChevronLeft, ChevronRight } from "lucide-react";
-import { Link } from "@tanstack/react-router";
+import { Link, useNavigate } from "@tanstack/react-router";
 import { Button } from "~/components/ui/button";
 import { cn } from "~/lib/utils";
 import { TrackerContainer } from "~/components/tracker/tracker-container";
@@ -27,10 +27,21 @@ import {
   type BudgetScope,
 } from "~/components/tracker/budget-board-view";
 import type { TrackerInterval } from "~/lib/dates";
-import { getMostRecentPayday, fromDateStr } from "~/lib/dates";
+import { getMostRecentPayday, fromDateStr, toDateStr } from "~/lib/dates";
 import { usePreferences, DEFAULT_PREFS, type UserPreferences } from "~/hooks/use-preferences";
+import { z } from "zod";
+import { setTrackerPeriodStart, setTrackerInterval } from "~/store/tracker-store";
+
+const trackerSearchSchema = z.object({
+  mode: z.enum(["board", "list"]).optional(),
+  scope: z.enum(["month", "year"]).optional(),
+  monthInterval: z.enum(["day", "week", "biweek", "month", "pay-period"]).optional(),
+  yearInterval: z.enum(["month", "quarter", "half", "year"]).optional(),
+  periodStart: z.string().optional(),
+});
 
 export const Route = createFileRoute("/_app/tracker")({
+  validateSearch: (search) => trackerSearchSchema.parse(search),
   component: TrackerPage,
 });
 
@@ -158,39 +169,32 @@ function TrackerPage() {
 }
 
 function TrackerContent({ prefs }: { prefs: UserPreferences }) {
-  const [mode, setMode] = useState<"board" | "list">(prefs.trackerDefaultMode);
-  const [scope, setScope] = useState<BudgetScope>(prefs.trackerDefaultScope);
-  const [monthInterval, setMonthInterval] = useState<BudgetBoardInterval>(prefs.trackerDefaultMonthInterval);
-  const [yearInterval, setYearInterval] = useState<BudgetBoardInterval>(prefs.trackerDefaultYearInterval);
-  const [periodStart, setPeriodStart] = useState<Date>(() =>
-    getCurrentPeriodStart(
-      prefs.trackerDefaultScope,
-      prefs.trackerDefaultMonthInterval,
-      prefs.trackerDefaultYearInterval,
+  const search = Route.useSearch();
+  const navigate = useNavigate({ from: Route.fullPath });
+
+  const mode = search.mode ?? prefs.trackerDefaultMode;
+  const scope = search.scope ?? prefs.trackerDefaultScope;
+  const monthInterval = search.monthInterval ?? prefs.trackerDefaultMonthInterval;
+  const yearInterval = search.yearInterval ?? prefs.trackerDefaultYearInterval;
+
+  const periodStart = useMemo(() => {
+    if (search.periodStart) {
+      return fromDateStr(search.periodStart);
+    }
+    return getCurrentPeriodStart(
+      scope,
+      monthInterval,
+      yearInterval,
       prefs.paydayInterval,
       prefs.paydayAnchorDate
-    )
-  );
-
-  useEffect(() => {
-    setMode(prefs.trackerDefaultMode);
-    setScope(prefs.trackerDefaultScope);
-    setMonthInterval(prefs.trackerDefaultMonthInterval);
-    setYearInterval(prefs.trackerDefaultYearInterval);
-    setPeriodStart(
-      getCurrentPeriodStart(
-        prefs.trackerDefaultScope,
-        prefs.trackerDefaultMonthInterval,
-        prefs.trackerDefaultYearInterval,
-        prefs.paydayInterval,
-        prefs.paydayAnchorDate
-      )
     );
   }, [
-    prefs.trackerDefaultMode,
-    prefs.trackerDefaultScope,
-    prefs.trackerDefaultMonthInterval,
-    prefs.trackerDefaultYearInterval,
+    search.periodStart,
+    scope,
+    monthInterval,
+    yearInterval,
+    prefs.paydayInterval,
+    prefs.paydayAnchorDate,
   ]);
 
   const interval = scope === "month" ? monthInterval : yearInterval;
@@ -201,9 +205,27 @@ function TrackerContent({ prefs }: { prefs: UserPreferences }) {
   const payPeriodNotConfigured =
     interval === "pay-period" && !prefs.paydayAnchorDate;
 
+  // Sync selected period to global trackerStore so Dashboard/other routes stay in sync
+  useEffect(() => {
+    setTrackerPeriodStart(periodStart);
+    setTrackerInterval(listInterval);
+  }, [periodStart, listInterval]);
+
   function onScopeChange(nextScope: BudgetScope) {
-    setScope(nextScope);
-    setPeriodStart(getCurrentPeriodStart(nextScope, monthInterval, yearInterval));
+    const nextStart = getCurrentPeriodStart(
+      nextScope,
+      monthInterval,
+      yearInterval,
+      prefs.paydayInterval,
+      prefs.paydayAnchorDate
+    );
+    navigate({
+      search: (prev) => ({
+        ...prev,
+        scope: nextScope,
+        periodStart: toDateStr(nextStart),
+      }),
+    });
   }
 
   return (
@@ -224,7 +246,7 @@ function TrackerContent({ prefs }: { prefs: UserPreferences }) {
               {(["board", "list"] as const).map((v) => (
                 <button
                   key={v}
-                  onClick={() => setMode(v)}
+                  onClick={() => navigate({ search: (prev) => ({ ...prev, mode: v }) })}
                   className={cn(
                     "rounded px-3 py-1.5 text-sm font-medium transition-colors",
                     mode === v ? "bg-white text-gray-900 shadow-sm" : "text-gray-500 hover:text-gray-700"
@@ -268,21 +290,31 @@ function TrackerContent({ prefs }: { prefs: UserPreferences }) {
                       key={opt.value}
                       onClick={() => {
                         if (scope === "month") {
-                          setMonthInterval(opt.value);
+                          let nextStart = periodStart;
                           if (
                             mode === "list" &&
                             (opt.value === "day" || opt.value === "week" || opt.value === "biweek")
                           ) {
-                            setPeriodStart(getRangeStartContainingToday(opt.value));
+                            nextStart = getRangeStartContainingToday(opt.value);
                           }
                           if (opt.value === "pay-period") {
-                            setPeriodStart(
-                              getRangeStartContainingToday("pay-period", prefs.paydayInterval, prefs.paydayAnchorDate)
-                            );
+                            nextStart = getRangeStartContainingToday("pay-period", prefs.paydayInterval, prefs.paydayAnchorDate);
                           }
+                          navigate({
+                            search: (prev) => ({
+                              ...prev,
+                              monthInterval: opt.value,
+                              periodStart: toDateStr(nextStart),
+                            }),
+                          });
                           return;
                         }
-                        setYearInterval(opt.value);
+                        navigate({
+                          search: (prev) => ({
+                            ...prev,
+                            yearInterval: opt.value,
+                          }),
+                        });
                       }}
                       className={cn(
                         "rounded px-3 py-1.5 text-sm font-medium transition-colors whitespace-nowrap",
@@ -317,7 +349,15 @@ function TrackerContent({ prefs }: { prefs: UserPreferences }) {
             size="sm"
             variant="ghost"
             disabled={payPeriodNotConfigured}
-            onClick={() => setPeriodStart(navigatePeriod(scope, interval, periodStart, "prev", prefs.paydayInterval))}
+            onClick={() => {
+              const nextStart = navigatePeriod(scope, interval, periodStart, "prev", prefs.paydayInterval);
+              navigate({
+                search: (prev) => ({
+                  ...prev,
+                  periodStart: toDateStr(nextStart),
+                }),
+              });
+            }}
             aria-label="Previous period"
             className="h-8 w-8 p-0 flex-shrink-0"
           >
@@ -328,7 +368,15 @@ function TrackerContent({ prefs }: { prefs: UserPreferences }) {
             size="sm"
             variant="ghost"
             disabled={payPeriodNotConfigured}
-            onClick={() => setPeriodStart(navigatePeriod(scope, interval, periodStart, "next", prefs.paydayInterval))}
+            onClick={() => {
+              const nextStart = navigatePeriod(scope, interval, periodStart, "next", prefs.paydayInterval);
+              navigate({
+                search: (prev) => ({
+                  ...prev,
+                  periodStart: toDateStr(nextStart),
+                }),
+              });
+            }}
             aria-label="Next period"
             className="h-8 w-8 p-0 flex-shrink-0"
           >

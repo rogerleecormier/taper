@@ -216,24 +216,49 @@ export function TrackerContainer({
         </div>
       </div>
 
-      {/* Vendor filter bar */}
-      {vendorOptions.length > 0 && (
-        <div className="flex items-center gap-2 border-b bg-white px-4 py-2">
-          <span className="text-xs text-muted-foreground shrink-0">Vendor:</span>
-          <Select value={selectedVendor} onValueChange={setSelectedVendor}>
-            <SelectTrigger className="h-7 w-48 text-xs">
-              <SelectValue placeholder="All vendors" />
-            </SelectTrigger>
-            <SelectContent>
-              <SelectItem value="__all__">All vendors</SelectItem>
-              <SelectItem value="__none__">No vendor</SelectItem>
-              {vendorOptions.map((vendor) => (
-                <SelectItem key={vendor} value={vendor}>
-                  {vendor}
-                </SelectItem>
-              ))}
-            </SelectContent>
-          </Select>
+      {/* Filter bar — vendor select + carry toggle */}
+      {(vendorOptions.length > 0 || billRows.length > 0) && (
+        <div className="flex items-center gap-3 border-b bg-white px-4 py-2">
+          {vendorOptions.length > 0 && (
+            <>
+              <span className="text-xs text-muted-foreground shrink-0">Vendor:</span>
+              <Select value={selectedVendor} onValueChange={setSelectedVendor}>
+                <SelectTrigger className="h-7 w-48 text-xs">
+                  <SelectValue placeholder="All vendors" />
+                </SelectTrigger>
+                <SelectContent>
+                  <SelectItem value="__all__">All vendors</SelectItem>
+                  <SelectItem value="__none__">No vendor</SelectItem>
+                  {vendorOptions.map((vendor) => (
+                    <SelectItem key={vendor} value={vendor}>
+                      {vendor}
+                    </SelectItem>
+                  ))}
+                </SelectContent>
+              </Select>
+            </>
+          )}
+          {billRows.length > 0 && (
+            <button
+              onClick={() => setShowCarried((v) => !v)}
+              className={cn(
+                "ml-auto inline-flex h-7 shrink-0 items-center gap-1.5 whitespace-nowrap rounded-md border px-2.5 py-1 text-xs font-medium transition-colors",
+                !showCarried
+                  ? "border-amber-200 bg-amber-100 text-amber-700 hover:bg-amber-200"
+                  : "border-gray-200 bg-white text-gray-500 hover:text-gray-700"
+              )}
+            >
+              {!showCarried ? (
+                <Eye className="h-3.5 w-3.5" />
+              ) : (
+                <EyeOff className="h-3.5 w-3.5" />
+              )}
+              <span className="hidden sm:inline">
+                {!showCarried ? "Show Carried" : "Hide Carried"}
+              </span>
+              <span className="sm:hidden">Carried</span>
+            </button>
+          )}
         </div>
       )}
 
@@ -303,30 +328,9 @@ export function TrackerContainer({
                     {filteredBillParents.length} item{filteredBillParents.length !== 1 ? "s" : ""}
                   </span>
                 </div>
-                <div className="flex items-center gap-2">
-                  <span className="text-sm font-semibold tabular-nums text-red-700">
-                    -{formatCurrency(expenseTotal)}
-                  </span>
-                  <button
-                    onClick={() => setShowCarried((v) => !v)}
-                    className={cn(
-                      "inline-flex h-7 shrink-0 items-center gap-1.5 whitespace-nowrap rounded-md border px-2.5 py-1 text-xs font-medium transition-colors",
-                      !showCarried
-                        ? "border-amber-200 bg-amber-100 text-amber-700 hover:bg-amber-200"
-                        : "border-gray-200 bg-white text-gray-500 hover:text-gray-700"
-                    )}
-                  >
-                    {!showCarried ? (
-                      <Eye className="h-3.5 w-3.5" />
-                    ) : (
-                      <EyeOff className="h-3.5 w-3.5" />
-                    )}
-                    <span className="hidden sm:inline">
-                      {!showCarried ? "Show Carried" : "Hide Carried"}
-                    </span>
-                    <span className="sm:hidden">Carried</span>
-                  </button>
-                </div>
+                <span className="text-sm font-semibold tabular-nums text-red-700">
+                  -{formatCurrency(expenseTotal)}
+                </span>
               </div>
 
               {filteredBillParents.map(
