@@ -76,12 +76,12 @@ function DashboardPage() {
               <CategoryBreakdownChart categoryBreakdown={data.categoryBreakdown} />
             </CardContent>
           </Card>
-          <Card className="border border-border bg-card shadow-xs">
-            <CardContent className="p-6">
-              <GoalsList goals={data.goals} />
-            </CardContent>
-          </Card>
         </div>
+        <Card className="border border-border bg-card shadow-xs">
+          <CardContent className="p-6">
+            <GoalsList goals={data.goals} />
+          </CardContent>
+        </Card>
       </section>
 
       <Separator className="bg-border" />
