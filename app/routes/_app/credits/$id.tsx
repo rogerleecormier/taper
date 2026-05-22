@@ -452,7 +452,7 @@ function CreditDetailPage() {
   ).length;
 
   return (
-    <div className="p-6 space-y-6 max-w-3xl">
+    <div className="p-6 space-y-6 max-w-3xl mx-auto">
       {/* Back link */}
       <Link
         to="/credits"
@@ -469,7 +469,7 @@ function CreditDetailPage() {
             <BadgeDollarSign className="h-5 w-5 text-accent" />
           </div>
           <div>
-            <h1 className="text-2xl font-bold font-heading">{credit.name}</h1>
+            <h1 className="text-2xl font-bold font-heading text-foreground">{credit.name}</h1>
             <div className="mt-1 flex flex-wrap items-center gap-x-3 gap-y-1 text-sm text-muted-foreground">
               <span className="font-semibold tabular-nums text-accent">
                 {formatCurrency(credit.amountCents)}

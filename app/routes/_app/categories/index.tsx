@@ -15,7 +15,7 @@ function CategoriesPage() {
   const { data: categories, isLoading, isError } = useCategories();
 
   return (
-    <div className="p-6 space-y-6">
+    <div className="p-6 space-y-6 max-w-7xl mx-auto">
       <div className="flex items-center justify-between">
         <div>
           <h1 className="text-3xl font-extrabold font-heading text-foreground tracking-tight">Categories</h1>
@@ -32,14 +32,14 @@ function CategoriesPage() {
       {isLoading && (
         <div className="space-y-2">
           {Array.from({ length: 4 }).map((_, i) => (
-            <div key={i} className="h-12 rounded-md bg-muted/50 animate-pulse" />
+            <div key={i} className="h-12 rounded-md bg-muted/40 animate-pulse" />
           ))}
         </div>
       )}
 
       {isError && (
-        <div className="flex flex-col items-center justify-center rounded-lg border border-dashed py-16 text-center">
-          <p className="text-sm text-danger">Failed to load categories. Please try again.</p>
+        <div className="flex flex-col items-center justify-center rounded-lg border border-dashed border-danger/30 bg-danger/5 py-16 text-center">
+          <p className="text-sm text-danger font-medium">Failed to load categories. Please try again.</p>
         </div>
       )}
 

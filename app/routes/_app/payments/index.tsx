@@ -85,9 +85,9 @@ function PaymentsPage() {
   const isError = scheduledError || (showPaid && paidError);
 
   return (
-    <div className="p-6 space-y-6">
+    <div className="p-6 space-y-6 max-w-7xl mx-auto">
       <div>
-        <h1 className="text-2xl font-bold text-foreground font-heading">Payments</h1>
+        <h1 className="text-3xl font-extrabold font-heading text-foreground tracking-tight">Payments</h1>
         <p className="mt-1 text-sm text-muted-foreground">
           Scheduled and recorded payments across all expenses.
         </p>
@@ -157,7 +157,7 @@ function PaymentsPage() {
 
       {isError && (
         <div className="rounded-lg border border-dashed border-danger/30 bg-danger/5 py-12 text-center">
-          <p className="text-sm text-danger">Failed to load payments. Please refresh and try again.</p>
+          <p className="text-sm text-danger font-medium">Failed to load payments. Please refresh and try again.</p>
         </div>
       )}
 
@@ -198,7 +198,7 @@ type ScheduledRow = {
 function ScheduledSection({ rows }: { rows: ScheduledRow[] }) {
   return (
     <div>
-      <h2 className="mb-3 text-xs font-semibold uppercase tracking-wider text-muted-foreground">
+      <h2 className="mb-3 text-xs font-bold uppercase tracking-wider text-muted-foreground">
         Scheduled{" "}
         <span className="font-normal normal-case text-muted-foreground/60">({rows.length})</span>
       </h2>
@@ -287,7 +287,7 @@ type PaidRow = {
 function PaidSection({ rows, rangeMonths }: { rows: PaidRow[]; rangeMonths: number }) {
   return (
     <div>
-      <h2 className="mb-3 text-xs font-semibold uppercase tracking-wider text-muted-foreground">
+      <h2 className="mb-3 text-xs font-bold uppercase tracking-wider text-muted-foreground">
         Paid Payments — last {rangeMonths} {rangeMonths === 1 ? "month" : "months"}{" "}
         <span className="font-normal normal-case text-muted-foreground/60">({rows.length})</span>
       </h2>

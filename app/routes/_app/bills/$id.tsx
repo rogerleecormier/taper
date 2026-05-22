@@ -473,7 +473,7 @@ function BillDetailPage() {
   ).length;
 
   return (
-    <div className="p-6 space-y-6 max-w-3xl">
+    <div className="p-6 space-y-6 max-w-3xl mx-auto">
       {/* Back link */}
       <Link
         to="/bills"
@@ -490,7 +490,7 @@ function BillDetailPage() {
             <Receipt className="h-5 w-5 text-danger" />
           </div>
           <div>
-            <h1 className="text-2xl font-bold font-heading">{bill.name}</h1>
+            <h1 className="text-2xl font-bold font-heading text-foreground">{bill.name}</h1>
             <div className="mt-1 flex flex-wrap items-center gap-x-3 gap-y-1 text-sm text-muted-foreground">
               <span className="font-semibold tabular-nums text-foreground">
                 {formatCurrency(bill.amountCents)}

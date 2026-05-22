@@ -884,7 +884,7 @@ function PayrollDetailPage() {
         <div className="flex items-start justify-between gap-4">
           <div>
             <div className="flex items-center gap-2">
-              <h1 className="text-3xl font-extrabold font-heading text-foreground tracking-tight">{source.name}</h1>
+              <h1 className="text-2xl font-bold font-heading text-foreground">{source.name}</h1>
               {source.sourceType === "payroll" && (
                 <Badge className="border-accent/20 bg-accent/10 text-accent">Payroll</Badge>
               )}

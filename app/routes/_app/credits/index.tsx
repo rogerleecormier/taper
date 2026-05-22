@@ -19,10 +19,10 @@ function CreditsPage() {
   );
 
   return (
-    <div className="p-6 space-y-6">
+    <div className="p-6 space-y-6 max-w-7xl mx-auto">
       <div className="flex items-center justify-between">
         <div>
-          <h1 className="text-2xl font-bold font-heading text-foreground">Credits</h1>
+          <h1 className="text-3xl font-extrabold font-heading text-foreground tracking-tight">Credits</h1>
           <p className="mt-1 text-sm text-muted-foreground">
             Manage amounts vendors owe back to you
           </p>
