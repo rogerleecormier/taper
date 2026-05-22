@@ -1,1 +1,2 @@
-# zero-dollar-budget-tracker
+# Fether
+Financial Tethering Budget Tracker.

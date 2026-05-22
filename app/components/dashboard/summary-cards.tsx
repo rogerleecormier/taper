@@ -30,12 +30,12 @@ export function SummaryCards({ data }: SummaryCardsProps) {
               <p className="text-sm font-medium text-muted-foreground">
                 Monthly Income
               </p>
-              <p className="mt-1 text-2xl font-bold text-green-600">
+              <p className="mt-1 text-2xl font-bold text-success">
                 {formatCurrency(totalMonthlyIncomeCents)}
               </p>
             </div>
-            <div className="flex h-12 w-12 items-center justify-center rounded-full bg-green-100">
-              <TrendingUp className="h-6 w-6 text-green-600" />
+            <div className="flex h-12 w-12 items-center justify-center rounded-full bg-success/10">
+              <TrendingUp className="h-6 w-6 text-success" />
             </div>
           </div>
         </CardContent>
@@ -49,12 +49,12 @@ export function SummaryCards({ data }: SummaryCardsProps) {
               <p className="text-sm font-medium text-muted-foreground">
                 Monthly Expenses
               </p>
-              <p className="mt-1 text-2xl font-bold text-red-600">
+              <p className="mt-1 text-2xl font-bold text-destructive">
                 {formatCurrency(totalMonthlyExpensesCents)}
               </p>
             </div>
-            <div className="flex h-12 w-12 items-center justify-center rounded-full bg-red-100">
-              <TrendingDown className="h-6 w-6 text-red-600" />
+            <div className="flex h-12 w-12 items-center justify-center rounded-full bg-destructive/10">
+              <TrendingDown className="h-6 w-6 text-destructive" />
             </div>
           </div>
         </CardContent>
@@ -71,7 +71,7 @@ export function SummaryCards({ data }: SummaryCardsProps) {
               <p
                 className={cn(
                   "mt-1 text-2xl font-bold",
-                  netIsPositive ? "text-blue-600" : "text-red-600"
+                  netIsPositive ? "text-accent" : "text-destructive"
                 )}
               >
                 {formatCurrency(netBalanceCents)}
@@ -80,13 +80,13 @@ export function SummaryCards({ data }: SummaryCardsProps) {
             <div
               className={cn(
                 "flex h-12 w-12 items-center justify-center rounded-full",
-                netIsPositive ? "bg-blue-100" : "bg-red-100"
+                netIsPositive ? "bg-accent/10" : "bg-destructive/10"
               )}
             >
               <DollarSign
                 className={cn(
                   "h-6 w-6",
-                  netIsPositive ? "text-blue-600" : "text-red-600"
+                  netIsPositive ? "text-accent" : "text-destructive"
                 )}
               />
             </div>
@@ -94,22 +94,22 @@ export function SummaryCards({ data }: SummaryCardsProps) {
         </CardContent>
       </Card>
 
-      {/* Unallocated */}
+      {/* Untethered */}
       <Card>
         <CardContent className="p-6">
           <div className="flex items-center justify-between">
             <div>
               <p className="text-sm font-medium text-muted-foreground">
-                Unallocated
+                Untethered
               </p>
               <p
                 className={cn(
                   "mt-1 text-2xl font-bold",
                   unallocatedIsZero
-                    ? "text-green-600"
+                    ? "text-success"
                     : unallocatedIsPositive
-                      ? "text-amber-600"
-                      : "text-red-600"
+                      ? "text-warning"
+                      : "text-destructive"
                 )}
               >
                 {formatCurrency(unallocatedCents)}
@@ -119,20 +119,20 @@ export function SummaryCards({ data }: SummaryCardsProps) {
               className={cn(
                 "flex h-12 w-12 items-center justify-center rounded-full",
                 unallocatedIsZero
-                  ? "bg-green-100"
+                  ? "bg-success/10"
                   : unallocatedIsPositive
-                    ? "bg-amber-100"
-                    : "bg-red-100"
+                    ? "bg-warning/10"
+                    : "bg-destructive/10"
               )}
             >
               <Target
                 className={cn(
                   "h-6 w-6",
                   unallocatedIsZero
-                    ? "text-green-600"
+                    ? "text-success"
                     : unallocatedIsPositive
-                      ? "text-amber-600"
-                      : "text-red-600"
+                      ? "text-warning"
+                      : "text-destructive"
                 )}
               />
             </div>

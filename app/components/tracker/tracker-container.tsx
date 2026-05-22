@@ -174,41 +174,41 @@ export function TrackerContainer({
       )}
 
       {/* Summary bar */}
-      <div className={cn("divide-x border-b bg-gray-50", creditTotal > 0 ? "grid grid-cols-4" : "grid grid-cols-3")}>
+      <div className={cn("divide-x divide-border border-b border-border bg-secondary/30", creditTotal > 0 ? "grid grid-cols-4" : "grid grid-cols-3")}>
         <div className="flex flex-col items-center py-4">
-          <span className="text-[11px] font-semibold uppercase tracking-wider text-gray-400">
+          <span className="text-[11px] font-semibold uppercase tracking-wider text-muted-foreground">
             Income
           </span>
-          <span className="mt-1 text-xl font-bold tabular-nums text-green-600">
+          <span className="mt-1 text-xl font-bold tabular-nums text-success">
             {formatCurrency(incomeTotal)}
           </span>
         </div>
         {creditTotal > 0 && (
           <div className="flex flex-col items-center py-4">
-            <span className="text-[11px] font-semibold uppercase tracking-wider text-gray-400">
+            <span className="text-[11px] font-semibold uppercase tracking-wider text-muted-foreground">
               Credits
             </span>
-            <span className="mt-1 text-xl font-bold tabular-nums text-teal-600">
+            <span className="mt-1 text-xl font-bold tabular-nums text-accent">
               {formatCurrency(creditTotal)}
             </span>
           </div>
         )}
         <div className="flex flex-col items-center py-4">
-          <span className="text-[11px] font-semibold uppercase tracking-wider text-gray-400">
+          <span className="text-[11px] font-semibold uppercase tracking-wider text-muted-foreground">
             Expenses
           </span>
-          <span className="mt-1 text-xl font-bold tabular-nums text-red-600">
+          <span className="mt-1 text-xl font-bold tabular-nums text-destructive">
             -{formatCurrency(expenseTotal)}
           </span>
         </div>
         <div className="flex flex-col items-center py-4">
-          <span className="text-[11px] font-semibold uppercase tracking-wider text-gray-400">
-            {balance >= 0 ? "Unallocated" : "Shortfall"}
+          <span className="text-[11px] font-semibold uppercase tracking-wider text-muted-foreground">
+            {balance >= 0 ? "Untethered" : "Shortfall"}
           </span>
           <span
             className={cn(
               "mt-1 text-xl font-bold tabular-nums",
-              balance === 0 ? "text-blue-600" : balance > 0 ? "text-amber-600" : "text-red-600"
+              balance === 0 ? "text-success" : balance > 0 ? "text-warning" : "text-destructive"
             )}
           >
             {formatCurrency(Math.abs(balance))}
@@ -218,7 +218,7 @@ export function TrackerContainer({
 
       {/* Filter bar — vendor select + carry toggle */}
       {(vendorOptions.length > 0 || billRows.length > 0) && (
-        <div className="flex items-center gap-3 border-b bg-white px-4 py-2">
+        <div className="flex items-center gap-3 border-b border-border bg-card px-4 py-2">
           {vendorOptions.length > 0 && (
             <>
               <span className="text-xs text-muted-foreground shrink-0">Vendor:</span>
@@ -244,8 +244,8 @@ export function TrackerContainer({
               className={cn(
                 "ml-auto inline-flex h-7 shrink-0 items-center gap-1.5 whitespace-nowrap rounded-md border px-2.5 py-1 text-xs font-medium transition-colors",
                 !showCarried
-                  ? "border-amber-200 bg-amber-100 text-amber-700 hover:bg-amber-200"
-                  : "border-gray-200 bg-white text-gray-500 hover:text-gray-700"
+                  ? "border-warning/20 bg-warning/10 text-warning hover:bg-warning/20"
+                  : "border-border bg-card text-muted-foreground hover:text-foreground"
               )}
             >
               {!showCarried ? (
@@ -282,17 +282,17 @@ export function TrackerContainer({
           {/* ── Income section ── */}
           {filteredIncomeParents.length > 0 && (
             <section>
-              <div className="flex items-center justify-between border-b bg-green-50 px-4 py-2.5">
+              <div className="flex items-center justify-between border-b border-border bg-success/5 px-4 py-2.5">
                 <div className="flex items-center gap-2">
-                  <TrendingUp className="h-3.5 w-3.5 text-green-600" />
-                  <span className="text-xs font-semibold uppercase tracking-wider text-green-700">
+                  <TrendingUp className="h-3.5 w-3.5 text-success" />
+                  <span className="text-xs font-semibold uppercase tracking-wider text-success">
                     Income
                   </span>
-                  <span className="text-xs text-green-600/70">
+                  <span className="text-xs text-success/70">
                     {filteredIncomeParents.length} source{filteredIncomeParents.length !== 1 ? "s" : ""}
                   </span>
                 </div>
-                <span className="text-sm font-semibold tabular-nums text-green-700">
+                <span className="text-sm font-semibold tabular-nums text-success">
                   {formatCurrency(incomeTotal)}
                 </span>
               </div>
@@ -318,17 +318,17 @@ export function TrackerContainer({
           {/* ── Expenses section ── */}
           {filteredBillParents.length > 0 && (
             <section>
-              <div className="flex items-center justify-between border-b bg-red-50 px-4 py-2.5">
+              <div className="flex items-center justify-between border-b border-border bg-destructive/5 px-4 py-2.5">
                 <div className="flex items-center gap-2">
-                  <Receipt className="h-3.5 w-3.5 text-red-600" />
-                  <span className="text-xs font-semibold uppercase tracking-wider text-red-700">
+                  <Receipt className="h-3.5 w-3.5 text-destructive" />
+                  <span className="text-xs font-semibold uppercase tracking-wider text-destructive">
                     Expenses
                   </span>
-                  <span className="text-xs text-red-600/70">
+                  <span className="text-xs text-destructive/70">
                     {filteredBillParents.length} item{filteredBillParents.length !== 1 ? "s" : ""}
                   </span>
                 </div>
-                <span className="text-sm font-semibold tabular-nums text-red-700">
+                <span className="text-sm font-semibold tabular-nums text-destructive">
                   -{formatCurrency(expenseTotal)}
                 </span>
               </div>
@@ -358,18 +358,18 @@ export function TrackerContainer({
           {/* ── Credits section ── */}
           {filteredCreditParents.length > 0 && (
             <section>
-              <div className="flex items-center justify-between border-b bg-teal-50 px-4 py-2.5">
+              <div className="flex items-center justify-between border-b border-border bg-accent/5 px-4 py-2.5">
                 <div className="flex items-center gap-2">
-                  <BadgeDollarSign className="h-3.5 w-3.5 text-teal-600" />
-                  <span className="text-xs font-semibold uppercase tracking-wider text-teal-700">
+                  <BadgeDollarSign className="h-3.5 w-3.5 text-accent" />
+                  <span className="text-xs font-semibold uppercase tracking-wider text-accent">
                     Credits
                   </span>
-                  <span className="text-xs text-teal-600/70">
+                  <span className="text-xs text-accent/70">
                     {filteredCreditParents.length} item{filteredCreditParents.length !== 1 ? "s" : ""}
                   </span>
                 </div>
                 <div className="flex items-center gap-2">
-                  <span className="text-sm font-semibold tabular-nums text-teal-700">
+                  <span className="text-sm font-semibold tabular-nums text-accent">
                     {formatCurrency(creditTotal)}
                   </span>
                   <button
@@ -377,8 +377,8 @@ export function TrackerContainer({
                     className={cn(
                       "inline-flex h-7 shrink-0 items-center gap-1.5 whitespace-nowrap rounded-md border px-2.5 py-1 text-xs font-medium transition-colors",
                       showReceived
-                        ? "border-teal-200 bg-teal-100 text-teal-700 hover:bg-teal-200"
-                        : "border-gray-200 bg-white text-gray-500 hover:text-gray-700"
+                        ? "border-accent/20 bg-accent/10 text-accent hover:bg-accent/20"
+                        : "border-border bg-card text-muted-foreground hover:text-foreground"
                     )}
                   >
                     {showReceived ? (

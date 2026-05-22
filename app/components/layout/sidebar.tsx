@@ -7,7 +7,7 @@ import {
   Wallet,
   Building2,
   Tag,
-  DollarSign,
+  Anchor,
   LogOut,
   BadgeDollarSign,
 } from "lucide-react";
@@ -38,9 +38,9 @@ export function Sidebar() {
       {/* Logo / App Title */}
       <div className="flex items-center gap-2 px-6 py-5 border-b">
         <div className="flex h-8 w-8 items-center justify-center rounded-md bg-primary text-primary-foreground">
-          <DollarSign className="h-5 w-5" />
+          <Anchor className="h-5 w-5" />
         </div>
-        <span className="text-lg font-semibold tracking-tight">Zero Dollar</span>
+        <span className="text-lg font-bold tracking-tight text-foreground font-heading">Fether</span>
       </div>
 
       {/* Navigation */}

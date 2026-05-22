@@ -12,7 +12,7 @@ export function UnallocatedBanner({ data }: UnallocatedBannerProps) {
   const isZero = unallocatedCents === 0;
   const isPositive = unallocatedCents > 0;
 
-  const allocatedPercent =
+  const tetheredPercent =
     totalMonthlyIncomeCents > 0
       ? Math.min(
           100,
@@ -25,48 +25,48 @@ export function UnallocatedBanner({ data }: UnallocatedBannerProps) {
       className={cn(
         "rounded-xl border p-4",
         isZero
-          ? "border-green-200 bg-green-50"
+          ? "border-success/20 bg-success/5"
           : isPositive
-            ? "border-amber-200 bg-amber-50"
-            : "border-red-200 bg-red-50"
+            ? "border-warning/20 bg-warning/5"
+            : "border-destructive/20 bg-destructive/5"
       )}
     >
       <div className="flex items-center justify-between gap-4">
         <div>
           {isZero ? (
-            <p className="font-semibold text-green-800">
-              Every dollar is allocated! 🎯
+            <p className="font-semibold text-success">
+              Every dollar is tethered! 🎯
             </p>
           ) : isPositive ? (
-            <p className="font-semibold text-amber-800">
-              {formatCurrency(unallocatedCents)} left to allocate
+            <p className="font-semibold text-warning">
+              {formatCurrency(unallocatedCents)} untethered
             </p>
           ) : (
-            <p className="font-semibold text-red-800">
-              Overspent by {formatCurrency(Math.abs(unallocatedCents))}
+            <p className="font-semibold text-destructive">
+              Over-tethered by {formatCurrency(Math.abs(unallocatedCents))}
             </p>
           )}
           <p
             className={cn(
               "mt-0.5 text-sm",
               isZero
-                ? "text-green-700"
+                ? "text-success/90"
                 : isPositive
-                  ? "text-amber-700"
-                  : "text-red-700"
+                  ? "text-warning/90"
+                  : "text-destructive/90"
             )}
           >
-            {allocatedPercent}% of income allocated
+            {tetheredPercent}% of income tethered
           </p>
         </div>
         <span
           className={cn(
             "text-sm font-medium tabular-nums",
             isZero
-              ? "text-green-700"
+              ? "text-success/90"
               : isPositive
-                ? "text-amber-700"
-                : "text-red-700"
+                ? "text-warning/90"
+                : "text-destructive/90"
           )}
         >
           {formatCurrency(totalMonthlyExpensesCents)} /{" "}
@@ -80,12 +80,12 @@ export function UnallocatedBanner({ data }: UnallocatedBannerProps) {
           className={cn(
             "h-full rounded-full transition-all",
             isZero
-              ? "bg-green-500"
+              ? "bg-success"
               : isPositive
-                ? "bg-amber-500"
-                : "bg-red-500"
+                ? "bg-warning"
+                : "bg-destructive"
           )}
-          style={{ width: `${allocatedPercent}%` }}
+          style={{ width: `${tetheredPercent}%` }}
         />
       </div>
     </div>

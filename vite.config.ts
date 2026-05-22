@@ -11,4 +11,9 @@ export default defineConfig({
     tailwindcss(),
     tsConfigPaths(),
   ],
+  build: {
+    rollupOptions: {
+      preserveEntrySignatures: "exports-only",
+    },
+  },
 });

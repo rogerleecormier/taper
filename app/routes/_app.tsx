@@ -20,7 +20,7 @@ import {
   LogOut,
   Menu,
   X,
-  DollarSign,
+  Anchor,
   CreditCard,
   BadgeDollarSign,
 } from "lucide-react";
@@ -63,7 +63,7 @@ function AppLayout() {
   }
 
   return (
-    <div className="flex h-screen bg-gray-100 overflow-hidden">
+    <div className="flex h-screen bg-background overflow-hidden">
       {/* Backdrop overlay — mobile only, shown when sidebar is open */}
       {sidebarOpen && (
         <div
@@ -77,7 +77,7 @@ function AppLayout() {
       <aside
         className={[
           // Mobile: fixed overlay that slides in from the left
-          "fixed inset-y-0 left-0 z-30 flex w-64 flex-shrink-0 flex-col bg-white border-r border-gray-200",
+          "fixed inset-y-0 left-0 z-30 flex w-64 flex-shrink-0 flex-col bg-card border-r border-border",
           "transition-transform duration-300 ease-in-out",
           sidebarOpen ? "translate-x-0" : "-translate-x-full",
           // Desktop: static flex child, always visible
@@ -85,14 +85,14 @@ function AppLayout() {
         ].join(" ")}
       >
         {/* Logo */}
-        <div className="flex h-16 flex-shrink-0 items-center gap-3 border-b border-gray-200 px-6">
-          <div className="flex h-8 w-8 flex-shrink-0 items-center justify-center rounded-md bg-blue-600 text-white">
-            <DollarSign className="h-5 w-5" />
+        <div className="flex h-16 flex-shrink-0 items-center gap-3 border-b border-border px-6">
+          <div className="flex h-8 w-8 flex-shrink-0 items-center justify-center rounded-md bg-primary text-primary-foreground">
+            <Anchor className="h-5 w-5" />
           </div>
-          <span className="text-base font-bold text-gray-900">Zero Dollar</span>
+          <span className="text-base font-bold text-foreground font-heading">Fether</span>
           {/* Close button visible only on mobile */}
           <button
-            className="ml-auto rounded-md p-1 text-gray-400 hover:text-gray-600 md:hidden"
+            className="ml-auto rounded-md p-1 text-muted-foreground hover:text-foreground md:hidden"
             onClick={() => setSidebarOpen(false)}
             aria-label="Close menu"
           >
@@ -111,8 +111,8 @@ function AppLayout() {
                 className={[
                   "flex items-center gap-3 rounded-md px-3 py-2 text-sm font-medium transition-colors",
                   isActive
-                    ? "bg-blue-50 text-blue-700"
-                    : "text-gray-600 hover:bg-gray-50 hover:text-gray-900",
+                    ? "bg-primary/10 text-primary"
+                    : "text-foreground/80 hover:bg-secondary hover:text-foreground",
                 ].join(" ")}
               >
                 <Icon className="h-4 w-4 flex-shrink-0" />
@@ -123,10 +123,10 @@ function AppLayout() {
         </nav>
 
         {/* Sign out */}
-        <div className="flex-shrink-0 border-t border-gray-200 px-3 py-4">
+        <div className="flex-shrink-0 border-t border-border px-3 py-4">
           <button
             onClick={handleSignOut}
-            className="flex w-full items-center gap-3 rounded-md px-3 py-2 text-sm font-medium text-gray-600 hover:bg-gray-50 hover:text-gray-900 transition-colors"
+            className="flex w-full items-center gap-3 rounded-md px-3 py-2 text-sm font-medium text-foreground/80 hover:bg-secondary hover:text-foreground transition-colors"
           >
             <LogOut className="h-4 w-4 flex-shrink-0" />
             Sign out
@@ -137,18 +137,18 @@ function AppLayout() {
       {/* Main content */}
       <div className="flex min-w-0 flex-1 flex-col overflow-hidden">
         {/* Mobile top bar with hamburger — hidden on desktop */}
-        <div className="flex flex-shrink-0 items-center h-14 gap-3 border-b border-gray-200 bg-white px-4 md:hidden">
+        <div className="flex flex-shrink-0 items-center h-14 gap-3 border-b border-border bg-card px-4 md:hidden">
           <button
             onClick={() => setSidebarOpen(true)}
-            className="-ml-1 rounded-md p-2 text-gray-600 hover:bg-gray-100 transition-colors"
+            className="-ml-1 rounded-md p-2 text-foreground/80 hover:bg-secondary transition-colors"
             aria-label="Open menu"
           >
             <Menu className="h-5 w-5" />
           </button>
-          <span className="text-base font-bold text-gray-900">Zero Dollar</span>
+          <span className="text-base font-bold text-foreground font-heading">Fether</span>
         </div>
 
-        <main className="flex-1 overflow-y-auto">
+        <main className="flex-1 overflow-y-auto bg-background">
           <Outlet />
         </main>
       </div>
