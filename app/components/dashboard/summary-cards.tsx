@@ -14,6 +14,7 @@ export function SummaryCards({ data }: SummaryCardsProps) {
     totalMonthlyExpensesCents,
     netBalanceCents,
     unallocatedCents,
+    totalGoalAllocatedCents,
   } = data;
 
   const netIsPositive = netBalanceCents >= 0;
@@ -113,6 +114,9 @@ export function SummaryCards({ data }: SummaryCardsProps) {
                 )}
               >
                 {formatCurrency(unallocatedCents)}
+              </p>
+              <p className="mt-1 text-xs text-muted-foreground">
+                {formatCurrency(totalGoalAllocatedCents)} allocated to goals
               </p>
             </div>
             <div

@@ -23,6 +23,7 @@ import {
   Anchor,
   CreditCard,
   BadgeDollarSign,
+  Target,
 } from "lucide-react";
 
 export const Route = createFileRoute("/_app")({
@@ -40,6 +41,7 @@ const navItems = [
   { label: "Budget Tracker", to: "/tracker", icon: CalendarDays },
   { label: "Expenses", to: "/bills", icon: Receipt },
   { label: "Credits", to: "/credits", icon: BadgeDollarSign },
+  { label: "Goals", to: "/goals", icon: Target },
   { label: "Payments", to: "/payments", icon: CreditCard },
   { label: "Income", to: "/income", icon: Wallet },
   { label: "Vendors", to: "/vendors", icon: Store },

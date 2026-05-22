@@ -9,6 +9,7 @@ import { billPayments } from "~/db/schema/bill-payments";
 import { incomeOccurrences } from "~/db/schema/income-occurrences";
 import { vendors } from "~/db/schema/vendors";
 import { categories } from "~/db/schema/categories";
+import { goals } from "~/db/schema/goals";
 import { normalizeToMonthlyCents, type BillInterval } from "~/lib/currency";
 import { getCachedOrFetch, dashboardCacheKey } from "~/lib/kv-cache";
 import { toDateStr } from "~/lib/dates";
@@ -19,6 +20,15 @@ export type DashboardData = {
   totalMonthlyExpensesCents: number;
   netBalanceCents: number;
   unallocatedCents: number;
+  totalGoalAllocatedCents: number;
+  goals: Array<{
+    id: string;
+    name: string;
+    targetAmountCents: number;
+    allocatedCents: number;
+    remainingCents: number;
+    progressPercent: number;
+  }>;
   upcomingBills: Array<{
     id: string;
     billId: string;
@@ -96,6 +106,7 @@ export const getDashboardData = createServerFn()
       const [
         activeBills,
         activeIncomeSources,
+        activeGoals,
         upcomingOccurrences,
         overdueOccurrences,
         recentPayments,
@@ -119,6 +130,13 @@ export const getDashboardData = createServerFn()
               eq(incomeSources.isActive, true)
             )
           )
+          .all(),
+
+        db
+          .select()
+          .from(goals)
+          .where(and(eq(goals.userId, user.id), eq(goals.isArchived, false)))
+          .orderBy(asc(goals.sortOrder), asc(goals.name))
           .all(),
 
         db
@@ -209,7 +227,26 @@ export const getDashboardData = createServerFn()
       );
 
       const netBalanceCents = totalMonthlyIncomeCents - totalMonthlyExpensesCents;
-      const unallocatedCents = netBalanceCents;
+      const totalGoalAllocatedCents = activeGoals.reduce(
+        (sum, goal) => sum + goal.allocatedCents,
+        0
+      );
+      const unallocatedCents = netBalanceCents - totalGoalAllocatedCents;
+
+      const dashboardGoals = activeGoals.map((goal) => {
+        const remainingCents = goal.targetAmountCents - goal.allocatedCents;
+        const progressPercent = goal.targetAmountCents > 0
+          ? Math.round((goal.allocatedCents / goal.targetAmountCents) * 100)
+          : 0;
+        return {
+          id: goal.id,
+          name: goal.name,
+          targetAmountCents: goal.targetAmountCents,
+          allocatedCents: goal.allocatedCents,
+          remainingCents,
+          progressPercent,
+        };
+      });
 
       // Category breakdown
       const categoryMap = new Map<
@@ -251,6 +288,8 @@ export const getDashboardData = createServerFn()
         totalMonthlyExpensesCents,
         netBalanceCents,
         unallocatedCents,
+        totalGoalAllocatedCents,
+        goals: dashboardGoals,
         upcomingBills: upcomingOccurrences.map((r) => ({
           id: r.occurrence.id,
           billId: r.occurrence.billId,

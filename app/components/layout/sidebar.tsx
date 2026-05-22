@@ -10,6 +10,7 @@ import {
   Anchor,
   LogOut,
   BadgeDollarSign,
+  Target,
 } from "lucide-react";
 import { cn } from "~/lib/utils";
 import { authClient } from "~/auth/client";
@@ -20,6 +21,7 @@ const navItems = [
   { href: "/tracker", label: "Budget Tracker", icon: CalendarDays },
   { href: "/bills", label: "Bills", icon: Receipt },
   { href: "/credits", label: "Credits", icon: BadgeDollarSign },
+  { href: "/goals", label: "Goals", icon: Target },
   { href: "/income", label: "Income", icon: Wallet },
   { href: "/vendors", label: "Vendors", icon: Building2 },
   { href: "/categories", label: "Categories", icon: Tag },

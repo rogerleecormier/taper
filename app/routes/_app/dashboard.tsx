@@ -8,6 +8,7 @@ import { OverdueBillsList } from "~/components/dashboard/overdue-bills-list";
 import { RecentPaymentsList } from "~/components/dashboard/recent-payments-list";
 import { IncomeExpenseChart } from "~/components/dashboard/income-expense-chart";
 import { CategoryBreakdownChart } from "~/components/dashboard/category-breakdown-chart";
+import { GoalsList } from "~/components/dashboard/goals-list";
 import { trackerStore } from "~/store/tracker-store";
 import { Separator } from "~/components/ui/separator";
 import { Card, CardContent } from "~/components/ui/card";
@@ -73,6 +74,11 @@ function DashboardPage() {
           <Card className="border border-border bg-card shadow-xs">
             <CardContent className="p-6">
               <CategoryBreakdownChart categoryBreakdown={data.categoryBreakdown} />
+            </CardContent>
+          </Card>
+          <Card className="border border-border bg-card shadow-xs">
+            <CardContent className="p-6">
+              <GoalsList goals={data.goals} />
             </CardContent>
           </Card>
         </div>

@@ -7,7 +7,7 @@ interface UnallocatedBannerProps {
 }
 
 export function UnallocatedBanner({ data }: UnallocatedBannerProps) {
-  const { unallocatedCents, totalMonthlyExpensesCents, totalMonthlyIncomeCents } = data;
+  const { unallocatedCents, totalMonthlyExpensesCents, totalMonthlyIncomeCents, totalGoalAllocatedCents } = data;
 
   const isZero = unallocatedCents === 0;
   const isPositive = unallocatedCents > 0;
@@ -16,7 +16,7 @@ export function UnallocatedBanner({ data }: UnallocatedBannerProps) {
     totalMonthlyIncomeCents > 0
       ? Math.min(
           100,
-          Math.round((totalMonthlyExpensesCents / totalMonthlyIncomeCents) * 100)
+          Math.round(((totalMonthlyExpensesCents + totalGoalAllocatedCents) / totalMonthlyIncomeCents) * 100)
         )
       : 0;
 
@@ -69,7 +69,7 @@ export function UnallocatedBanner({ data }: UnallocatedBannerProps) {
                 : "text-destructive/90"
           )}
         >
-          {formatCurrency(totalMonthlyExpensesCents)} /{" "}
+          {formatCurrency(totalMonthlyExpensesCents + totalGoalAllocatedCents)} /{" "}
           {formatCurrency(totalMonthlyIncomeCents)}
         </span>
       </div>
