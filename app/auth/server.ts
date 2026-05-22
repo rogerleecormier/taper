@@ -31,7 +31,7 @@ export function createAuth(env: AppEnv) {
     baseURL: env.BETTER_AUTH_URL,
     trustedOrigins: [
       "https://fether.rcormier.dev",
-      "https://zero-dollar-budget-tracker.rcormier.workers.dev",
+      "https://fether.rcormier.workers.dev",
     ],
     emailAndPassword: { enabled: true },
     databaseHooks: {
