@@ -15,46 +15,52 @@ function SettingsPage() {
   const { data: session } = authClient.useSession();
 
   return (
-    <div className="p-6 max-w-2xl mx-auto space-y-6">
+    <div className="p-6 space-y-6 max-w-7xl mx-auto">
       <div>
         <h1 className="text-3xl font-extrabold font-heading text-foreground tracking-tight">Settings</h1>
         <p className="mt-1 text-sm text-muted-foreground">Manage your account preferences</p>
       </div>
 
-      <div className="space-y-6">
-        {/* Profile card */}
-        <section className="rounded-xl border border-border bg-card shadow-xs overflow-hidden">
-          <div className="flex items-center gap-2 px-5 py-4 border-b border-border bg-muted/20">
-            <User className="h-4 w-4 text-muted-foreground" />
-            <h2 className="text-sm font-bold font-heading text-foreground">Profile</h2>
-          </div>
-          <div className="px-5 py-4 space-y-4">
-            <div>
-              <p className="text-[10px] font-bold uppercase tracking-wider text-muted-foreground mb-1">Name</p>
-              <p className="text-sm font-semibold text-foreground">
-                {session?.user?.name ?? "—"}
-              </p>
+      <div className="grid grid-cols-1 lg:grid-cols-2 gap-6 items-start">
+        {/* Left column — Account */}
+        <div className="space-y-6">
+          {/* Profile card */}
+          <section className="rounded-xl border border-border bg-card shadow-xs overflow-hidden">
+            <div className="flex items-center gap-2 px-5 py-4 border-b border-border bg-muted/20">
+              <User className="h-4 w-4 text-muted-foreground" />
+              <h2 className="text-sm font-bold font-heading text-foreground">Profile</h2>
             </div>
-            <div>
-              <p className="text-[10px] font-bold uppercase tracking-wider text-muted-foreground mb-1">Email</p>
-              <p className="text-sm font-semibold text-foreground">
-                {session?.user?.email ?? "—"}
-              </p>
+            <div className="px-5 py-4 space-y-4">
+              <div>
+                <p className="text-[10px] font-bold uppercase tracking-wider text-muted-foreground mb-1">Name</p>
+                <p className="text-sm font-semibold text-foreground">
+                  {session?.user?.name ?? "—"}
+                </p>
+              </div>
+              <div>
+                <p className="text-[10px] font-bold uppercase tracking-wider text-muted-foreground mb-1">Email</p>
+                <p className="text-sm font-semibold text-foreground">
+                  {session?.user?.email ?? "—"}
+                </p>
+              </div>
             </div>
-          </div>
-        </section>
+          </section>
 
-        {/* Payday card */}
-        <PaydayCard />
+          {/* Change password card */}
+          <ChangePasswordCard />
+        </div>
 
-        {/* Budget Tracker Defaults card */}
-        <TrackerDefaultsCard />
+        {/* Right column — Preferences */}
+        <div className="space-y-6">
+          {/* Payday card */}
+          <PaydayCard />
 
-        {/* Default categories card */}
-        <DefaultCategoriesCard />
+          {/* Budget Tracker Defaults card */}
+          <TrackerDefaultsCard />
 
-        {/* Change password card */}
-        <ChangePasswordCard />
+          {/* Default categories card */}
+          <DefaultCategoriesCard />
+        </div>
       </div>
     </div>
   );
