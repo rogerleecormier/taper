@@ -1,6 +1,5 @@
 "use client";
 
-import { useQuery } from "@tanstack/react-query";
 import {
   BarChart,
   Bar,
@@ -12,7 +11,7 @@ import {
   ResponsiveContainer,
 } from "recharts";
 import { formatCurrency } from "~/lib/currency";
-import { getTrendData } from "~/server/fn/dashboard";
+import type { DashboardData } from "~/server/fn/dashboard";
 
 interface TooltipPayload {
   name: string;
@@ -24,6 +23,10 @@ interface CustomTooltipProps {
   active?: boolean;
   payload?: TooltipPayload[];
   label?: string;
+}
+
+interface IncomeExpenseChartProps {
+  data: DashboardData;
 }
 
 function CustomTooltip({ active, payload, label }: CustomTooltipProps) {
@@ -54,14 +57,16 @@ function yAxisTickFormatter(value: number): string {
   return `$${(value / 100).toFixed(0)}`;
 }
 
-export function IncomeExpenseChart() {
-  const { data: trend, isLoading } = useQuery({
-    queryKey: ["trend", "current-month-planned"],
-    queryFn: () => getTrendData({ data: {} }),
-    staleTime: 60_000,
-  });
+export function IncomeExpenseChart({ data }: IncomeExpenseChartProps) {
+  const trend = [
+    {
+      month: data.periodLabel,
+      incomeCents: data.totalMonthlyIncomeCents,
+      expensesCents: data.totalMonthlyExpensesCents,
+    },
+  ];
 
-  const hasData = trend && trend.some((d) => d.incomeCents > 0 || d.expensesCents > 0);
+  const hasData = trend.some((d) => d.incomeCents > 0 || d.expensesCents > 0);
 
   return (
     <div className="w-full">
@@ -71,11 +76,7 @@ export function IncomeExpenseChart() {
         </h3>
       </div>
 
-      {isLoading ? (
-        <div className="flex items-center justify-center h-[280px]">
-          <p className="text-sm text-muted-foreground">Loading...</p>
-        </div>
-      ) : !hasData ? (
+      {!hasData ? (
         <div className="flex flex-col items-center justify-center h-[280px] gap-1">
           <p className="text-sm text-muted-foreground">No planned income or expenses for this month</p>
           <p className="text-xs text-muted-foreground">Add recurring income or expense occurrences in the tracker</p>

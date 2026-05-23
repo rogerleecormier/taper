@@ -64,12 +64,6 @@ export type DashboardData = {
   }>;
 };
 
-export type TrendDataPoint = {
-  month: string;
-  incomeCents: number;
-  expensesCents: number;
-};
-
 export const getDashboardData = createServerFn()
   .middleware([authMiddleware])
   .inputValidator(
@@ -323,49 +317,4 @@ export const getDashboardData = createServerFn()
         categoryBreakdown,
       };
     });
-  });
-
-export const getTrendData = createServerFn()
-  .middleware([authMiddleware])
-  .inputValidator(z.object({}))
-  .handler(async ({ data, context }): Promise<TrendDataPoint[]> => {
-    const { db, user } = context;
-    void data;
-
-    const monthDate = new Date();
-    const monthStart = toDateStr(startOfMonth(monthDate));
-    const monthEnd = toDateStr(endOfMonth(monthDate));
-
-    const [plannedExpenseOccs, plannedIncomeOccs] = await Promise.all([
-      db
-        .select({ amountCents: billOccurrences.amountCents })
-        .from(billOccurrences)
-        .where(
-          and(
-            eq(billOccurrences.userId, user.id),
-            gte(billOccurrences.dueDate, monthStart),
-            lte(billOccurrences.dueDate, monthEnd),
-            inArray(billOccurrences.status, ["pending", "partial", "paid", "overdue"]),
-          )
-        )
-        .all(),
-      db
-        .select({ amountCents: incomeOccurrences.amountCents })
-        .from(incomeOccurrences)
-        .where(
-          and(
-            eq(incomeOccurrences.userId, user.id),
-            gte(incomeOccurrences.expectedDate, monthStart),
-            lte(incomeOccurrences.expectedDate, monthEnd),
-            inArray(incomeOccurrences.status, ["pending", "received", "late"]),
-          )
-        )
-        .all(),
-    ]);
-
-    return [{
-      month: format(monthDate, "MMM yyyy"),
-      expensesCents: plannedExpenseOccs.reduce((sum, r) => sum + r.amountCents, 0),
-      incomeCents: plannedIncomeOccs.reduce((sum, r) => sum + r.amountCents, 0),
-    }];
   });

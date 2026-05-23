@@ -152,7 +152,7 @@ function DashboardPage() {
         <div className="grid grid-cols-1 xl:grid-cols-2 gap-6">
           <Card className="border border-border bg-card shadow-xs">
             <CardContent className="p-6">
-              <IncomeExpenseChart />
+              <IncomeExpenseChart data={data} />
             </CardContent>
           </Card>
           <Card className="border border-border bg-card shadow-xs">
