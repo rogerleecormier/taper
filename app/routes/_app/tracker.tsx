@@ -22,10 +22,10 @@ import { Button } from "~/components/ui/button";
 import { cn } from "~/lib/utils";
 import { TrackerContainer } from "~/components/tracker/tracker-container";
 import {
-  BudgetBoardView,
+  BudgetCalendarView,
   type BudgetBoardInterval,
   type BudgetScope,
-} from "~/components/tracker/budget-board-view";
+} from "~/components/tracker/budget-calendar-view";
 import type { TrackerInterval } from "~/lib/dates";
 import { getMostRecentPayday, fromDateStr, toDateStr } from "~/lib/dates";
 import { usePreferences, DEFAULT_PREFS, type UserPreferences } from "~/hooks/use-preferences";
@@ -33,7 +33,7 @@ import { z } from "zod";
 import { setTrackerPeriodStart, setTrackerInterval } from "~/store/tracker-store";
 
 const trackerSearchSchema = z.object({
-  mode: z.enum(["board", "list"]).optional(),
+  mode: z.enum(["board", "calendar", "list"]).optional(),
   scope: z.enum(["month", "year"]).optional(),
   monthInterval: z.enum(["day", "week", "biweek", "month", "pay-period"]).optional(),
   yearInterval: z.enum(["month", "quarter", "half", "year"]).optional(),
@@ -171,8 +171,8 @@ function TrackerPage() {
 function TrackerContent({ prefs }: { prefs: UserPreferences }) {
   const search = Route.useSearch();
   const navigate = useNavigate({ from: Route.fullPath });
-
-  const mode = search.mode ?? prefs.trackerDefaultMode;
+  let mode = search.mode ?? prefs.trackerDefaultMode;
+  if (mode === "board") mode = "calendar";
   const scope = search.scope ?? prefs.trackerDefaultScope;
   const monthInterval = search.monthInterval ?? prefs.trackerDefaultMonthInterval;
   const yearInterval = search.yearInterval ?? prefs.trackerDefaultYearInterval;
@@ -243,16 +243,19 @@ function TrackerContent({ prefs }: { prefs: UserPreferences }) {
           <div className="space-y-1.5">
             <p className="text-xs font-bold uppercase tracking-wider text-muted-foreground">View</p>
             <div className="inline-flex rounded-md border border-border bg-muted p-0.5">
-              {(["board", "list"] as const).map((v) => (
+              {([
+                { value: "calendar", label: "Calendar" },
+                { value: "list", label: "Timeline Flow" }
+              ] as const).map((v) => (
                 <button
-                  key={v}
-                  onClick={() => navigate({ search: (prev) => ({ ...prev, mode: v }) })}
+                  key={v.value}
+                  onClick={() => navigate({ search: (prev) => ({ ...prev, mode: v.value }) })}
                   className={cn(
                     "rounded px-3 py-1.5 text-sm font-semibold transition-all duration-200 cursor-pointer",
-                    mode === v ? "bg-card text-foreground shadow-xs" : "text-muted-foreground hover:text-foreground"
+                    mode === v.value ? "bg-card text-foreground shadow-xs" : "text-muted-foreground hover:text-foreground"
                   )}
                 >
-                  {v === "board" ? "Board" : "List"}
+                  {v.label}
                 </button>
               ))}
             </div>
@@ -277,11 +280,11 @@ function TrackerContent({ prefs }: { prefs: UserPreferences }) {
             </div>
           </div>
 
-          {/* Interval toggle — hidden in list+year (the window is always the full year) */}
-          {!(mode === "list" && scope === "year") && (
+          {/* Interval toggle — hidden in list+year, and also in calendar mode */}
+          {mode !== "calendar" && !(mode === "list" && scope === "year") && (
             <div className="space-y-1.5">
               <p className="text-xs font-bold uppercase tracking-wider text-muted-foreground">
-                {mode === "board" ? "Column size" : "Date range"}
+                Date range
               </p>
               <div className="overflow-x-auto">
                 <div className="inline-flex rounded-md border border-border bg-muted p-0.5">
@@ -386,8 +389,8 @@ function TrackerContent({ prefs }: { prefs: UserPreferences }) {
       </div>
 
       {!payPeriodNotConfigured && (
-        mode === "board" ? (
-          <BudgetBoardView scope={scope} interval={interval} periodStart={periodStart} />
+        mode === "calendar" ? (
+          <BudgetCalendarView scope={scope} interval={interval} periodStart={periodStart} />
         ) : (
           <TrackerContainer interval={listInterval} periodStart={periodStart} showToolbar={false} />
         )
