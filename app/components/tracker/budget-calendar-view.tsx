@@ -83,7 +83,11 @@ function DraggableCalendarItem({ item, onClick }: { item: CalendarItem; onClick:
     carried: "bg-accent/10 border-accent/20 text-accent opacity-95",
   };
 
-  const colorStyle = statusColors[item.status as keyof typeof statusColors] ?? statusColors.pending;
+  // Credits use accent (teal) for their received state; success (green) is for income
+  const colorStyle =
+    item.type === "credit" && item.status === "received"
+      ? "bg-accent/15 border-accent/30 text-accent"
+      : (statusColors[item.status as keyof typeof statusColors] ?? statusColors.pending);
 
   return (
     <div
