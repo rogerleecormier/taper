@@ -92,10 +92,10 @@ const STATUS_STYLES: Record<string, { border: string; bg: string; text: string; 
     indicator: "bg-muted-foreground/45",
   },
   carried: {
-    border: "border-accent/20",
-    bg: "bg-accent/5",
-    text: "text-accent",
-    indicator: "bg-accent/60",
+    border: "border-orange/20",
+    bg: "bg-orange/5",
+    text: "text-orange",
+    indicator: "bg-orange/60",
   },
 };
 

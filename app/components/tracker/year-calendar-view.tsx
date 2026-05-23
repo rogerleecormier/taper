@@ -67,7 +67,7 @@ const STATUS_COLORS: Record<string, string> = {
   pending: "bg-warning",
   overdue: "bg-destructive",
   skipped: "bg-muted-foreground/40",
-  carried: "bg-accent/50",
+  carried: "bg-orange/50",
 };
 
 // ─── Mini Day Cell ────────────────────────────────────────────────────────────
@@ -119,7 +119,9 @@ function MiniDayCell({
               key={item.id}
               className={cn(
                 "h-[3px] w-[3px] rounded-full shrink-0",
-                STATUS_COLORS[item.status] ?? "bg-warning"
+                item.type === "credit" && item.status === "received"
+                  ? "bg-accent"
+                  : (STATUS_COLORS[item.status] ?? "bg-warning")
               )}
             />
           ))}

@@ -80,7 +80,7 @@ function DraggableCalendarItem({ item, onClick }: { item: CalendarItem; onClick:
     pending: "bg-warning/15 border-warning/30 text-warning",
     overdue: "bg-destructive/15 border-destructive/30 text-destructive",
     skipped: "bg-muted/30 border-muted-foreground/20 text-muted-foreground opacity-65",
-    carried: "bg-accent/10 border-accent/20 text-accent opacity-95",
+    carried: "bg-orange/10 border-orange/20 text-orange opacity-95",
   };
 
   // Credits use accent (teal) for their received state; success (green) is for income
