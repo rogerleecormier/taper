@@ -366,12 +366,12 @@ function LandingPage() {
                                     </div>
                                     <div className="flex-1 flex flex-col gap-0.5 justify-end overflow-hidden mt-1">
                                       {cellItems.map((item, i) => {
-                                        let style = "bg-warning/10 border-warning/20 text-warning-foreground";
+                                        let style = "bg-warning/10 border-warning/20 text-warning";
                                         if (item.status === "paid" || item.status === "received") {
-                                          style = "bg-success/10 border-success/20 text-success-foreground";
+                                          style = "bg-success/10 border-success/20 text-success";
                                         }
                                         if (item.type === "credit") {
-                                          style = "bg-accent/10 border-accent/20 text-accent-foreground";
+                                          style = "bg-accent/10 border-accent/20 text-accent";
                                         }
 
                                         return (
