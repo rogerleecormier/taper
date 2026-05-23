@@ -68,10 +68,10 @@ const STATUS_STYLES: Record<string, { border: string; bg: string; text: string; 
     indicator: "bg-success",
   },
   partial: {
-    border: "border-accent/20",
-    bg: "bg-accent/5",
-    text: "text-accent",
-    indicator: "bg-accent",
+    border: "border-primary/20",
+    bg: "bg-primary/5",
+    text: "text-primary",
+    indicator: "bg-primary",
   },
   pending: {
     border: "border-warning/20",

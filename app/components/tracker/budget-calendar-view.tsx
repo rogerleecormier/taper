@@ -76,7 +76,7 @@ function DraggableCalendarItem({ item, onClick }: { item: CalendarItem; onClick:
   const statusColors = {
     paid: "bg-success/15 border-success/30 text-success",
     received: "bg-success/15 border-success/30 text-success",
-    partial: "bg-accent/15 border-accent/30 text-accent",
+    partial: "bg-primary/15 border-primary/30 text-primary",
     pending: "bg-warning/15 border-warning/30 text-warning",
     overdue: "bg-destructive/15 border-destructive/30 text-destructive",
     skipped: "bg-muted/30 border-muted-foreground/20 text-muted-foreground opacity-65",

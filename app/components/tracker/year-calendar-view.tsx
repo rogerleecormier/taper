@@ -63,7 +63,7 @@ const DOW = ["Su", "Mo", "Tu", "We", "Th", "Fr", "Sa"];
 const STATUS_COLORS: Record<string, string> = {
   paid: "bg-success",
   received: "bg-success",
-  partial: "bg-accent",
+  partial: "bg-primary",
   pending: "bg-warning",
   overdue: "bg-destructive",
   skipped: "bg-muted-foreground/40",
