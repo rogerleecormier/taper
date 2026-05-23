@@ -24,6 +24,7 @@ import {
   CreditCard,
   BadgeDollarSign,
   Target,
+  ShieldCheck,
 } from "lucide-react";
 
 export const Route = createFileRoute("/_app")({
@@ -53,6 +54,8 @@ function AppLayout() {
   const navigate = useNavigate();
   const pathname = useRouterState({ select: (s) => s.location.pathname });
   const [sidebarOpen, setSidebarOpen] = useState(false);
+  const { data: session } = authClient.useSession();
+  const isAdmin = (session?.user as { role?: string } | undefined)?.role === "admin";
 
   // Auto-close sidebar on navigation (mobile)
   useEffect(() => {
@@ -119,6 +122,21 @@ function AppLayout() {
               </Link>
             );
           })}
+
+          {isAdmin && (
+            <Link
+              to="/admin"
+              className={[
+                "flex items-center gap-3 rounded-md px-3 py-2 text-sm font-medium transition-colors",
+                pathname === "/admin" || pathname.startsWith("/admin/")
+                  ? "bg-primary/10 text-primary"
+                  : "text-foreground/80 hover:bg-secondary hover:text-foreground",
+              ].join(" ")}
+            >
+              <ShieldCheck className="h-4 w-4 flex-shrink-0" />
+              Admin
+            </Link>
+          )}
         </nav>
 
         {/* Sign out */}

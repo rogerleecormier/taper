@@ -11,7 +11,7 @@ import { categories } from "~/db/schema/categories";
 import { goals } from "~/db/schema/goals";
 import { getCachedOrFetch, dashboardCacheKey } from "~/lib/kv-cache";
 import { toDateStr } from "~/lib/dates";
-import { addDays, addMonths, startOfMonth, endOfMonth, format, parseISO } from "date-fns";
+import { addDays, startOfMonth, endOfMonth, format, parseISO } from "date-fns";
 
 export type DashboardData = {
   periodLabel: string;
@@ -63,8 +63,6 @@ export type DashboardData = {
     percentage: number;
   }>;
 };
-
-export type TrendPeriod = 1 | 3 | 6 | 12;
 
 export type TrendDataPoint = {
   month: string;
@@ -329,64 +327,45 @@ export const getDashboardData = createServerFn()
 
 export const getTrendData = createServerFn()
   .middleware([authMiddleware])
-  .inputValidator(
-    z.object({
-      months: z.union([
-        z.literal(1),
-        z.literal(3),
-        z.literal(6),
-        z.literal(12),
-      ]).default(1),
-    })
-  )
+  .inputValidator(z.object({}))
   .handler(async ({ data, context }): Promise<TrendDataPoint[]> => {
     const { db, user } = context;
-    const trend: TrendDataPoint[] = [];
+    void data;
 
-    for (let i = data.months - 1; i >= 0; i--) {
-      const monthDate = addMonths(new Date(), -i);
-      const monthStart = toDateStr(startOfMonth(monthDate));
-      const monthEnd = toDateStr(endOfMonth(monthDate));
-      const monthLabel = data.months <= 3
-        ? format(monthDate, "MMM yyyy")
-        : format(monthDate, "MMM yy");
+    const monthDate = new Date();
+    const monthStart = toDateStr(startOfMonth(monthDate));
+    const monthEnd = toDateStr(endOfMonth(monthDate));
 
-      const [billPaid, incomeReceived] = await Promise.all([
-        db
-          .select({ paidCents: billPayments.amountCents })
-          .from(billPayments)
-          .where(
-            and(
-              eq(billPayments.userId, user.id),
-              gte(billPayments.paidDate, monthStart),
-              lte(billPayments.paidDate, monthEnd)
-            )
+    const [plannedExpenseOccs, plannedIncomeOccs] = await Promise.all([
+      db
+        .select({ amountCents: billOccurrences.amountCents })
+        .from(billOccurrences)
+        .where(
+          and(
+            eq(billOccurrences.userId, user.id),
+            gte(billOccurrences.dueDate, monthStart),
+            lte(billOccurrences.dueDate, monthEnd),
+            inArray(billOccurrences.status, ["pending", "partial", "paid", "overdue"]),
           )
-          .all(),
-
-        db
-          .select({ receivedCents: incomeOccurrences.receivedAmountCents, baseCents: incomeOccurrences.amountCents })
-          .from(incomeOccurrences)
-          .where(
-            and(
-              eq(incomeOccurrences.userId, user.id),
-              eq(incomeOccurrences.status, "received"),
-              gte(incomeOccurrences.receivedDate, monthStart),
-              lte(incomeOccurrences.receivedDate, monthEnd)
-            )
+        )
+        .all(),
+      db
+        .select({ amountCents: incomeOccurrences.amountCents })
+        .from(incomeOccurrences)
+        .where(
+          and(
+            eq(incomeOccurrences.userId, user.id),
+            gte(incomeOccurrences.expectedDate, monthStart),
+            lte(incomeOccurrences.expectedDate, monthEnd),
+            inArray(incomeOccurrences.status, ["pending", "received", "late"]),
           )
-          .all(),
-      ]);
+        )
+        .all(),
+    ]);
 
-      trend.push({
-        month: monthLabel,
-        expensesCents: billPaid.reduce((sum, r) => sum + r.paidCents, 0),
-        incomeCents: incomeReceived.reduce(
-          (sum, r) => sum + (r.receivedCents ?? r.baseCents),
-          0
-        ),
-      });
-    }
-
-    return trend;
+    return [{
+      month: format(monthDate, "MMM yyyy"),
+      expensesCents: plannedExpenseOccs.reduce((sum, r) => sum + r.amountCents, 0),
+      incomeCents: plannedIncomeOccs.reduce((sum, r) => sum + r.amountCents, 0),
+    }];
   });

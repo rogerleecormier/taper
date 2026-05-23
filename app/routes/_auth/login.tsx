@@ -1,10 +1,13 @@
-import { createFileRoute, Link, useNavigate } from "@tanstack/react-router";
+import { createFileRoute, useNavigate } from "@tanstack/react-router";
 import { useState } from "react";
 import { authClient } from "~/auth/client";
 
 export const Route = createFileRoute("/_auth/login")({
   component: LoginPage,
 });
+
+const DEMO_EMAIL = "demo@demo.com";
+const DEMO_PASSWORD = "demo";
 
 function LoginPage() {
   const navigate = useNavigate();
@@ -27,6 +30,29 @@ function LoginPage() {
 
       if (result.error) {
         setError(result.error.message ?? "Invalid email or password.");
+      } else {
+        navigate({ to: "/dashboard" });
+      }
+    } catch {
+      setError("Something went wrong. Please try again.");
+    } finally {
+      setIsLoading(false);
+    }
+  }
+
+  async function handleDemoLogin() {
+    setError(null);
+    setIsLoading(true);
+
+    try {
+      const result = await authClient.signIn.email({
+        email: DEMO_EMAIL,
+        password: DEMO_PASSWORD,
+        callbackURL: "/dashboard",
+      });
+
+      if (result.error) {
+        setError("Demo account is not set up yet. Contact the administrator.");
       } else {
         navigate({ to: "/dashboard" });
       }
@@ -97,15 +123,25 @@ function LoginPage() {
         </button>
       </form>
 
-      <p className="mt-6 text-center text-sm text-muted-foreground">
-        Don&apos;t have an account?{" "}
-        <Link
-          to="/register"
-          className="font-medium text-accent hover:text-accent/90 transition-colors"
+      <div className="mt-4">
+        <div className="relative">
+          <div className="absolute inset-0 flex items-center">
+            <div className="w-full border-t border-border" />
+          </div>
+          <div className="relative flex justify-center text-xs uppercase">
+            <span className="bg-card px-2 text-muted-foreground">or</span>
+          </div>
+        </div>
+
+        <button
+          type="button"
+          disabled={isLoading}
+          onClick={handleDemoLogin}
+          className="mt-4 w-full rounded-md border border-border bg-secondary text-foreground px-4 py-2 text-sm font-medium hover:bg-secondary/80 focus:outline-none focus:ring-2 focus:ring-ring focus:ring-offset-2 disabled:opacity-50 disabled:cursor-not-allowed transition-colors cursor-pointer"
         >
-          Create one
-        </Link>
-      </p>
+          View demo account
+        </button>
+      </div>
     </div>
   );
 }

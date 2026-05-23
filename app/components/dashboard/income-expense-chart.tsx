@@ -1,6 +1,5 @@
 "use client";
 
-import { useState } from "react";
 import { useQuery } from "@tanstack/react-query";
 import {
   BarChart,
@@ -13,16 +12,7 @@ import {
   ResponsiveContainer,
 } from "recharts";
 import { formatCurrency } from "~/lib/currency";
-import { getTrendData, type TrendPeriod } from "~/server/fn/dashboard";
-import { Button } from "~/components/ui/button";
-import { cn } from "~/lib/utils";
-
-const PERIODS: { label: string; value: TrendPeriod }[] = [
-  { label: "1M", value: 1 },
-  { label: "3M", value: 3 },
-  { label: "6M", value: 6 },
-  { label: "12M", value: 12 },
-];
+import { getTrendData } from "~/server/fn/dashboard";
 
 interface TooltipPayload {
   name: string;
@@ -65,11 +55,9 @@ function yAxisTickFormatter(value: number): string {
 }
 
 export function IncomeExpenseChart() {
-  const [period, setPeriod] = useState<TrendPeriod>(1);
-
   const { data: trend, isLoading } = useQuery({
-    queryKey: ["trend", period],
-    queryFn: () => getTrendData({ data: { months: period } }),
+    queryKey: ["trend", "current-month-planned"],
+    queryFn: () => getTrendData({ data: {} }),
     staleTime: 60_000,
   });
 
@@ -81,19 +69,6 @@ export function IncomeExpenseChart() {
         <h3 className="text-sm font-semibold text-muted-foreground uppercase tracking-wide">
           Income vs Expenses
         </h3>
-        <div className="flex gap-1">
-          {PERIODS.map(({ label, value }) => (
-            <Button
-              key={value}
-              size="sm"
-              variant={period === value ? "default" : "ghost"}
-              className={cn("h-7 px-2.5 text-xs", period !== value && "text-muted-foreground")}
-              onClick={() => setPeriod(value)}
-            >
-              {label}
-            </Button>
-          ))}
-        </div>
       </div>
 
       {isLoading ? (
@@ -102,8 +77,8 @@ export function IncomeExpenseChart() {
         </div>
       ) : !hasData ? (
         <div className="flex flex-col items-center justify-center h-[280px] gap-1">
-          <p className="text-sm text-muted-foreground">No data for this period</p>
-          <p className="text-xs text-muted-foreground">Mark bills as paid or income as received to see trends</p>
+          <p className="text-sm text-muted-foreground">No planned income or expenses for this month</p>
+          <p className="text-xs text-muted-foreground">Add recurring income or expense occurrences in the tracker</p>
         </div>
       ) : (
         <ResponsiveContainer width="100%" height={280}>

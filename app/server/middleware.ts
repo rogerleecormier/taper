@@ -3,10 +3,12 @@ import { getRequest } from "@tanstack/react-start/server";
 import { createAuth, type AppEnv } from "~/auth/server";
 import { createDb } from "~/db";
 
+export type UserRole = "admin" | "user" | "demo";
+
 declare module "@tanstack/react-start" {
   interface Middleware {
     context: {
-      user: { id: string; name: string; email: string };
+      user: { id: string; name: string; email: string; role: UserRole };
       db: ReturnType<typeof createDb>;
       env: AppEnv;
     };
@@ -33,10 +35,33 @@ export const authMiddleware = createMiddleware().server(async ({ next }) => {
 
   return next({
     context: {
-      user: session.user as { id: string; name: string; email: string },
+      user: session.user as { id: string; name: string; email: string; role: UserRole },
       db,
       env,
     },
+  });
+});
+
+export const adminMiddleware = createMiddleware().server(async ({ next }) => {
+  const env = getEnv();
+  const auth = createAuth(env);
+  const request = getRequest();
+  const session = await auth.api.getSession({ headers: request.headers });
+
+  if (!session?.user) {
+    throw new Error("Unauthorized");
+  }
+
+  const user = session.user as { id: string; name: string; email: string; role: UserRole };
+
+  if (user.role !== "admin") {
+    throw new Error("Forbidden");
+  }
+
+  const db = createDb(env.DB);
+
+  return next({
+    context: { user, db, env },
   });
 });
 

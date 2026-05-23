@@ -16,6 +16,7 @@ import { Route as AuthRegisterRouteImport } from './routes/_auth/register'
 import { Route as AuthLoginRouteImport } from './routes/_auth/login'
 import { Route as AppTrackerRouteImport } from './routes/_app/tracker'
 import { Route as AppSettingsRouteImport } from './routes/_app/settings'
+import { Route as AppAdminRouteImport } from './routes/_app/admin'
 import { Route as AppDashboardRouteImport } from './routes/_app/dashboard'
 import { Route as AppVendorsIndexRouteImport } from './routes/_app/vendors/index'
 import { Route as AppPaymentsIndexRouteImport } from './routes/_app/payments/index'
@@ -59,6 +60,11 @@ const AppTrackerRoute = AppTrackerRouteImport.update({
 const AppSettingsRoute = AppSettingsRouteImport.update({
   id: '/settings',
   path: '/settings',
+  getParentRoute: () => AppRoute,
+} as any)
+const AppAdminRoute = AppAdminRouteImport.update({
+  id: '/admin',
+  path: '/admin',
   getParentRoute: () => AppRoute,
 } as any)
 const AppDashboardRoute = AppDashboardRouteImport.update({
@@ -121,6 +127,7 @@ export interface FileRoutesByFullPath {
   '/': typeof IndexRoute
   '/dashboard': typeof AppDashboardRoute
   '/settings': typeof AppSettingsRoute
+  '/admin': typeof AppAdminRoute
   '/tracker': typeof AppTrackerRoute
   '/login': typeof AuthLoginRoute
   '/register': typeof AuthRegisterRoute
@@ -139,6 +146,7 @@ export interface FileRoutesByTo {
   '/': typeof IndexRoute
   '/dashboard': typeof AppDashboardRoute
   '/settings': typeof AppSettingsRoute
+  '/admin': typeof AppAdminRoute
   '/tracker': typeof AppTrackerRoute
   '/login': typeof AuthLoginRoute
   '/register': typeof AuthRegisterRoute
@@ -160,6 +168,7 @@ export interface FileRoutesById {
   '/_auth': typeof AuthRouteWithChildren
   '/_app/dashboard': typeof AppDashboardRoute
   '/_app/settings': typeof AppSettingsRoute
+  '/_app/admin': typeof AppAdminRoute
   '/_app/tracker': typeof AppTrackerRoute
   '/_auth/login': typeof AuthLoginRoute
   '/_auth/register': typeof AuthRegisterRoute
@@ -180,6 +189,7 @@ export interface FileRouteTypes {
     | '/'
     | '/dashboard'
     | '/settings'
+    | '/admin'
     | '/tracker'
     | '/login'
     | '/register'
@@ -198,6 +208,7 @@ export interface FileRouteTypes {
     | '/'
     | '/dashboard'
     | '/settings'
+    | '/admin'
     | '/tracker'
     | '/login'
     | '/register'
@@ -218,6 +229,7 @@ export interface FileRouteTypes {
     | '/_auth'
     | '/_app/dashboard'
     | '/_app/settings'
+    | '/_app/admin'
     | '/_app/tracker'
     | '/_auth/login'
     | '/_auth/register'
@@ -288,6 +300,13 @@ declare module '@tanstack/react-router' {
       path: '/settings'
       fullPath: '/settings'
       preLoaderRoute: typeof AppSettingsRouteImport
+      parentRoute: typeof AppRoute
+    }
+    '/_app/admin': {
+      id: '/_app/admin'
+      path: '/admin'
+      fullPath: '/admin'
+      preLoaderRoute: typeof AppAdminRouteImport
       parentRoute: typeof AppRoute
     }
     '/_app/dashboard': {
@@ -373,6 +392,7 @@ declare module '@tanstack/react-router' {
 interface AppRouteChildren {
   AppDashboardRoute: typeof AppDashboardRoute
   AppSettingsRoute: typeof AppSettingsRoute
+  AppAdminRoute: typeof AppAdminRoute
   AppTrackerRoute: typeof AppTrackerRoute
   AppBillsIdRoute: typeof AppBillsIdRoute
   AppCreditsIdRoute: typeof AppCreditsIdRoute
@@ -389,6 +409,7 @@ interface AppRouteChildren {
 const AppRouteChildren: AppRouteChildren = {
   AppDashboardRoute: AppDashboardRoute,
   AppSettingsRoute: AppSettingsRoute,
+  AppAdminRoute: AppAdminRoute,
   AppTrackerRoute: AppTrackerRoute,
   AppBillsIdRoute: AppBillsIdRoute,
   AppCreditsIdRoute: AppCreditsIdRoute,

@@ -1,5 +1,7 @@
 import { betterAuth } from "better-auth";
+import { admin } from "better-auth/plugins";
 import { drizzleAdapter } from "better-auth/adapters/drizzle";
+import { createAuthMiddleware, APIError } from "better-auth/api";
 import { nanoid } from "nanoid";
 import { createDb } from "~/db";
 import { categories } from "~/db/schema/categories";
@@ -34,6 +36,21 @@ export function createAuth(env: AppEnv) {
       "https://taper.rcormier.workers.dev",
     ],
     emailAndPassword: { enabled: true },
+    plugins: [
+      admin({
+        defaultRole: "user",
+        adminRole: "admin",
+      }),
+    ],
+    hooks: {
+      before: createAuthMiddleware(async (ctx) => {
+        if (ctx.path === "/sign-up/email") {
+          throw new APIError("FORBIDDEN", {
+            message: "Signups are disabled. Contact an administrator.",
+          });
+        }
+      }),
+    },
     databaseHooks: {
       user: {
         create: {
