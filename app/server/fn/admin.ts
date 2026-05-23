@@ -15,8 +15,7 @@ import { addMonths } from "date-fns";
 import { toDateStr } from "~/lib/dates";
 import { generateOccurrenceDates, type RecurrenceRule } from "~/lib/occurrence-generator";
 
-export const seedDemoData = createServerFn()
-  .method("POST")
+export const seedDemoData = createServerFn({ method: "POST" })
   .middleware([adminMiddleware])
   .inputValidator(z.object({ userId: z.string() }))
   .handler(async ({ data, context }) => {
@@ -159,8 +158,7 @@ function resolveGenerationWindowEnd(now: Date, endDate: string | null | undefine
   return endDate < cappedWindowEnd ? endDate : cappedWindowEnd;
 }
 
-export const regenerateUserOccurrences = createServerFn()
-  .method("POST")
+export const regenerateUserOccurrences = createServerFn({ method: "POST" })
   .middleware([adminMiddleware])
   .inputValidator(z.object({ userId: z.string() }))
   .handler(async ({ data, context }) => {
