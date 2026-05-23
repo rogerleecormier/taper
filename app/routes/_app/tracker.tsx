@@ -26,6 +26,7 @@ import {
   type BudgetBoardInterval,
   type BudgetScope,
 } from "~/components/tracker/budget-calendar-view";
+import { YearCalendarView } from "~/components/tracker/year-calendar-view";
 import type { TrackerInterval } from "~/lib/dates";
 import { getMostRecentPayday, fromDateStr, toDateStr } from "~/lib/dates";
 import { usePreferences, DEFAULT_PREFS, type UserPreferences } from "~/hooks/use-preferences";
@@ -200,7 +201,13 @@ function TrackerContent({ prefs }: { prefs: UserPreferences }) {
   const interval = scope === "month" ? monthInterval : yearInterval;
   const activeIntervals = scope === "month" ? MONTH_INTERVALS : YEAR_INTERVALS;
   const listInterval = getListInterval(scope, interval);
-  const periodLabel = getPeriodLabel(scope, interval, periodStart, prefs.paydayInterval);
+  // Year calendar always navigates a full year at a time
+  const navInterval: BudgetBoardInterval =
+    mode === "calendar" && scope === "year" ? "year" : interval;
+  const periodLabel =
+    mode === "calendar" && scope === "year"
+      ? format(periodStart, "yyyy")
+      : getPeriodLabel(scope, interval, periodStart, prefs.paydayInterval);
 
   const payPeriodNotConfigured =
     interval === "pay-period" && !prefs.paydayAnchorDate;
@@ -353,7 +360,7 @@ function TrackerContent({ prefs }: { prefs: UserPreferences }) {
             variant="ghost"
             disabled={payPeriodNotConfigured}
             onClick={() => {
-              const nextStart = navigatePeriod(scope, interval, periodStart, "prev", prefs.paydayInterval);
+              const nextStart = navigatePeriod(scope, navInterval, periodStart, "prev", prefs.paydayInterval);
               navigate({
                 search: (prev) => ({
                   ...prev,
@@ -372,7 +379,7 @@ function TrackerContent({ prefs }: { prefs: UserPreferences }) {
             variant="ghost"
             disabled={payPeriodNotConfigured}
             onClick={() => {
-              const nextStart = navigatePeriod(scope, interval, periodStart, "next", prefs.paydayInterval);
+              const nextStart = navigatePeriod(scope, navInterval, periodStart, "next", prefs.paydayInterval);
               navigate({
                 search: (prev) => ({
                   ...prev,
@@ -390,7 +397,11 @@ function TrackerContent({ prefs }: { prefs: UserPreferences }) {
 
       {!payPeriodNotConfigured && (
         mode === "calendar" ? (
-          <BudgetCalendarView scope={scope} interval={interval} periodStart={periodStart} />
+          scope === "year" ? (
+            <YearCalendarView periodStart={periodStart} />
+          ) : (
+            <BudgetCalendarView scope={scope} interval={interval} periodStart={periodStart} />
+          )
         ) : (
           <TrackerContainer interval={listInterval} periodStart={periodStart} showToolbar={false} />
         )
