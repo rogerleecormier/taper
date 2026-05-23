@@ -309,6 +309,9 @@ function TrackerContent({ prefs }: { prefs: UserPreferences }) {
                           ) {
                             nextStart = getRangeStartContainingToday(opt.value);
                           }
+                          if (opt.value === "month") {
+                            nextStart = startOfMonth(periodStart);
+                          }
                           if (opt.value === "pay-period") {
                             nextStart = getRangeStartContainingToday("pay-period", prefs.paydayInterval, prefs.paydayAnchorDate);
                           }
