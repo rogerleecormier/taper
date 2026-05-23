@@ -17,7 +17,17 @@ export const goalKeys = {
   transferHistory: (filters: object) => ["goal-transfers", filters] as const,
 };
 
-export function useGoals(filters?: Parameters<typeof getGoals>[0]["data"]) {
+type GoalsFilters = {
+  includeArchived?: boolean;
+};
+
+type GoalTransferHistoryFilters = {
+  goalId?: string;
+  startDate?: string;
+  endDate?: string;
+};
+
+export function useGoals(filters?: GoalsFilters) {
   return useQuery({
     queryKey: goalKeys.filtered(filters ?? {}),
     queryFn: () => getGoals({ data: filters }),
@@ -33,7 +43,7 @@ export function useGoal(id: string) {
 }
 
 export function useGoalTransferHistory(
-  filters?: Parameters<typeof getGoalTransferHistory>[0]["data"]
+  filters?: GoalTransferHistoryFilters
 ) {
   return useQuery({
     queryKey: goalKeys.transferHistory(filters ?? {}),

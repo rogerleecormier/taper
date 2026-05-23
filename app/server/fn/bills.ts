@@ -16,6 +16,14 @@ import { format, addMonths } from "date-fns";
 import { toDateStr } from "~/lib/dates";
 import { invalidateUserDashboard } from "~/lib/kv-cache";
 
+const MAX_GENERATION_MONTHS = 18;
+
+function resolveGenerationWindowEnd(now: Date, endDate: string | null | undefined) {
+  const cappedWindowEnd = toDateStr(addMonths(now, MAX_GENERATION_MONTHS));
+  if (!endDate) return cappedWindowEnd;
+  return endDate < cappedWindowEnd ? endDate : cappedWindowEnd;
+}
+
 const BillInputSchema = z.object({
   vendorId: z.string().nullable().optional(),
   categoryId: z.string().nullable().optional(),
@@ -148,7 +156,7 @@ export const createBill = createServerFn()
     });
 
     // Generate occurrences for next 90 days
-    const windowEnd = toDateStr(addMonths(now, 3));
+    const windowEnd = resolveGenerationWindowEnd(now, data.endDate);
     await generateAndInsertOccurrences(db, {
       id,
       userId: user.id,
@@ -192,7 +200,7 @@ export const updateBill = createServerFn()
       .where(and(eq(bills.id, data.id), eq(bills.userId, user.id)));
 
     // Regenerate open occurrences based on the updated series rule.
-    const windowEnd = toDateStr(addMonths(now, 3));
+    const windowEnd = resolveGenerationWindowEnd(now, data.endDate);
 
     // Delete existing open occurrences (including previously marked overdue)
     // so old schedule dates don't stick around after series edits.

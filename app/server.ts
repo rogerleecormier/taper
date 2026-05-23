@@ -16,6 +16,6 @@ export default {
       return auth.handler(request);
     }
 
-    return startHandler(request, env);
+    return startHandler(request);
   },
 };

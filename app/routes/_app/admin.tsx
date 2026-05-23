@@ -4,7 +4,7 @@ import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { ShieldCheck, UserPlus, Users, CheckCircle2, AlertCircle, Loader2 } from "lucide-react";
 import { authClient } from "~/auth/client";
 import { getSession } from "~/server/middleware";
-import { seedDemoData } from "~/server/fn/admin";
+import { seedDemoData, regenerateUserOccurrences } from "~/server/fn/admin";
 
 export const Route = createFileRoute("/_app/admin")({
   beforeLoad: async () => {
@@ -91,6 +91,7 @@ function AdminPage() {
                     <p className="text-xs text-muted-foreground truncate">{user.email}</p>
                   </div>
                   <div className="flex items-center gap-2 flex-shrink-0">
+                    <RegenerateOccurrencesButton userId={user.id} />
                     <span
                       className={[
                         "inline-flex items-center rounded-full px-2 py-0.5 text-xs font-medium",
@@ -211,6 +212,53 @@ function SeedDemoButton({
         </span>
       ) : (
         "Seed Data"
+      )}
+    </button>
+  );
+}
+
+function RegenerateOccurrencesButton({ userId }: { userId: string }) {
+  const [status, setStatus] = useState<"idle" | "loading" | "success" | "error">("idle");
+
+  async function handleRegenerate() {
+    setStatus("loading");
+    try {
+      await regenerateUserOccurrences({ data: { userId } });
+      setStatus("success");
+      setTimeout(() => setStatus("idle"), 3000);
+    } catch {
+      setStatus("error");
+      setTimeout(() => setStatus("idle"), 3000);
+    }
+  }
+
+  if (status === "success") {
+    return (
+      <span className="flex items-center gap-1 text-xs text-green-600">
+        <CheckCircle2 className="h-3 w-3" /> Regenerated
+      </span>
+    );
+  }
+  if (status === "error") {
+    return (
+      <span className="flex items-center gap-1 text-xs text-destructive">
+        <AlertCircle className="h-3 w-3" /> Failed
+      </span>
+    );
+  }
+
+  return (
+    <button
+      onClick={handleRegenerate}
+      disabled={status === "loading"}
+      className="text-xs rounded-md border border-border px-2 py-1 text-foreground/70 hover:bg-secondary transition-colors disabled:opacity-50 cursor-pointer"
+    >
+      {status === "loading" ? (
+        <span className="flex items-center gap-1">
+          <Loader2 className="h-3 w-3 animate-spin" /> Regenerating…
+        </span>
+      ) : (
+        "Regen Occurrences"
       )}
     </button>
   );

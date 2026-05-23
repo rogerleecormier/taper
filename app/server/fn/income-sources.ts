@@ -14,6 +14,14 @@ import {
 import { addMonths } from "date-fns";
 import { toDateStr } from "~/lib/dates";
 
+const MAX_GENERATION_MONTHS = 18;
+
+function resolveGenerationWindowEnd(now: Date, endDate: string | null | undefined) {
+  const cappedWindowEnd = toDateStr(addMonths(now, MAX_GENERATION_MONTHS));
+  if (!endDate) return cappedWindowEnd;
+  return endDate < cappedWindowEnd ? endDate : cappedWindowEnd;
+}
+
 const IncomeSourceInputSchema = z.object({
   vendorId: z.string().nullable().optional(),
   categoryId: z.string().nullable().optional(),
@@ -131,7 +139,7 @@ export const createIncomeSource = createServerFn()
       updatedAt: now,
     });
 
-    const windowEnd = toDateStr(addMonths(now, 3));
+    const windowEnd = resolveGenerationWindowEnd(now, data.endDate);
     await generateAndInsertIncomeOccurrences(db, {
       id,
       userId: user.id,
@@ -171,7 +179,7 @@ export const updateIncomeSource = createServerFn()
       })
       .where(and(eq(incomeSources.id, data.id), eq(incomeSources.userId, user.id)));
 
-    const windowEnd = toDateStr(addMonths(now, 3));
+    const windowEnd = resolveGenerationWindowEnd(now, data.endDate);
     const pending = await db
       .select({ id: incomeOccurrences.id })
       .from(incomeOccurrences)

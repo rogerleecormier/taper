@@ -16,7 +16,13 @@ export const creditKeys = {
   history: (id: string) => ["credit-history", id] as const,
 };
 
-export function useCredits(filters?: Parameters<typeof getCredits>[0]["data"]) {
+type CreditsFilters = {
+  categoryId?: string;
+  vendorId?: string;
+  isActive?: boolean;
+};
+
+export function useCredits(filters?: CreditsFilters) {
   return useQuery({
     queryKey: creditKeys.filtered(filters ?? {}),
     queryFn: () => getCredits({ data: filters }),

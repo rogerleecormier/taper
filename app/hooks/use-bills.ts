@@ -16,7 +16,13 @@ export const billKeys = {
   history: (id: string) => ["bill-history", id] as const,
 };
 
-export function useBills(filters?: Parameters<typeof getBills>[0]["data"]) {
+type BillsFilters = {
+  categoryId?: string;
+  vendorId?: string;
+  isActive?: boolean;
+};
+
+export function useBills(filters?: BillsFilters) {
   return useQuery({
     queryKey: billKeys.filtered(filters ?? {}),
     queryFn: () => getBills({ data: filters }),

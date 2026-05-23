@@ -1,6 +1,6 @@
 import { createServerFn } from "@tanstack/react-start";
 import { z } from "zod";
-import { eq } from "drizzle-orm";
+import { and, eq, inArray } from "drizzle-orm";
 import { nanoid } from "nanoid";
 import { adminMiddleware } from "~/server/middleware";
 import { categories } from "~/db/schema/categories";
@@ -8,6 +8,12 @@ import { bills } from "~/db/schema/bills";
 import { incomeSources } from "~/db/schema/income-sources";
 import { credits } from "~/db/schema/credits";
 import { goals } from "~/db/schema/goals";
+import { billOccurrences } from "~/db/schema/bill-occurrences";
+import { incomeOccurrences } from "~/db/schema/income-occurrences";
+import { creditOccurrences } from "~/db/schema/credit-occurrences";
+import { addMonths } from "date-fns";
+import { toDateStr } from "~/lib/dates";
+import { generateOccurrenceDates, type RecurrenceRule } from "~/lib/occurrence-generator";
 
 export const seedDemoData = createServerFn()
   .middleware([adminMiddleware])
@@ -142,4 +148,178 @@ export const seedDemoData = createServerFn()
     }
 
     return { success: true };
+  });
+
+const MAX_GENERATION_MONTHS = 18;
+
+function resolveGenerationWindowEnd(now: Date, endDate: string | null | undefined) {
+  const cappedWindowEnd = toDateStr(addMonths(now, MAX_GENERATION_MONTHS));
+  if (!endDate) return cappedWindowEnd;
+  return endDate < cappedWindowEnd ? endDate : cappedWindowEnd;
+}
+
+export const regenerateUserOccurrences = createServerFn()
+  .middleware([adminMiddleware])
+  .inputValidator(z.object({ userId: z.string() }))
+  .handler(async ({ data, context }) => {
+    const { db } = context;
+    const now = new Date();
+
+    const allBills = await db
+      .select()
+      .from(bills)
+      .where(and(eq(bills.userId, data.userId), eq(bills.isActive, true)))
+      .all();
+
+    for (const bill of allBills) {
+      const existingOpen = await db
+        .select({ id: billOccurrences.id })
+        .from(billOccurrences)
+        .where(
+          and(
+            eq(billOccurrences.billId, bill.id),
+            inArray(billOccurrences.status, ["pending", "overdue"])
+          )
+        )
+        .all();
+
+      if (existingOpen.length > 0) {
+        await db
+          .delete(billOccurrences)
+          .where(
+            and(
+              eq(billOccurrences.billId, bill.id),
+              inArray(billOccurrences.id, existingOpen.map((r) => r.id))
+            )
+          );
+      }
+
+      const windowEnd = resolveGenerationWindowEnd(now, bill.endDate);
+      const rule: RecurrenceRule = {
+        interval: bill.interval as RecurrenceRule["interval"],
+        startDate: bill.startDate,
+        endDate: bill.endDate,
+        dayOfMonth: bill.dayOfMonth,
+        dayOfWeek: bill.dayOfWeek,
+      };
+      const dueDates = generateOccurrenceDates(rule, bill.startDate, windowEnd);
+      if (dueDates.length === 0) continue;
+
+      await db.insert(billOccurrences).values(
+        dueDates.map((dueDate) => ({
+          id: nanoid(),
+          userId: bill.userId,
+          billId: bill.id,
+          dueDate,
+          amountCents: bill.amountCents,
+          status: "pending" as const,
+          createdAt: now,
+          updatedAt: now,
+        }))
+      );
+    }
+
+    const allIncome = await db
+      .select()
+      .from(incomeSources)
+      .where(and(eq(incomeSources.userId, data.userId), eq(incomeSources.isActive, true)))
+      .all();
+
+    for (const source of allIncome) {
+      await db
+        .delete(incomeOccurrences)
+        .where(
+          and(
+            eq(incomeOccurrences.incomeSourceId, source.id),
+            eq(incomeOccurrences.status, "pending")
+          )
+        );
+
+      const windowEnd = resolveGenerationWindowEnd(now, source.endDate);
+      const rule: RecurrenceRule = {
+        interval: source.interval as RecurrenceRule["interval"],
+        startDate: source.startDate,
+        endDate: source.endDate,
+        dayOfMonth: source.dayOfMonth,
+        dayOfWeek: source.dayOfWeek,
+      };
+      const expectedDates = generateOccurrenceDates(rule, source.startDate, windowEnd);
+      if (expectedDates.length === 0) continue;
+
+      await db.insert(incomeOccurrences).values(
+        expectedDates.map((expectedDate) => ({
+          id: nanoid(),
+          userId: source.userId,
+          incomeSourceId: source.id,
+          expectedDate,
+          amountCents: source.amountCents,
+          status: "pending" as const,
+          createdAt: now,
+          updatedAt: now,
+        }))
+      );
+    }
+
+    const allCredits = await db
+      .select()
+      .from(credits)
+      .where(and(eq(credits.userId, data.userId), eq(credits.isActive, true)))
+      .all();
+
+    for (const credit of allCredits) {
+      const existingOpen = await db
+        .select({ id: creditOccurrences.id })
+        .from(creditOccurrences)
+        .where(
+          and(
+            eq(creditOccurrences.creditId, credit.id),
+            inArray(creditOccurrences.status, ["pending", "overdue"])
+          )
+        )
+        .all();
+
+      if (existingOpen.length > 0) {
+        await db
+          .delete(creditOccurrences)
+          .where(
+            and(
+              eq(creditOccurrences.creditId, credit.id),
+              inArray(creditOccurrences.id, existingOpen.map((r) => r.id))
+            )
+          );
+      }
+
+      const windowEnd = resolveGenerationWindowEnd(now, credit.endDate);
+      const rule: RecurrenceRule = {
+        interval: credit.interval as RecurrenceRule["interval"],
+        startDate: credit.startDate,
+        endDate: credit.endDate,
+        dayOfMonth: credit.dayOfMonth,
+        dayOfWeek: credit.dayOfWeek,
+      };
+      const dueDates = generateOccurrenceDates(rule, credit.startDate, windowEnd);
+      if (dueDates.length === 0) continue;
+
+      await db.insert(creditOccurrences).values(
+        dueDates.map((dueDate) => ({
+          id: nanoid(),
+          userId: credit.userId,
+          creditId: credit.id,
+          dueDate,
+          amountCents: credit.amountCents,
+          status: "pending" as const,
+          createdAt: now,
+          updatedAt: now,
+        }))
+      );
+    }
+
+    return {
+      success: true,
+      regenerated: {
+        bills: allBills.length,
+        incomeSources: allIncome.length,
+        credits: allCredits.length,
+      },
+    };
   });

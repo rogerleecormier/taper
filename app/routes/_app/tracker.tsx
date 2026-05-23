@@ -41,12 +41,15 @@ const trackerSearchSchema = z.object({
   periodStart: z.string().optional(),
 });
 
+type MonthInterval = z.infer<typeof trackerSearchSchema>["monthInterval"];
+type YearInterval = z.infer<typeof trackerSearchSchema>["yearInterval"];
+
 export const Route = createFileRoute("/_app/tracker")({
   validateSearch: (search) => trackerSearchSchema.parse(search),
   component: TrackerPage,
 });
 
-const MONTH_INTERVALS: Array<{ value: BudgetBoardInterval; label: string }> = [
+const MONTH_INTERVALS: Array<{ value: MonthInterval; label: string }> = [
   { value: "day", label: "Days" },
   { value: "week", label: "Weeks" },
   { value: "biweek", label: "Biweeks" },
@@ -54,7 +57,7 @@ const MONTH_INTERVALS: Array<{ value: BudgetBoardInterval; label: string }> = [
   { value: "pay-period", label: "Pay Period" },
 ];
 
-const YEAR_INTERVALS: Array<{ value: BudgetBoardInterval; label: string }> = [
+const YEAR_INTERVALS: Array<{ value: YearInterval; label: string }> = [
   { value: "month", label: "Months" },
   { value: "quarter", label: "3 Months" },
   { value: "half", label: "6 Months" },
@@ -302,32 +305,34 @@ function TrackerContent({ prefs }: { prefs: UserPreferences }) {
                       key={opt.value}
                       onClick={() => {
                         if (scope === "month") {
+                          const monthValue = opt.value as MonthInterval;
                           let nextStart = periodStart;
                           if (
                             mode === "list" &&
-                            (opt.value === "day" || opt.value === "week" || opt.value === "biweek")
+                            (monthValue === "day" || monthValue === "week" || monthValue === "biweek")
                           ) {
-                            nextStart = getRangeStartContainingToday(opt.value);
+                            nextStart = getRangeStartContainingToday(monthValue);
                           }
-                          if (opt.value === "month") {
+                          if (monthValue === "month") {
                             nextStart = startOfMonth(periodStart);
                           }
-                          if (opt.value === "pay-period") {
+                          if (monthValue === "pay-period") {
                             nextStart = getRangeStartContainingToday("pay-period", prefs.paydayInterval, prefs.paydayAnchorDate);
                           }
                           navigate({
                             search: (prev) => ({
                               ...prev,
-                              monthInterval: opt.value,
+                              monthInterval: monthValue,
                               periodStart: toDateStr(nextStart),
                             }),
                           });
                           return;
                         }
+                        const yearValue = opt.value as YearInterval;
                         navigate({
                           search: (prev) => ({
                             ...prev,
-                            yearInterval: opt.value,
+                            yearInterval: yearValue,
                           }),
                         });
                       }}

@@ -16,6 +16,14 @@ import { format, addMonths } from "date-fns";
 import { toDateStr } from "~/lib/dates";
 import { invalidateUserDashboard } from "~/lib/kv-cache";
 
+const MAX_GENERATION_MONTHS = 18;
+
+function resolveGenerationWindowEnd(now: Date, endDate: string | null | undefined) {
+  const cappedWindowEnd = toDateStr(addMonths(now, MAX_GENERATION_MONTHS));
+  if (!endDate) return cappedWindowEnd;
+  return endDate < cappedWindowEnd ? endDate : cappedWindowEnd;
+}
+
 const CreditInputSchema = z.object({
   vendorId: z.string().nullable().optional(),
   categoryId: z.string().nullable().optional(),
@@ -153,7 +161,7 @@ export const createCredit = createServerFn()
       updatedAt: now,
     });
 
-    const windowEnd = toDateStr(addMonths(now, 3));
+    const windowEnd = resolveGenerationWindowEnd(now, data.endDate);
     await generateAndInsertCreditOccurrences(db, {
       id,
       userId: user.id,
@@ -195,7 +203,7 @@ export const updateCredit = createServerFn()
       })
       .where(and(eq(credits.id, data.id), eq(credits.userId, user.id)));
 
-    const windowEnd = toDateStr(addMonths(now, 3));
+    const windowEnd = resolveGenerationWindowEnd(now, data.endDate);
 
     const future = await db
       .select({ id: creditOccurrences.id })
