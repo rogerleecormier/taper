@@ -12,7 +12,7 @@ export function UnallocatedBanner({ data }: UnallocatedBannerProps) {
   const isZero = unallocatedCents === 0;
   const isPositive = unallocatedCents > 0;
 
-  const tetheredPercent =
+  const allocatedPercent =
     totalMonthlyIncomeCents > 0
       ? Math.min(
           100,
@@ -23,7 +23,7 @@ export function UnallocatedBanner({ data }: UnallocatedBannerProps) {
   return (
     <div
       className={cn(
-        "rounded-xl border p-4",
+        "rounded-xl border p-4 glass-card",
         isZero
           ? "border-success/20 bg-success/5"
           : isPositive
@@ -35,15 +35,15 @@ export function UnallocatedBanner({ data }: UnallocatedBannerProps) {
         <div>
           {isZero ? (
             <p className="font-semibold text-success">
-              Every dollar is tethered! 🎯
+              Perfectly Balanced! Fully funneled to a point. 🎯
             </p>
           ) : isPositive ? (
             <p className="font-semibold text-warning">
-              {formatCurrency(unallocatedCents)} untethered
+              {formatCurrency(unallocatedCents)} remaining to taper
             </p>
           ) : (
             <p className="font-semibold text-destructive">
-              Over-tethered by {formatCurrency(Math.abs(unallocatedCents))}
+              Over-allocated by {formatCurrency(Math.abs(unallocatedCents))}
             </p>
           )}
           <p
@@ -56,7 +56,7 @@ export function UnallocatedBanner({ data }: UnallocatedBannerProps) {
                   : "text-destructive/90"
             )}
           >
-            {tetheredPercent}% of income tethered
+            {allocatedPercent}% of income allocated
           </p>
         </div>
         <span
@@ -85,7 +85,7 @@ export function UnallocatedBanner({ data }: UnallocatedBannerProps) {
                 ? "bg-warning"
                 : "bg-destructive"
           )}
-          style={{ width: `${tetheredPercent}%` }}
+          style={{ width: `${allocatedPercent}%` }}
         />
       </div>
     </div>

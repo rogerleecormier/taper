@@ -1,4 +1,4 @@
-name = "fether"
+name = "taper"
 compatibility_date = "2025-05-01"
 compatibility_flags = ["nodejs_compat"]
 
@@ -21,7 +21,7 @@ bucket_name = "budget-receipts"
 binding = "AI"
 
 [vars]
-BETTER_AUTH_URL = "https://fether.rcormier.dev"
+BETTER_AUTH_URL = "https://taper.rcormier.dev"
 
 [observability]
 enabled = true

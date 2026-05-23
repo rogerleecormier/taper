@@ -97,7 +97,7 @@ export function GoalTransferDialog({ goals }: GoalTransferDialogProps) {
                   <SelectValue />
                 </SelectTrigger>
                 <SelectContent>
-                  <SelectItem value="__untethered__">Untethered</SelectItem>
+                  <SelectItem value="__untethered__">Left to Taper</SelectItem>
                   {goals.map((goal) => (
                     <SelectItem key={goal.id} value={goal.id}>
                       {goal.name}
@@ -114,7 +114,7 @@ export function GoalTransferDialog({ goals }: GoalTransferDialogProps) {
                   <SelectValue />
                 </SelectTrigger>
                 <SelectContent>
-                  <SelectItem value="__untethered__">Untethered</SelectItem>
+                  <SelectItem value="__untethered__">Left to Taper</SelectItem>
                   {goals.map((goal) => (
                     <SelectItem key={goal.id} value={goal.id}>
                       {goal.name}

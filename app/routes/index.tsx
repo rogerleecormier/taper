@@ -1,4 +1,5 @@
 import { createFileRoute, Link } from "@tanstack/react-router";
+import { Logo } from "~/components/layout/logo";
 import {
   LayoutDashboard,
   CalendarDays,
@@ -10,7 +11,6 @@ import {
   TrendingDown,
   ChevronRight,
   ChevronDown,
-  Anchor,
   Target,
   GripVertical,
   LogOut,
@@ -26,14 +26,9 @@ function LandingPage() {
       {/* Nav */}
       <nav className="sticky top-0 z-50 border-b border-border bg-card/90 backdrop-blur">
         <div className="mx-auto flex h-16 max-w-6xl items-center justify-between px-6">
-          <div className="flex items-center gap-2">
-            <div className="flex h-8 w-8 items-center justify-center rounded-lg bg-primary text-primary-foreground">
-              <Anchor className="h-5 w-5" />
-            </div>
-            <span className="text-lg font-bold text-foreground font-heading">
-              Fether
-            </span>
-          </div>
+          <Link to="/">
+            <Logo size="md" />
+          </Link>
           <div className="flex items-center gap-3">
             <Link
               to="/login"
@@ -53,18 +48,18 @@ function LandingPage() {
 
       {/* Hero */}
       <section className="mx-auto max-w-6xl px-6 pt-20 pb-16 text-center">
-        <div className="inline-flex items-center gap-2 rounded-full bg-primary/10 px-4 py-1.5 text-sm font-medium text-primary mb-6">
+        <div className="inline-flex items-center gap-2 rounded-full bg-primary/10 px-4 py-1.5 text-sm font-medium text-primary mb-6 animate-pulse">
           <Target className="h-3.5 w-3.5" />
-          Tether every dollar to your goals
+          Funnel your income with absolute precision.
         </div>
         <h1 className="text-5xl font-bold tracking-tight text-foreground font-heading sm:text-6xl">
-          Tether your budget.
+          Taper your budget.
           <br />
-          <span className="text-primary">Ground your goals.</span>
+          <span className="text-primary">Balance your allocations.</span>
         </h1>
         <p className="mt-6 max-w-2xl mx-auto text-xl text-muted-foreground leading-relaxed">
-          Financial tethering that grounds every dollar. Track your income, bills, and occurrences 
-          in one place. Your goal: 100% of income tethered, $0.00 left untethered.
+          Take your raw monthly income and taper it into targeted, balanced category buckets.
+          No waste. Complete alignment. Funnel every dollar to a clean, precise point.
         </p>
         <div className="mt-10 flex items-center justify-center gap-4">
           <Link
@@ -93,7 +88,7 @@ function LandingPage() {
               <div className="h-3 w-3 rounded-full bg-yellow-400" />
               <div className="h-3 w-3 rounded-full bg-green-400" />
               <div className="ml-4 flex-1 rounded-md bg-card border border-border h-5 max-w-xs text-xs text-muted-foreground/60 flex items-center px-2">
-                fether.rcormier.dev
+                taper.rcormier.dev
               </div>
             </div>
 
@@ -101,16 +96,13 @@ function LandingPage() {
               {/* Sidebar */}
               <div className="w-52 flex-shrink-0 border-r border-border bg-card flex flex-col">
                 <div className="flex items-center gap-2 px-4 py-3 border-b border-border">
-                  <div className="flex h-6 w-6 items-center justify-center rounded bg-primary text-primary-foreground">
-                    <Anchor className="h-4 w-4" />
-                  </div>
-                  <span className="text-sm font-semibold text-foreground font-heading">Fether</span>
+                  <Logo size="sm" />
                 </div>
                 <nav className="flex-1 px-2 py-2 space-y-0.5">
                   {[
                     { icon: LayoutDashboard, label: "Dashboard", active: true },
                     { icon: CalendarDays, label: "Budget Tracker" },
-                    { icon: Receipt, label: "Bills" },
+                    { icon: Receipt, label: "Expenses" },
                     { icon: Wallet, label: "Income" },
                     { icon: Building2, label: "Vendors" },
                     { icon: Tag, label: "Categories" },
@@ -146,9 +138,9 @@ function LandingPage() {
                   <div className="flex items-center justify-between">
                     <div>
                       <p className="text-[11px] font-semibold text-success">
-                        Every dollar is tethered! 🎯
+                        Fully funneled to a point! 🎯
                       </p>
-                      <p className="text-[10px] text-success/90">100% of income tethered</p>
+                      <p className="text-[10px] text-success/90">100% of income allocated</p>
                     </div>
                     <span className="text-[10px] font-medium text-success/90 tabular-nums">
                       $4,850 / $4,850
@@ -164,8 +156,8 @@ function LandingPage() {
                   {[
                     { label: "Monthly Income", value: "$4,850", color: "text-success", bg: "bg-success/10", Icon: TrendingUp, iconColor: "text-success" },
                     { label: "Monthly Expenses", value: "$4,850", color: "text-destructive", bg: "bg-destructive/10", Icon: TrendingDown, iconColor: "text-destructive" },
-                    { label: "Net Balance", value: "$0", color: "text-accent", bg: "bg-accent/10", Icon: Anchor, iconColor: "text-accent" },
-                    { label: "Untethered", value: "$0.00", color: "text-success", bg: "bg-success/10", Icon: Target, iconColor: "text-success" },
+                    { label: "Net Balance", value: "$0", color: "text-accent", bg: "bg-accent/10", Icon: Target, iconColor: "text-accent" },
+                    { label: "Left to Taper", value: "$0.00", color: "text-success", bg: "bg-success/10", Icon: Target, iconColor: "text-success" },
                   ].map(({ label, value, color, bg, Icon, iconColor }) => (
                     <div key={label} className="rounded-lg border border-border bg-card p-2.5 shadow-sm">
                       <div className="flex items-center justify-between mb-1">
@@ -262,11 +254,11 @@ function LandingPage() {
         <div className="mx-auto max-w-6xl px-6">
           <div className="text-center mb-16">
             <h2 className="text-3xl font-bold text-foreground font-heading">
-              Everything you need to anchor your budget
+              Everything you need to balance your budget
             </h2>
             <p className="mt-4 text-lg text-muted-foreground">
-              Built around financial tethering — every dollar has an anchor,
-              nothing is left untethered.
+              Built around precision funneling — every dollar is balanced,
+              nothing is left to waste.
             </p>
           </div>
 
@@ -275,7 +267,7 @@ function LandingPage() {
               icon={<CalendarDays className="h-5 w-5 text-accent" />}
               iconBg="bg-accent/10"
               title="Budget Tracker"
-              description="Expandable rows for every income source and expense. See each scheduled occurrence, then mark it paid, received, or skipped — with drag-to-reorder to stay organized."
+              description="A split chronological timeline flow ledger and category cards. View scheduled occurrences, mark them paid, received, or skipped, and track allocations."
               mockup={<TrackerMockup />}
             />
 
@@ -303,10 +295,10 @@ function LandingPage() {
         <div className="mx-auto max-w-6xl px-6">
           <div className="text-center mb-16">
             <h2 className="text-3xl font-bold text-foreground font-heading">
-              How financial tethering works
+              How precision tapering works
             </h2>
             <p className="mt-4 text-lg text-muted-foreground">
-              Three steps to financial clarity every month.
+              Three steps to financial balance and clarity.
             </p>
           </div>
           <div className="grid grid-cols-1 gap-10 md:grid-cols-3">
@@ -320,15 +312,15 @@ function LandingPage() {
               },
               {
                 step: "02",
-                title: "Tether every dollar",
-                desc: "Add bills and expenses until your untethered balance reaches exactly $0.00. The dashboard shows your status in real time.",
+                title: "Taper your income",
+                desc: "Add bills and expenses until your unfunneled balance reaches exactly $0.00 (the clean, precise point). Taper's alerts show your balance in real time.",
                 icon: <TrendingDown className="h-6 w-6 text-accent" />,
                 iconBg: "bg-accent/10",
               },
               {
                 step: "03",
-                title: "Ground your cash",
-                desc: "Open the Budget Tracker, expand any row, and mark each occurrence paid or received. Watch your month close out perfectly anchored.",
+                title: "Funnel allocations",
+                desc: "Open the Budget Tracker, view your split chronological flow ledger, and mark occurrences paid or received. Watch your cash distribute cleanly to zero waste.",
                 icon: <CalendarDays className="h-6 w-6 text-warning" />,
                 iconBg: "bg-warning/10",
               },
@@ -352,7 +344,7 @@ function LandingPage() {
       <section className="bg-primary py-20 text-primary-foreground">
         <div className="mx-auto max-w-3xl px-6 text-center">
           <h2 className="text-3xl font-bold font-heading mb-4 text-primary-foreground">
-            Ready to ground your goals?
+            Ready to balance your budget?
           </h2>
           <p className="text-primary-foreground/90 text-lg mb-8">
             Free to use. No credit card required.
@@ -378,13 +370,8 @@ function LandingPage() {
       {/* Footer */}
       <footer className="border-t border-border py-8 bg-card">
         <div className="mx-auto max-w-6xl px-6 flex items-center justify-between">
-          <div className="flex items-center gap-2">
-            <div className="flex h-6 w-6 items-center justify-center rounded bg-primary text-primary-foreground">
-              <Anchor className="h-4 w-4" />
-            </div>
-            <span className="text-sm font-semibold text-foreground font-heading">Fether</span>
-          </div>
-          <p className="text-sm text-muted-foreground">Tether every dollar to your goals.</p>
+          <Logo size="sm" />
+          <p className="text-sm text-muted-foreground">Funnel your income with absolute precision.</p>
         </div>
       </footer>
     </div>
@@ -426,7 +413,7 @@ function TrackerMockup() {
         {[
           { label: "Income", value: "$2,400", color: "text-success" },
           { label: "Expenses", value: "$1,850", color: "text-destructive" },
-          { label: "Untethered", value: "$550", color: "text-warning" },
+          { label: "Left to Taper", value: "$550", color: "text-warning" },
         ].map(({ label, value, color }) => (
           <div key={label} className="flex flex-col items-center py-2 bg-secondary/10">
             <span className="text-[9px] font-semibold uppercase tracking-wider text-muted-foreground">

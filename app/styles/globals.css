@@ -16,32 +16,51 @@
   --color-popover: oklch(1 0 0);
   --color-popover-foreground: oklch(0.20 0.015 240);
 
-  /* Emerald Green */
-  --color-primary: oklch(0.55 0.16 160);
-  --color-primary-foreground: oklch(0.98 0.005 240);
+  /* Royal Indigo-Violet Primary */
+  --color-primary: oklch(0.50 0.18 285);
+  --color-primary-foreground: oklch(0.98 0.005 285);
 
-  --color-secondary: oklch(0.92 0.01 240);
-  --color-secondary-foreground: oklch(0.20 0.015 240);
+  --color-secondary: oklch(0.94 0.01 285);
+  --color-secondary-foreground: oklch(0.20 0.015 285);
 
-  --color-muted: oklch(0.92 0.01 240);
-  --color-muted-foreground: oklch(0.48 0.02 240);
+  --color-muted: oklch(0.94 0.01 285);
+  --color-muted-foreground: oklch(0.48 0.02 285);
 
-  /* Tech Teal */
-  --color-accent: oklch(0.48 0.12 210);
-  --color-accent-foreground: oklch(0.98 0.005 240);
+  /* Precise Teal-Cyan Accent */
+  --color-accent: oklch(0.54 0.15 200);
+  --color-accent-foreground: oklch(0.98 0.005 200);
 
   --color-destructive: oklch(0.60 0.18 25);
   --color-destructive-foreground: oklch(0.98 0.005 240);
 
-  --color-border: oklch(0.90 0.005 240);
-  --color-input: oklch(0.90 0.005 240);
-  --color-ring: oklch(0.55 0.16 160 / 0.4);
+  --color-border: oklch(0.90 0.005 285);
+  --color-input: oklch(0.90 0.005 285);
+  --color-ring: oklch(0.50 0.18 285 / 0.4);
 
-  --color-success: oklch(0.55 0.16 160);
+  /* Harmonious Success & Warning states */
+  --color-success: oklch(0.62 0.17 145);
   --color-warning: oklch(0.78 0.14 85);
   --color-danger: oklch(0.60 0.18 25);
 
-  --radius: 0.5rem;
+  --radius: 0.75rem; /* Slightly softer borders for card premium feel */
+}
+
+@layer utilities {
+  .glass-card {
+    background-color: oklch(1 0 0 / 0.8);
+    backdrop-filter: blur(12px);
+    -webkit-backdrop-filter: blur(12px);
+    border: 1px solid oklch(1 0 0 / 0.1);
+  }
+  .glass-card-dark {
+    background-color: oklch(0.20 0.015 285 / 0.8);
+    backdrop-filter: blur(12px);
+    -webkit-backdrop-filter: blur(12px);
+    border: 1px solid oklch(1 0 0 / 0.05);
+  }
+  .taper-gradient {
+    background: linear-gradient(135deg, var(--color-primary) 0%, var(--color-accent) 100%);
+  }
 }
 
 @layer base {

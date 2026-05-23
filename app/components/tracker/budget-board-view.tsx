@@ -1,6 +1,7 @@
 "use client";
 
 import { useMemo } from "react";
+import { Calendar } from "lucide-react";
 import { DndContext, type DragEndEvent, useDraggable, useDroppable } from "@dnd-kit/core";
 import {
   addDays,
@@ -190,6 +191,8 @@ function DraggableCard({ item }: { item: BoardOccurrence }) {
     transform: CSS.Translate.toString(transform),
   };
 
+  const borderLeftColor = item.type === "income" ? "border-l-success" : "border-l-destructive";
+
   return (
     <div
       ref={setNodeRef}
@@ -197,14 +200,18 @@ function DraggableCard({ item }: { item: BoardOccurrence }) {
       {...listeners}
       {...attributes}
       className={cn(
-        "cursor-grab rounded-md border border-border bg-card p-3 text-xs shadow-xs transition-all hover:border-accent/50 active:cursor-grabbing",
-        isDragging && "opacity-50 border-accent scale-95"
+        "cursor-grab rounded-xl border border-border border-l-4 bg-card p-3.5 text-xs shadow-xs transition-all duration-150 hover:border-primary/45 hover:shadow-md active:cursor-grabbing",
+        borderLeftColor,
+        isDragging && "opacity-50 border-primary scale-95"
       )}
     >
-      <div className="font-bold text-foreground">{item.name}</div>
-      <div className="mt-0.5 text-[10px] uppercase font-bold tracking-wider text-muted-foreground">{item.dateStr}</div>
-      <div className={cn("mt-1.5 font-extrabold text-sm tabular-nums", item.type === "income" ? "text-success" : "text-danger")}>
-        {formatCurrency(item.amountCents)}
+      <div className="font-extrabold text-foreground tracking-tight">{item.name}</div>
+      <div className="mt-1 text-[10px] font-bold text-muted-foreground flex items-center gap-1">
+        <Calendar className="h-3 w-3 text-muted-foreground/60 shrink-0" />
+        {item.dateStr}
+      </div>
+      <div className={cn("mt-2 font-black text-sm tabular-nums", item.type === "income" ? "text-success" : "text-destructive")}>
+        {item.type === "income" ? "" : "-"}{formatCurrency(item.amountCents)}
       </div>
     </div>
   );
@@ -224,12 +231,17 @@ function DropBucket({
 
   return (
     <div className="min-w-72 flex-1">
-      <div className="mb-2 text-xs font-bold uppercase tracking-wider text-muted-foreground/90">{bucket.label}</div>
+      <div className="mb-3.5 flex items-center justify-between px-1">
+        <span className="text-xs font-bold uppercase tracking-wider text-muted-foreground">{bucket.label}</span>
+        <span className="rounded-full bg-secondary px-2 py-0.5 text-[10px] font-bold text-muted-foreground tabular-nums">
+          {items.length}
+        </span>
+      </div>
       <div
         ref={setNodeRef}
         className={cn(
-          "min-h-[300px] space-y-2.5 rounded-lg border border-border bg-muted/20 p-3 transition-colors",
-          isOver && "border-accent/50 bg-accent/5"
+          "min-h-[420px] space-y-3 rounded-2xl border border-border bg-muted/15 p-3.5 transition-colors glass-card/20",
+          isOver && "border-primary/40 bg-primary/5"
         )}
       >
         {items.map((item) => (

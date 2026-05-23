@@ -30,8 +30,8 @@ export function createAuth(env: AppEnv) {
     secret: env.BETTER_AUTH_SECRET,
     baseURL: env.BETTER_AUTH_URL,
     trustedOrigins: [
-      "https://fether.rcormier.dev",
-      "https://fether.rcormier.workers.dev",
+      "https://taper.rcormier.dev",
+      "https://taper.rcormier.workers.dev",
     ],
     emailAndPassword: { enabled: true },
     databaseHooks: {

@@ -1,5 +1,6 @@
 import * as React from "react";
 import { Link, useRouterState } from "@tanstack/react-router";
+import { Logo } from "~/components/layout/logo";
 import {
   LayoutDashboard,
   CalendarDays,
@@ -7,7 +8,6 @@ import {
   Wallet,
   Building2,
   Tag,
-  Anchor,
   LogOut,
   BadgeDollarSign,
   Target,
@@ -38,11 +38,8 @@ export function Sidebar() {
   return (
     <aside className="flex h-full w-64 flex-col border-r bg-background">
       {/* Logo / App Title */}
-      <div className="flex items-center gap-2 px-6 py-5 border-b">
-        <div className="flex h-8 w-8 items-center justify-center rounded-md bg-primary text-primary-foreground">
-          <Anchor className="h-5 w-5" />
-        </div>
-        <span className="text-lg font-bold tracking-tight text-foreground font-heading">Fether</span>
+      <div className="flex h-16 items-center px-6 border-b shrink-0">
+        <Logo size="md" />
       </div>
 
       {/* Navigation */}

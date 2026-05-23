@@ -9,6 +9,7 @@ import {
 } from "@tanstack/react-router";
 import { getSession } from "~/server/middleware";
 import { authClient } from "~/auth/client";
+import { Logo } from "~/components/layout/logo";
 import {
   LayoutDashboard,
   CalendarDays,
@@ -20,7 +21,6 @@ import {
   LogOut,
   Menu,
   X,
-  Anchor,
   CreditCard,
   BadgeDollarSign,
   Target,
@@ -87,14 +87,11 @@ function AppLayout() {
         ].join(" ")}
       >
         {/* Logo */}
-        <div className="flex h-16 flex-shrink-0 items-center gap-3 border-b border-border px-6">
-          <div className="flex h-8 w-8 flex-shrink-0 items-center justify-center rounded-md bg-primary text-primary-foreground">
-            <Anchor className="h-5 w-5" />
-          </div>
-          <span className="text-base font-bold text-foreground font-heading">Fether</span>
+        <div className="flex h-16 flex-shrink-0 items-center border-b border-border px-6">
+          <Logo size="md" />
           {/* Close button visible only on mobile */}
           <button
-            className="ml-auto rounded-md p-1 text-muted-foreground hover:text-foreground md:hidden"
+            className="ml-auto rounded-md p-1 text-muted-foreground hover:text-foreground md:hidden animate-hover"
             onClick={() => setSidebarOpen(false)}
             aria-label="Close menu"
           >
@@ -147,7 +144,7 @@ function AppLayout() {
           >
             <Menu className="h-5 w-5" />
           </button>
-          <span className="text-base font-bold text-foreground font-heading">Fether</span>
+          <Logo size="sm" />
         </div>
 
         <main className="flex-1 overflow-y-auto bg-background">

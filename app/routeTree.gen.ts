@@ -20,9 +20,9 @@ import { Route as AppDashboardRouteImport } from './routes/_app/dashboard'
 import { Route as AppVendorsIndexRouteImport } from './routes/_app/vendors/index'
 import { Route as AppPaymentsIndexRouteImport } from './routes/_app/payments/index'
 import { Route as AppIncomeIndexRouteImport } from './routes/_app/income/index'
+import { Route as AppGoalsIndexRouteImport } from './routes/_app/goals/index'
 import { Route as AppCreditsIndexRouteImport } from './routes/_app/credits/index'
 import { Route as AppCategoriesIndexRouteImport } from './routes/_app/categories/index'
-import { Route as AppGoalsIndexRouteImport } from './routes/_app/goals/index'
 import { Route as AppBillsIndexRouteImport } from './routes/_app/bills/index'
 import { Route as AppIncomeIdRouteImport } from './routes/_app/income/$id'
 import { Route as AppCreditsIdRouteImport } from './routes/_app/credits/$id'
@@ -81,6 +81,11 @@ const AppIncomeIndexRoute = AppIncomeIndexRouteImport.update({
   path: '/income/',
   getParentRoute: () => AppRoute,
 } as any)
+const AppGoalsIndexRoute = AppGoalsIndexRouteImport.update({
+  id: '/goals/',
+  path: '/goals/',
+  getParentRoute: () => AppRoute,
+} as any)
 const AppCreditsIndexRoute = AppCreditsIndexRouteImport.update({
   id: '/credits/',
   path: '/credits/',
@@ -89,11 +94,6 @@ const AppCreditsIndexRoute = AppCreditsIndexRouteImport.update({
 const AppCategoriesIndexRoute = AppCategoriesIndexRouteImport.update({
   id: '/categories/',
   path: '/categories/',
-  getParentRoute: () => AppRoute,
-} as any)
-const AppGoalsIndexRoute = AppGoalsIndexRouteImport.update({
-  id: '/goals/',
-  path: '/goals/',
   getParentRoute: () => AppRoute,
 } as any)
 const AppBillsIndexRoute = AppBillsIndexRouteImport.update({
@@ -129,8 +129,8 @@ export interface FileRoutesByFullPath {
   '/income/$id': typeof AppIncomeIdRoute
   '/bills/': typeof AppBillsIndexRoute
   '/categories/': typeof AppCategoriesIndexRoute
-  '/goals/': typeof AppGoalsIndexRoute
   '/credits/': typeof AppCreditsIndexRoute
+  '/goals/': typeof AppGoalsIndexRoute
   '/income/': typeof AppIncomeIndexRoute
   '/payments/': typeof AppPaymentsIndexRoute
   '/vendors/': typeof AppVendorsIndexRoute
@@ -147,8 +147,8 @@ export interface FileRoutesByTo {
   '/income/$id': typeof AppIncomeIdRoute
   '/bills': typeof AppBillsIndexRoute
   '/categories': typeof AppCategoriesIndexRoute
-  '/goals': typeof AppGoalsIndexRoute
   '/credits': typeof AppCreditsIndexRoute
+  '/goals': typeof AppGoalsIndexRoute
   '/income': typeof AppIncomeIndexRoute
   '/payments': typeof AppPaymentsIndexRoute
   '/vendors': typeof AppVendorsIndexRoute
@@ -168,8 +168,8 @@ export interface FileRoutesById {
   '/_app/income/$id': typeof AppIncomeIdRoute
   '/_app/bills/': typeof AppBillsIndexRoute
   '/_app/categories/': typeof AppCategoriesIndexRoute
-  '/_app/goals/': typeof AppGoalsIndexRoute
   '/_app/credits/': typeof AppCreditsIndexRoute
+  '/_app/goals/': typeof AppGoalsIndexRoute
   '/_app/income/': typeof AppIncomeIndexRoute
   '/_app/payments/': typeof AppPaymentsIndexRoute
   '/_app/vendors/': typeof AppVendorsIndexRoute
@@ -188,8 +188,8 @@ export interface FileRouteTypes {
     | '/income/$id'
     | '/bills/'
     | '/categories/'
-    | '/goals/'
     | '/credits/'
+    | '/goals/'
     | '/income/'
     | '/payments/'
     | '/vendors/'
@@ -206,8 +206,8 @@ export interface FileRouteTypes {
     | '/income/$id'
     | '/bills'
     | '/categories'
-    | '/goals'
     | '/credits'
+    | '/goals'
     | '/income'
     | '/payments'
     | '/vendors'
@@ -226,8 +226,8 @@ export interface FileRouteTypes {
     | '/_app/income/$id'
     | '/_app/bills/'
     | '/_app/categories/'
-    | '/_app/goals/'
     | '/_app/credits/'
+    | '/_app/goals/'
     | '/_app/income/'
     | '/_app/payments/'
     | '/_app/vendors/'
@@ -318,6 +318,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof AppIncomeIndexRouteImport
       parentRoute: typeof AppRoute
     }
+    '/_app/goals/': {
+      id: '/_app/goals/'
+      path: '/goals'
+      fullPath: '/goals/'
+      preLoaderRoute: typeof AppGoalsIndexRouteImport
+      parentRoute: typeof AppRoute
+    }
     '/_app/credits/': {
       id: '/_app/credits/'
       path: '/credits'
@@ -330,13 +337,6 @@ declare module '@tanstack/react-router' {
       path: '/categories'
       fullPath: '/categories/'
       preLoaderRoute: typeof AppCategoriesIndexRouteImport
-      parentRoute: typeof AppRoute
-    }
-    '/_app/goals/': {
-      id: '/_app/goals/'
-      path: '/goals'
-      fullPath: '/goals/'
-      preLoaderRoute: typeof AppGoalsIndexRouteImport
       parentRoute: typeof AppRoute
     }
     '/_app/bills/': {
@@ -379,8 +379,8 @@ interface AppRouteChildren {
   AppIncomeIdRoute: typeof AppIncomeIdRoute
   AppBillsIndexRoute: typeof AppBillsIndexRoute
   AppCategoriesIndexRoute: typeof AppCategoriesIndexRoute
-  AppGoalsIndexRoute: typeof AppGoalsIndexRoute
   AppCreditsIndexRoute: typeof AppCreditsIndexRoute
+  AppGoalsIndexRoute: typeof AppGoalsIndexRoute
   AppIncomeIndexRoute: typeof AppIncomeIndexRoute
   AppPaymentsIndexRoute: typeof AppPaymentsIndexRoute
   AppVendorsIndexRoute: typeof AppVendorsIndexRoute
@@ -395,8 +395,8 @@ const AppRouteChildren: AppRouteChildren = {
   AppIncomeIdRoute: AppIncomeIdRoute,
   AppBillsIndexRoute: AppBillsIndexRoute,
   AppCategoriesIndexRoute: AppCategoriesIndexRoute,
-  AppGoalsIndexRoute: AppGoalsIndexRoute,
   AppCreditsIndexRoute: AppCreditsIndexRoute,
+  AppGoalsIndexRoute: AppGoalsIndexRoute,
   AppIncomeIndexRoute: AppIncomeIndexRoute,
   AppPaymentsIndexRoute: AppPaymentsIndexRoute,
   AppVendorsIndexRoute: AppVendorsIndexRoute,

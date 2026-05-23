@@ -96,13 +96,13 @@ export function SummaryCards({ data }: SummaryCardsProps) {
         </CardContent>
       </Card>
 
-      {/* Untethered */}
+      {/* Left to Taper */}
       <Card>
         <CardContent className="p-6">
           <div className="flex items-center justify-between">
             <div>
               <p className="text-sm font-medium text-muted-foreground">
-                Untethered
+                Left to Taper
               </p>
               <p
                 className={cn(

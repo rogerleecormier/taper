@@ -1,4 +1,5 @@
 import { createFileRoute, Outlet } from "@tanstack/react-router";
+import { Logo } from "~/components/layout/logo";
 
 export const Route = createFileRoute("/_auth")({
   component: AuthLayout,
@@ -6,14 +7,14 @@ export const Route = createFileRoute("/_auth")({
 
 function AuthLayout() {
   return (
-    <div className="min-h-screen bg-background flex flex-col items-center justify-center">
+    <div className="min-h-screen bg-background flex flex-col items-center justify-center p-4">
       <div className="mb-8 text-center">
-        <h1 className="text-3xl font-bold text-foreground font-heading">Fether</h1>
-        <p className="mt-1 text-sm text-muted-foreground">
-          Tether every dollar to your goals
+        <Logo size="lg" className="justify-center" />
+        <p className="mt-2 text-sm text-muted-foreground">
+          Funnel your income with absolute precision.
         </p>
       </div>
-      <div className="w-full max-w-md bg-card rounded-xl shadow-sm border border-border p-8">
+      <div className="w-full max-w-md bg-card rounded-2xl shadow-md border border-border p-8 glass-card">
         <Outlet />
       </div>
     </div>
