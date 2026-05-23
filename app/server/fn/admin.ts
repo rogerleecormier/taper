@@ -16,6 +16,7 @@ import { toDateStr } from "~/lib/dates";
 import { generateOccurrenceDates, type RecurrenceRule } from "~/lib/occurrence-generator";
 
 export const seedDemoData = createServerFn()
+  .method("POST")
   .middleware([adminMiddleware])
   .inputValidator(z.object({ userId: z.string() }))
   .handler(async ({ data, context }) => {
@@ -159,6 +160,7 @@ function resolveGenerationWindowEnd(now: Date, endDate: string | null | undefine
 }
 
 export const regenerateUserOccurrences = createServerFn()
+  .method("POST")
   .middleware([adminMiddleware])
   .inputValidator(z.object({ userId: z.string() }))
   .handler(async ({ data, context }) => {
