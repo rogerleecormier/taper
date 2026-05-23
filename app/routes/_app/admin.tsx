@@ -219,16 +219,27 @@ function SeedDemoButton({
 
 function RegenerateOccurrencesButton({ userId }: { userId: string }) {
   const [status, setStatus] = useState<"idle" | "loading" | "success" | "error">("idle");
+  const [errorMessage, setErrorMessage] = useState<string | null>(null);
 
   async function handleRegenerate() {
     setStatus("loading");
+    setErrorMessage(null);
     try {
-      await regenerateUserOccurrences({ data: { userId } });
+      const result = await regenerateUserOccurrences({ data: { userId } });
+      if (!result?.success) {
+        throw new Error("Regeneration did not complete successfully.");
+      }
       setStatus("success");
       setTimeout(() => setStatus("idle"), 3000);
-    } catch {
+    } catch (error) {
+      const message =
+        error instanceof Error ? error.message : "Failed to regenerate occurrences.";
+      setErrorMessage(message);
       setStatus("error");
-      setTimeout(() => setStatus("idle"), 3000);
+      setTimeout(() => {
+        setStatus("idle");
+        setErrorMessage(null);
+      }, 6000);
     }
   }
 
@@ -241,8 +252,8 @@ function RegenerateOccurrencesButton({ userId }: { userId: string }) {
   }
   if (status === "error") {
     return (
-      <span className="flex items-center gap-1 text-xs text-destructive">
-        <AlertCircle className="h-3 w-3" /> Failed
+      <span className="flex items-center gap-1 text-xs text-destructive" title={errorMessage ?? undefined}>
+        <AlertCircle className="h-3 w-3" /> Failed{errorMessage ? `: ${errorMessage}` : ""}
       </span>
     );
   }
