@@ -201,12 +201,14 @@ function TrackerContent({ prefs }: { prefs: UserPreferences }) {
   const interval = scope === "month" ? monthInterval : yearInterval;
   const activeIntervals = scope === "month" ? MONTH_INTERVALS : YEAR_INTERVALS;
   const listInterval = getListInterval(scope, interval);
-  // Year calendar always navigates a full year at a time
+  // Calendar mode always navigates whole months/years regardless of sub-interval
   const navInterval: BudgetBoardInterval =
-    mode === "calendar" && scope === "year" ? "year" : interval;
+    mode === "calendar" ? (scope === "year" ? "year" : "month") : interval;
   const periodLabel =
-    mode === "calendar" && scope === "year"
-      ? format(periodStart, "yyyy")
+    mode === "calendar"
+      ? scope === "year"
+        ? format(periodStart, "yyyy")
+        : format(periodStart, "MMMM yyyy")
       : getPeriodLabel(scope, interval, periodStart, prefs.paydayInterval);
 
   const payPeriodNotConfigured =
