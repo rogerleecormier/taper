@@ -3,19 +3,18 @@ import { z } from "zod";
 import { eq, and, gte, lte, lt, desc, asc, inArray } from "drizzle-orm";
 import { authMiddleware } from "~/server/middleware";
 import { bills } from "~/db/schema/bills";
-import { incomeSources } from "~/db/schema/income-sources";
 import { billOccurrences } from "~/db/schema/bill-occurrences";
 import { billPayments } from "~/db/schema/bill-payments";
 import { incomeOccurrences } from "~/db/schema/income-occurrences";
 import { vendors } from "~/db/schema/vendors";
 import { categories } from "~/db/schema/categories";
 import { goals } from "~/db/schema/goals";
-import { normalizeToMonthlyCents, type BillInterval } from "~/lib/currency";
 import { getCachedOrFetch, dashboardCacheKey } from "~/lib/kv-cache";
 import { toDateStr } from "~/lib/dates";
-import { addDays, addMonths, startOfMonth, endOfMonth, format } from "date-fns";
+import { addDays, addMonths, startOfMonth, endOfMonth, format, parseISO } from "date-fns";
 
 export type DashboardData = {
+  periodLabel: string;
   totalMonthlyIncomeCents: number;
   totalMonthlyExpensesCents: number;
   netBalanceCents: number;
@@ -82,52 +81,72 @@ export const getDashboardData = createServerFn()
         z.literal(14),
         z.literal(30),
       ]).default(7),
-      referenceDate: z.string().regex(/^\d{4}-\d{2}-\d{2}$/).optional(),
+      periodStart: z.string().regex(/^\d{4}-\d{2}-\d{2}$/),
+      periodEnd: z.string().regex(/^\d{4}-\d{2}-\d{2}$/),
     })
   )
   .handler(async ({ data, context }): Promise<DashboardData> => {
     const { db, user, env } = context;
-    const reference = data.referenceDate ?? toDateStr(new Date());
+    const { periodStart, periodEnd } = data;
     const actualToday = toDateStr(new Date());
-    const effectiveUpcomingStart = reference > actualToday ? reference : actualToday;
     const upcomingEnd = toDateStr(
-      addDays(new Date(`${effectiveUpcomingStart}T00:00:00`), data.upcomingDays)
+      addDays(new Date(`${actualToday}T00:00:00`), data.upcomingDays)
     );
-    const recentStart = toDateStr(
-      addDays(new Date(`${reference}T00:00:00`), -30)
-    );
-    const period = reference.slice(0, 7);
+
+    // Build a human-readable period label
+    const ps = parseISO(periodStart);
+    const pe = parseISO(periodEnd);
+    const isFullMonth =
+      periodStart === toDateStr(startOfMonth(ps)) &&
+      periodEnd === toDateStr(endOfMonth(ps));
+    const periodLabel = isFullMonth
+      ? format(ps, "MMMM yyyy")
+      : ps.getMonth() === pe.getMonth() && ps.getFullYear() === pe.getFullYear()
+        ? `${format(ps, "MMM d")} – ${format(pe, "d, yyyy")}`
+        : `${format(ps, "MMM d")} – ${format(pe, "MMM d, yyyy")}`;
+
     const cacheKey = dashboardCacheKey(
       user.id,
-      `${period}-${reference}-${actualToday}-${data.upcomingDays}`
+      `${periodStart}-${periodEnd}-${actualToday}-${data.upcomingDays}`
     );
 
     return getCachedOrFetch(env.KV, cacheKey, 300, async () => {
       const [
-        activeBills,
-        activeIncomeSources,
+        periodIncomeOccurrences,
+        periodBillOccurrences,
         activeGoals,
         upcomingOccurrences,
         overdueOccurrences,
         recentPayments,
       ] = await Promise.all([
         db
-          .select({
-            bill: bills,
-            category: categories,
-          })
-          .from(bills)
-          .leftJoin(categories, eq(bills.categoryId, categories.id))
-          .where(and(eq(bills.userId, user.id), eq(bills.isActive, true)))
+          .select()
+          .from(incomeOccurrences)
+          .where(
+            and(
+              eq(incomeOccurrences.userId, user.id),
+              gte(incomeOccurrences.expectedDate, periodStart),
+              lte(incomeOccurrences.expectedDate, periodEnd),
+              inArray(incomeOccurrences.status, ["pending", "received", "late"])
+            )
+          )
           .all(),
 
         db
-          .select()
-          .from(incomeSources)
+          .select({
+            occurrence: billOccurrences,
+            bill: bills,
+            category: categories,
+          })
+          .from(billOccurrences)
+          .leftJoin(bills, eq(billOccurrences.billId, bills.id))
+          .leftJoin(categories, eq(bills.categoryId, categories.id))
           .where(
             and(
-              eq(incomeSources.userId, user.id),
-              eq(incomeSources.isActive, true)
+              eq(billOccurrences.userId, user.id),
+              gte(billOccurrences.dueDate, periodStart),
+              lte(billOccurrences.dueDate, periodEnd),
+              inArray(billOccurrences.status, ["pending", "partial", "paid", "overdue", "carried"])
             )
           )
           .all(),
@@ -153,7 +172,7 @@ export const getDashboardData = createServerFn()
           .where(
             and(
               eq(billOccurrences.userId, user.id),
-              gte(billOccurrences.dueDate, effectiveUpcomingStart),
+              gte(billOccurrences.dueDate, actualToday),
               lte(billOccurrences.dueDate, upcomingEnd),
               inArray(billOccurrences.status, ["pending", "partial"])
             )
@@ -196,8 +215,8 @@ export const getDashboardData = createServerFn()
           .where(
             and(
               eq(billPayments.userId, user.id),
-              gte(billPayments.paidDate, recentStart),
-              lte(billPayments.paidDate, reference)
+              gte(billPayments.paidDate, periodStart),
+              lte(billPayments.paidDate, periodEnd <= actualToday ? periodEnd : actualToday)
             )
           )
           .orderBy(desc(billPayments.paidDate))
@@ -205,24 +224,13 @@ export const getDashboardData = createServerFn()
           .all(),
       ]);
 
-      // Normalize to monthly
-      const totalMonthlyIncomeCents = activeIncomeSources.reduce(
-        (sum, s) =>
-          sum +
-          normalizeToMonthlyCents(
-            s.amountCents,
-            s.interval as BillInterval
-          ),
+      const totalMonthlyIncomeCents = periodIncomeOccurrences.reduce(
+        (sum, o) => sum + (o.receivedAmountCents ?? o.amountCents),
         0
       );
 
-      const totalMonthlyExpensesCents = activeBills.reduce(
-        (sum, b) =>
-          sum +
-          normalizeToMonthlyCents(
-            b.bill.amountCents,
-            b.bill.interval as BillInterval
-          ),
+      const totalMonthlyExpensesCents = periodBillOccurrences.reduce(
+        (sum, r) => sum + r.occurrence.amountCents,
         0
       );
 
@@ -248,25 +256,21 @@ export const getDashboardData = createServerFn()
         };
       });
 
-      // Category breakdown
+      // Category breakdown from period bill occurrences
       const categoryMap = new Map<
         string,
         { name: string; color: string | null; totalCents: number }
       >();
 
-      for (const { bill, category } of activeBills) {
-        const key = bill.categoryId ?? "__none__";
+      for (const { occurrence, bill, category } of periodBillOccurrences) {
+        const key = bill?.categoryId ?? "__none__";
         const name = category?.name ?? "Uncategorized";
         const color = category?.color ?? null;
-        const monthlyCents = normalizeToMonthlyCents(
-          bill.amountCents,
-          bill.interval as BillInterval
-        );
         const existing = categoryMap.get(key);
         if (existing) {
-          existing.totalCents += monthlyCents;
+          existing.totalCents += occurrence.amountCents;
         } else {
-          categoryMap.set(key, { name, color, totalCents: monthlyCents });
+          categoryMap.set(key, { name, color, totalCents: occurrence.amountCents });
         }
       }
 
@@ -284,6 +288,7 @@ export const getDashboardData = createServerFn()
       );
 
       return {
+        periodLabel,
         totalMonthlyIncomeCents,
         totalMonthlyExpensesCents,
         netBalanceCents,

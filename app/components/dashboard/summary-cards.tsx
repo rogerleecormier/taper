@@ -10,6 +10,7 @@ interface SummaryCardsProps {
 
 export function SummaryCards({ data }: SummaryCardsProps) {
   const {
+    periodLabel,
     totalMonthlyIncomeCents,
     totalMonthlyExpensesCents,
     netBalanceCents,
@@ -29,7 +30,7 @@ export function SummaryCards({ data }: SummaryCardsProps) {
           <div className="flex items-center justify-between">
             <div>
               <p className="text-sm font-medium text-muted-foreground">
-                Monthly Income
+                {periodLabel} Income
               </p>
               <p className="mt-1 text-2xl font-bold text-success">
                 {formatCurrency(totalMonthlyIncomeCents)}
@@ -48,7 +49,7 @@ export function SummaryCards({ data }: SummaryCardsProps) {
           <div className="flex items-center justify-between">
             <div>
               <p className="text-sm font-medium text-muted-foreground">
-                Monthly Expenses
+                {periodLabel} Expenses
               </p>
               <p className="mt-1 text-2xl font-bold text-destructive">
                 {formatCurrency(totalMonthlyExpensesCents)}

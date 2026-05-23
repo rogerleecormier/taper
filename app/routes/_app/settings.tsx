@@ -72,16 +72,19 @@ function PaydayCard() {
   const update = useUpdatePreferences();
   const [paydayInterval, setPaydayInterval] = useState<"weekly" | "biweekly">(prefs.paydayInterval);
   const [anchorDate, setAnchorDate] = useState<string>(prefs.paydayAnchorDate ?? "");
+  const [dashboardPeriodMode, setDashboardPeriodMode] = useState<"month" | "pay_period">(prefs.dashboardPeriodMode);
   const [saveState, setSaveState] = useState<"idle" | "saved" | "error">("idle");
 
   useEffect(() => {
     setPaydayInterval(prefs.paydayInterval);
     setAnchorDate(prefs.paydayAnchorDate ?? "");
-  }, [prefs.paydayInterval, prefs.paydayAnchorDate]);
+    setDashboardPeriodMode(prefs.dashboardPeriodMode);
+  }, [prefs.paydayInterval, prefs.paydayAnchorDate, prefs.dashboardPeriodMode]);
 
   const hasChanges =
     paydayInterval !== prefs.paydayInterval ||
-    (anchorDate || null) !== prefs.paydayAnchorDate;
+    (anchorDate || null) !== prefs.paydayAnchorDate ||
+    dashboardPeriodMode !== prefs.dashboardPeriodMode;
 
   async function handleSave() {
     setSaveState("idle");
@@ -89,6 +92,7 @@ function PaydayCard() {
       await update.mutateAsync({
         paydayInterval,
         paydayAnchorDate: anchorDate || null,
+        dashboardPeriodMode,
       });
       setSaveState("saved");
     } catch {
@@ -138,6 +142,21 @@ function PaydayCard() {
             <p className="text-xs text-muted-foreground">Pick a date you were actually paid — all pay periods are calculated from this anchor.</p>
           </div>
         </div>
+
+        <PrefRow label="Dashboard Period">
+          {(["month", "pay_period"] as const).map((v) => (
+            <PrefButton
+              key={v}
+              active={dashboardPeriodMode === v}
+              onClick={() => {
+                setDashboardPeriodMode(v);
+                setSaveState("idle");
+              }}
+            >
+              {v === "month" ? "Month" : "Pay Period"}
+            </PrefButton>
+          ))}
+        </PrefRow>
 
         <div className="pt-1">
           {saveState === "saved" && (

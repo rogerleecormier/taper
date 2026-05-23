@@ -12,6 +12,7 @@ export const DEFAULT_PREFS: UserPreferences = {
   trackerDefaultYearInterval: "month",
   paydayInterval: "biweekly",
   paydayAnchorDate: null,
+  dashboardPeriodMode: "month",
 };
 
 export function usePreferences() {

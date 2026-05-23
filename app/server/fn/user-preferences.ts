@@ -11,6 +11,7 @@ const DEFAULT_PREFS = {
   trackerDefaultYearInterval: "month" as const,
   paydayInterval: "biweekly" as "weekly" | "biweekly",
   paydayAnchorDate: null as string | null,
+  dashboardPeriodMode: "month" as "month" | "pay_period",
 };
 
 export const getUserPreferences = createServerFn()
@@ -31,6 +32,7 @@ export const getUserPreferences = createServerFn()
         trackerDefaultYearInterval: (row?.trackerDefaultYearInterval ?? "month") as "month" | "quarter" | "half" | "year",
         paydayInterval: (row?.paydayInterval ?? "biweekly") as "weekly" | "biweekly",
         paydayAnchorDate: row?.paydayAnchorDate ?? null,
+        dashboardPeriodMode: (row?.dashboardPeriodMode ?? "month") as "month" | "pay_period",
       };
     } catch {
       return DEFAULT_PREFS;
@@ -47,6 +49,7 @@ export const updateUserPreferences = createServerFn()
       trackerDefaultYearInterval: z.enum(["month", "quarter", "half", "year"]).optional(),
       paydayInterval: z.enum(["weekly", "biweekly"]).optional(),
       paydayAnchorDate: z.string().regex(/^\d{4}-\d{2}-\d{2}$/).nullable().optional(),
+      dashboardPeriodMode: z.enum(["month", "pay_period"]).optional(),
     })
   )
   .handler(async ({ data, context }) => {
@@ -73,6 +76,7 @@ export const updateUserPreferences = createServerFn()
         trackerDefaultYearInterval: data.trackerDefaultYearInterval ?? "month",
         paydayInterval: data.paydayInterval ?? "biweekly",
         paydayAnchorDate: data.paydayAnchorDate ?? null,
+        dashboardPeriodMode: data.dashboardPeriodMode ?? "month",
         updatedAt: now,
       });
     }

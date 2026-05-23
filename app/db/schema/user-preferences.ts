@@ -11,5 +11,8 @@ export const userPreferences = sqliteTable("user_preferences", {
   trackerDefaultYearInterval: text("tracker_default_year_interval").notNull().default("month"),
   paydayInterval: text("payday_interval").notNull().default("biweekly"),
   paydayAnchorDate: text("payday_anchor_date"),
+  dashboardPeriodMode: text("dashboard_period_mode", { enum: ["month", "pay_period"] })
+    .notNull()
+    .default("month"),
   updatedAt: integer("updated_at", { mode: "timestamp" }).notNull(),
 });
