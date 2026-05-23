@@ -204,9 +204,17 @@ export const regenerateUserOccurrences = createServerFn()
       };
       const dueDates = generateOccurrenceDates(rule, bill.startDate, windowEnd);
       if (dueDates.length === 0) continue;
+      const existingDates = await db
+        .select({ dueDate: billOccurrences.dueDate })
+        .from(billOccurrences)
+        .where(eq(billOccurrences.billId, bill.id))
+        .all();
+      const existingDueDateSet = new Set(existingDates.map((r) => r.dueDate));
+      const newDueDates = dueDates.filter((d) => !existingDueDateSet.has(d));
+      if (newDueDates.length === 0) continue;
 
       await db.insert(billOccurrences).values(
-        dueDates.map((dueDate) => ({
+        newDueDates.map((dueDate) => ({
           id: nanoid(),
           userId: bill.userId,
           billId: bill.id,
@@ -245,9 +253,17 @@ export const regenerateUserOccurrences = createServerFn()
       };
       const expectedDates = generateOccurrenceDates(rule, source.startDate, windowEnd);
       if (expectedDates.length === 0) continue;
+      const existingDates = await db
+        .select({ expectedDate: incomeOccurrences.expectedDate })
+        .from(incomeOccurrences)
+        .where(eq(incomeOccurrences.incomeSourceId, source.id))
+        .all();
+      const existingExpectedDateSet = new Set(existingDates.map((r) => r.expectedDate));
+      const newExpectedDates = expectedDates.filter((d) => !existingExpectedDateSet.has(d));
+      if (newExpectedDates.length === 0) continue;
 
       await db.insert(incomeOccurrences).values(
-        expectedDates.map((expectedDate) => ({
+        newExpectedDates.map((expectedDate) => ({
           id: nanoid(),
           userId: source.userId,
           incomeSourceId: source.id,
@@ -299,9 +315,17 @@ export const regenerateUserOccurrences = createServerFn()
       };
       const dueDates = generateOccurrenceDates(rule, credit.startDate, windowEnd);
       if (dueDates.length === 0) continue;
+      const existingDates = await db
+        .select({ dueDate: creditOccurrences.dueDate })
+        .from(creditOccurrences)
+        .where(eq(creditOccurrences.creditId, credit.id))
+        .all();
+      const existingDueDateSet = new Set(existingDates.map((r) => r.dueDate));
+      const newDueDates = dueDates.filter((d) => !existingDueDateSet.has(d));
+      if (newDueDates.length === 0) continue;
 
       await db.insert(creditOccurrences).values(
-        dueDates.map((dueDate) => ({
+        newDueDates.map((dueDate) => ({
           id: nanoid(),
           userId: credit.userId,
           creditId: credit.id,
