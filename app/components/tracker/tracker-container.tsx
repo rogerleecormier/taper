@@ -318,19 +318,17 @@ export function TrackerContainer({
           </CardContent>
         </Card>
 
-        {creditTotal > 0 && (
-          <Card className="border border-border bg-card shadow-xs">
-            <CardContent className="p-4 flex items-center justify-between">
-              <div>
-                <p className="text-[11px] font-bold uppercase tracking-wider text-muted-foreground">Credits</p>
-                <p className="mt-1 text-lg font-black text-accent tabular-nums">{formatCurrency(creditTotal)}</p>
-              </div>
-              <div className="h-10 w-10 rounded-xl bg-accent/10 flex items-center justify-center">
-                <BadgeDollarSign className="h-5 w-5 text-accent" />
-              </div>
-            </CardContent>
-          </Card>
-        )}
+        <Card className="border border-border bg-card shadow-xs">
+          <CardContent className="p-4 flex items-center justify-between">
+            <div>
+              <p className="text-[11px] font-bold uppercase tracking-wider text-muted-foreground">Credits</p>
+              <p className="mt-1 text-lg font-black text-accent tabular-nums">{formatCurrency(creditTotal)}</p>
+            </div>
+            <div className="h-10 w-10 rounded-xl bg-accent/10 flex items-center justify-center">
+              <BadgeDollarSign className="h-5 w-5 text-accent" />
+            </div>
+          </CardContent>
+        </Card>
 
         <Card className="border border-border bg-card shadow-xs">
           <CardContent className="p-4 flex items-center justify-between">
