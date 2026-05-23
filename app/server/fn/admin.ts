@@ -151,11 +151,20 @@ export const seedDemoData = createServerFn({ method: "POST" })
   });
 
 const MAX_GENERATION_MONTHS = 18;
+const OCCURRENCE_INSERT_CHUNK_SIZE = 10;
 
 function resolveGenerationWindowEnd(now: Date, endDate: string | null | undefined) {
   const cappedWindowEnd = toDateStr(addMonths(now, MAX_GENERATION_MONTHS));
   if (!endDate) return cappedWindowEnd;
   return endDate < cappedWindowEnd ? endDate : cappedWindowEnd;
+}
+
+function chunkArray<T>(items: T[], chunkSize: number): T[][] {
+  const chunks: T[][] = [];
+  for (let i = 0; i < items.length; i += chunkSize) {
+    chunks.push(items.slice(i, i + chunkSize));
+  }
+  return chunks;
 }
 
 export const regenerateUserOccurrences = createServerFn({ method: "POST" })
@@ -213,18 +222,19 @@ export const regenerateUserOccurrences = createServerFn({ method: "POST" })
       const newDueDates = dueDates.filter((d) => !existingDueDateSet.has(d));
       if (newDueDates.length === 0) continue;
 
-      await db.insert(billOccurrences).values(
-        newDueDates.map((dueDate) => ({
-          id: nanoid(),
-          userId: bill.userId,
-          billId: bill.id,
-          dueDate,
-          amountCents: bill.amountCents,
-          status: "pending" as const,
-          createdAt: now,
-          updatedAt: now,
-        }))
-      );
+      const billRows = newDueDates.map((dueDate) => ({
+        id: nanoid(),
+        userId: bill.userId,
+        billId: bill.id,
+        dueDate,
+        amountCents: bill.amountCents,
+        status: "pending" as const,
+        createdAt: now,
+        updatedAt: now,
+      }));
+      for (const chunk of chunkArray(billRows, OCCURRENCE_INSERT_CHUNK_SIZE)) {
+        await db.insert(billOccurrences).values(chunk);
+      }
     }
 
     const allIncome = await db
@@ -262,18 +272,19 @@ export const regenerateUserOccurrences = createServerFn({ method: "POST" })
       const newExpectedDates = expectedDates.filter((d) => !existingExpectedDateSet.has(d));
       if (newExpectedDates.length === 0) continue;
 
-      await db.insert(incomeOccurrences).values(
-        newExpectedDates.map((expectedDate) => ({
-          id: nanoid(),
-          userId: source.userId,
-          incomeSourceId: source.id,
-          expectedDate,
-          amountCents: source.amountCents,
-          status: "pending" as const,
-          createdAt: now,
-          updatedAt: now,
-        }))
-      );
+      const incomeRows = newExpectedDates.map((expectedDate) => ({
+        id: nanoid(),
+        userId: source.userId,
+        incomeSourceId: source.id,
+        expectedDate,
+        amountCents: source.amountCents,
+        status: "pending" as const,
+        createdAt: now,
+        updatedAt: now,
+      }));
+      for (const chunk of chunkArray(incomeRows, OCCURRENCE_INSERT_CHUNK_SIZE)) {
+        await db.insert(incomeOccurrences).values(chunk);
+      }
     }
 
     const allCredits = await db
@@ -324,18 +335,19 @@ export const regenerateUserOccurrences = createServerFn({ method: "POST" })
       const newDueDates = dueDates.filter((d) => !existingDueDateSet.has(d));
       if (newDueDates.length === 0) continue;
 
-      await db.insert(creditOccurrences).values(
-        newDueDates.map((dueDate) => ({
-          id: nanoid(),
-          userId: credit.userId,
-          creditId: credit.id,
-          dueDate,
-          amountCents: credit.amountCents,
-          status: "pending" as const,
-          createdAt: now,
-          updatedAt: now,
-        }))
-      );
+      const creditRows = newDueDates.map((dueDate) => ({
+        id: nanoid(),
+        userId: credit.userId,
+        creditId: credit.id,
+        dueDate,
+        amountCents: credit.amountCents,
+        status: "pending" as const,
+        createdAt: now,
+        updatedAt: now,
+      }));
+      for (const chunk of chunkArray(creditRows, OCCURRENCE_INSERT_CHUNK_SIZE)) {
+        await db.insert(creditOccurrences).values(chunk);
+      }
     }
 
     return {
