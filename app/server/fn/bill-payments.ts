@@ -322,6 +322,72 @@ export const getScheduledPaymentsForPage = createServerFn()
       .all();
   });
 
+// All carried-forward occurrences that are still unpaid (pending/partial/overdue).
+// Used by the dashboard carry-forward activity list.
+export const getCarriedForwardUnpaid = createServerFn()
+  .middleware([authMiddleware])
+  .handler(async ({ context }) => {
+    const { db, user } = context;
+
+    const rows = await db
+      .select({
+        occurrenceId: billOccurrences.id,
+        billId: bills.id,
+        dueDate: billOccurrences.dueDate,
+        amountCents: billOccurrences.amountCents,
+        paidAmountCents: billOccurrences.paidAmountCents,
+        status: billOccurrences.status,
+        notes: billOccurrences.notes,
+        carriedFromId: billOccurrences.carriedFromId,
+        billName: bills.name,
+        billInterval: bills.interval,
+        vendorId: vendors.id,
+        vendorName: vendors.name,
+        categoryName: categories.name,
+        categoryColor: categories.color,
+      })
+      .from(billOccurrences)
+      .innerJoin(bills, eq(billOccurrences.billId, bills.id))
+      .leftJoin(vendors, eq(bills.vendorId, vendors.id))
+      .leftJoin(categories, eq(bills.categoryId, categories.id))
+      .where(
+        and(
+          eq(billOccurrences.userId, user.id),
+          inArray(billOccurrences.status, ["pending", "partial", "overdue"]),
+        )
+      )
+      .orderBy(asc(billOccurrences.dueDate))
+      .all();
+
+    // Filter to only those with a carriedFromId (i.e. were carried forward)
+    const carried = rows.filter((r) => r.carriedFromId);
+
+    // Resolve originalDueDate by walking the carriedFromId chain
+    const sourceIds = carried.map((r) => r.carriedFromId!);
+    const sources = sourceIds.length > 0
+      ? await db
+          .select({ id: billOccurrences.id, dueDate: billOccurrences.dueDate, carriedFromId: billOccurrences.carriedFromId })
+          .from(billOccurrences)
+          .where(and(eq(billOccurrences.userId, user.id), inArray(billOccurrences.id, sourceIds)))
+          .all()
+      : [];
+
+    const sourceMap = new Map(sources.map((s) => [s.id, s]));
+
+    return carried.map((r) => {
+      // Walk chain to find original date
+      let current = sourceMap.get(r.carriedFromId!);
+      let originalDueDate = current?.dueDate ?? r.dueDate;
+      while (current?.carriedFromId) {
+        const parent = sourceMap.get(current.carriedFromId);
+        if (!parent) break;
+        originalDueDate = parent.dueDate;
+        current = parent;
+      }
+      return { ...r, originalDueDate };
+    });
+  });
+
 // Actual payment records from bill_payments, joined back to the occurrence and expense.
 // startDate / endDate filter on paidDate (the date the payment was recorded).
 export const getPaidPaymentsForPage = createServerFn()

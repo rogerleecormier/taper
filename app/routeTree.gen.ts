@@ -16,8 +16,8 @@ import { Route as AuthRegisterRouteImport } from './routes/_auth/register'
 import { Route as AuthLoginRouteImport } from './routes/_auth/login'
 import { Route as AppTrackerRouteImport } from './routes/_app/tracker'
 import { Route as AppSettingsRouteImport } from './routes/_app/settings'
-import { Route as AppAdminRouteImport } from './routes/_app/admin'
 import { Route as AppDashboardRouteImport } from './routes/_app/dashboard'
+import { Route as AppAdminRouteImport } from './routes/_app/admin'
 import { Route as AppVendorsIndexRouteImport } from './routes/_app/vendors/index'
 import { Route as AppPaymentsIndexRouteImport } from './routes/_app/payments/index'
 import { Route as AppIncomeIndexRouteImport } from './routes/_app/income/index'
@@ -62,14 +62,14 @@ const AppSettingsRoute = AppSettingsRouteImport.update({
   path: '/settings',
   getParentRoute: () => AppRoute,
 } as any)
-const AppAdminRoute = AppAdminRouteImport.update({
-  id: '/admin',
-  path: '/admin',
-  getParentRoute: () => AppRoute,
-} as any)
 const AppDashboardRoute = AppDashboardRouteImport.update({
   id: '/dashboard',
   path: '/dashboard',
+  getParentRoute: () => AppRoute,
+} as any)
+const AppAdminRoute = AppAdminRouteImport.update({
+  id: '/admin',
+  path: '/admin',
   getParentRoute: () => AppRoute,
 } as any)
 const AppVendorsIndexRoute = AppVendorsIndexRouteImport.update({
@@ -125,9 +125,9 @@ const AppBillsIdRoute = AppBillsIdRouteImport.update({
 
 export interface FileRoutesByFullPath {
   '/': typeof IndexRoute
+  '/admin': typeof AppAdminRoute
   '/dashboard': typeof AppDashboardRoute
   '/settings': typeof AppSettingsRoute
-  '/admin': typeof AppAdminRoute
   '/tracker': typeof AppTrackerRoute
   '/login': typeof AuthLoginRoute
   '/register': typeof AuthRegisterRoute
@@ -144,9 +144,9 @@ export interface FileRoutesByFullPath {
 }
 export interface FileRoutesByTo {
   '/': typeof IndexRoute
+  '/admin': typeof AppAdminRoute
   '/dashboard': typeof AppDashboardRoute
   '/settings': typeof AppSettingsRoute
-  '/admin': typeof AppAdminRoute
   '/tracker': typeof AppTrackerRoute
   '/login': typeof AuthLoginRoute
   '/register': typeof AuthRegisterRoute
@@ -166,9 +166,9 @@ export interface FileRoutesById {
   '/': typeof IndexRoute
   '/_app': typeof AppRouteWithChildren
   '/_auth': typeof AuthRouteWithChildren
+  '/_app/admin': typeof AppAdminRoute
   '/_app/dashboard': typeof AppDashboardRoute
   '/_app/settings': typeof AppSettingsRoute
-  '/_app/admin': typeof AppAdminRoute
   '/_app/tracker': typeof AppTrackerRoute
   '/_auth/login': typeof AuthLoginRoute
   '/_auth/register': typeof AuthRegisterRoute
@@ -187,9 +187,9 @@ export interface FileRouteTypes {
   fileRoutesByFullPath: FileRoutesByFullPath
   fullPaths:
     | '/'
+    | '/admin'
     | '/dashboard'
     | '/settings'
-    | '/admin'
     | '/tracker'
     | '/login'
     | '/register'
@@ -206,9 +206,9 @@ export interface FileRouteTypes {
   fileRoutesByTo: FileRoutesByTo
   to:
     | '/'
+    | '/admin'
     | '/dashboard'
     | '/settings'
-    | '/admin'
     | '/tracker'
     | '/login'
     | '/register'
@@ -227,9 +227,9 @@ export interface FileRouteTypes {
     | '/'
     | '/_app'
     | '/_auth'
+    | '/_app/admin'
     | '/_app/dashboard'
     | '/_app/settings'
-    | '/_app/admin'
     | '/_app/tracker'
     | '/_auth/login'
     | '/_auth/register'
@@ -302,18 +302,18 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof AppSettingsRouteImport
       parentRoute: typeof AppRoute
     }
-    '/_app/admin': {
-      id: '/_app/admin'
-      path: '/admin'
-      fullPath: '/admin'
-      preLoaderRoute: typeof AppAdminRouteImport
-      parentRoute: typeof AppRoute
-    }
     '/_app/dashboard': {
       id: '/_app/dashboard'
       path: '/dashboard'
       fullPath: '/dashboard'
       preLoaderRoute: typeof AppDashboardRouteImport
+      parentRoute: typeof AppRoute
+    }
+    '/_app/admin': {
+      id: '/_app/admin'
+      path: '/admin'
+      fullPath: '/admin'
+      preLoaderRoute: typeof AppAdminRouteImport
       parentRoute: typeof AppRoute
     }
     '/_app/vendors/': {
@@ -390,9 +390,9 @@ declare module '@tanstack/react-router' {
 }
 
 interface AppRouteChildren {
+  AppAdminRoute: typeof AppAdminRoute
   AppDashboardRoute: typeof AppDashboardRoute
   AppSettingsRoute: typeof AppSettingsRoute
-  AppAdminRoute: typeof AppAdminRoute
   AppTrackerRoute: typeof AppTrackerRoute
   AppBillsIdRoute: typeof AppBillsIdRoute
   AppCreditsIdRoute: typeof AppCreditsIdRoute
@@ -407,9 +407,9 @@ interface AppRouteChildren {
 }
 
 const AppRouteChildren: AppRouteChildren = {
+  AppAdminRoute: AppAdminRoute,
   AppDashboardRoute: AppDashboardRoute,
   AppSettingsRoute: AppSettingsRoute,
-  AppAdminRoute: AppAdminRoute,
   AppTrackerRoute: AppTrackerRoute,
   AppBillsIdRoute: AppBillsIdRoute,
   AppCreditsIdRoute: AppCreditsIdRoute,

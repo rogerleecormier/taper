@@ -50,6 +50,7 @@ export type DashboardData = {
   }>;
   recentPayments: Array<{
     id: string;
+    billId: string;
     billName: string;
     paidDate: string;
     paidAmountCents: number;
@@ -309,6 +310,7 @@ export const getDashboardData = createServerFn()
         })),
         recentPayments: recentPayments.map((r) => ({
           id: r.payment.id,
+          billId: r.bill?.id ?? "",
           billName: r.bill?.name ?? "Unknown",
           paidDate: r.payment.paidDate,
           paidAmountCents: r.payment.amountCents,

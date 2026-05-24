@@ -307,9 +307,29 @@ export const getBillHistory = createServerFn()
       (byOcc[p.occurrenceId] ??= []).push(p);
     }
 
+    // Build a map for resolving carry-forward chains to original due date
+    const occMap = new Map(occs.map((o) => [o.id, o]));
+    function resolveOriginalDueDate(occId: string): string | null {
+      const occ = occMap.get(occId);
+      if (!occ?.carriedFromId) return null;
+      let current = occMap.get(occ.carriedFromId);
+      let original = current?.dueDate ?? null;
+      while (current?.carriedFromId) {
+        const parent = occMap.get(current.carriedFromId);
+        if (!parent) break;
+        original = parent.dueDate;
+        current = parent;
+      }
+      return original;
+    }
+
     return {
       bill,
-      occurrences: occs.map((o) => ({ ...o, payments: byOcc[o.id] ?? [] })),
+      occurrences: occs.map((o) => ({
+        ...o,
+        payments: byOcc[o.id] ?? [],
+        originalDueDate: resolveOriginalDueDate(o.id),
+      })),
     };
   });
 

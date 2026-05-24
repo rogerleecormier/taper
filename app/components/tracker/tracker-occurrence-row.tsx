@@ -18,6 +18,7 @@ import {
   Store,
   Clock,
 } from "lucide-react";
+import { differenceInDays, parseISO } from "date-fns";
 import { cn } from "~/lib/utils";
 import { formatCurrency } from "~/lib/currency";
 import { toDateStr, nextOccurrenceDate } from "~/lib/dates";
@@ -117,6 +118,7 @@ interface Props {
   categoryName?: string | null;
   categoryColor?: string | null;
   vendorName?: string | null;
+  originalDueDate?: string | null;
 }
 
 function PaymentRow({
@@ -207,6 +209,7 @@ export function TrackerOccurrenceRow({
   categoryName,
   categoryColor,
   vendorName,
+  originalDueDate,
 }: Props) {
   const [mode, setMode] = useState<"view" | "edit" | "income-pay" | "carry">("view");
   const [payModalOpen, setPayModalOpen] = useState(false);
@@ -416,6 +419,15 @@ export function TrackerOccurrenceRow({
             {(isBill(occurrence) || isCredit(occurrence)) && occurrence.carriedFromId && (
               <span className="rounded-md border border-warning/20 bg-warning/5 px-2 py-0.5 text-[10px] font-bold text-warning">
                 Deferred
+              </span>
+            )}
+            {originalDueDate && originalDueDate !== dateStr && (
+              <span className="flex items-center gap-0.5 text-[10px] text-muted-foreground">
+                <Clock className="h-3 w-3 flex-shrink-0" />
+                Originally {originalDueDate}
+                <span className="text-warning ml-0.5">
+                  ({differenceInDays(parseISO(dateStr), parseISO(originalDueDate))}d)
+                </span>
               </span>
             )}
           </div>

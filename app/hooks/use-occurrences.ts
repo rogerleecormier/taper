@@ -14,6 +14,7 @@ import {
   deleteBillPayment,
   getScheduledPaymentsForPage,
   getPaidPaymentsForPage,
+  getCarriedForwardUnpaid,
 } from "~/server/fn/bill-payments";
 import {
   getIncomeOccurrences,
@@ -98,6 +99,14 @@ export function useScheduledPaymentsForPage(
   });
 }
 
+export function useCarriedForwardUnpaid() {
+  return useQuery({
+    queryKey: ["carried-forward-unpaid"] as const,
+    queryFn: () => getCarriedForwardUnpaid({}),
+    staleTime: PERIOD_STALE_MS,
+  });
+}
+
 export function usePaidPaymentsForPage(
   filters: Parameters<typeof getPaidPaymentsForPage>[0]["data"]
 ) {
@@ -157,6 +166,8 @@ export function useCarryForwardOccurrence() {
       qc.invalidateQueries({ queryKey: ["bill-payments-period"] });
       qc.invalidateQueries({ queryKey: ["bill-history"] });
       qc.invalidateQueries({ queryKey: ["dashboard"] });
+      qc.invalidateQueries({ queryKey: ["carried-forward-unpaid"] });
+      qc.invalidateQueries({ queryKey: ["payments-page-scheduled"] });
     },
   });
 }
@@ -170,6 +181,8 @@ export function useReverseCarryForward() {
       qc.invalidateQueries({ queryKey: ["bill-payments-period"] });
       qc.invalidateQueries({ queryKey: ["bill-history"] });
       qc.invalidateQueries({ queryKey: ["dashboard"] });
+      qc.invalidateQueries({ queryKey: ["carried-forward-unpaid"] });
+      qc.invalidateQueries({ queryKey: ["payments-page-scheduled"] });
     },
   });
 }

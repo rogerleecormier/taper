@@ -9,7 +9,9 @@ import {
   Check,
   X,
   Pencil,
+  Clock,
 } from "lucide-react";
+import { differenceInDays, parseISO } from "date-fns";
 import { cn } from "~/lib/utils";
 import { formatCurrency } from "~/lib/currency";
 import { toDateStr, nextOccurrenceDate } from "~/lib/dates";
@@ -95,7 +97,7 @@ function OccurrenceCard({
   billName,
   interval,
 }: {
-  occurrence: BillOccurrence & { payments: BillPayment[] };
+  occurrence: BillOccurrence & { payments: BillPayment[]; originalDueDate?: string | null };
   billName: string;
   interval: string;
 }) {
@@ -218,6 +220,16 @@ function OccurrenceCard({
             {occurrence.carriedFromId && (
               <span className="inline-flex rounded border border-warning/20 bg-warning/10 px-1.5 py-0.5 text-[11px] font-medium text-warning">
                 Deferred
+              </span>
+            )}
+            {occurrence.originalDueDate && occurrence.originalDueDate !== occurrence.dueDate && (
+              <span className="inline-flex items-center gap-0.5 text-[11px] text-muted-foreground">
+                <Clock className="h-3 w-3" />
+                Originally: {occurrence.originalDueDate}
+                {" "}
+                <span className="text-warning">
+                  ({differenceInDays(parseISO(occurrence.dueDate), parseISO(occurrence.originalDueDate))}d deferred)
+                </span>
               </span>
             )}
             <span

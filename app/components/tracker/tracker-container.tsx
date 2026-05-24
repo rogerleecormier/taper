@@ -151,6 +151,29 @@ export function TrackerContainer({
 
   // Chronological timeline compile
   const timelineOccurrences = useMemo(() => {
+    // Build a flat map of all bill occurrences for originalDueDate resolution
+    const allBillOccs = new Map<string, BillOccurrence>();
+    filteredBillParents.forEach((p) => {
+      if (!p) return;
+      // Include all occurrences (even carried ones) for chain resolution
+      Array.from(billOccurrenceMap.get(p.entityId)?.values() ?? []).forEach((o) => {
+        allBillOccs.set(o.id, o as BillOccurrence);
+      });
+    });
+
+    function resolveOriginalDueDate(occ: BillOccurrence): string | null {
+      if (!occ.carriedFromId) return null;
+      let current = allBillOccs.get(occ.carriedFromId);
+      let original = current?.dueDate ?? null;
+      while (current?.carriedFromId) {
+        const parent = allBillOccs.get(current.carriedFromId);
+        if (!parent) break;
+        original = parent.dueDate;
+        current = parent;
+      }
+      return original;
+    }
+
     const list: Array<{
       occurrence: AnyOcc;
       type: "income" | "bill" | "credit";
@@ -162,6 +185,7 @@ export function TrackerContainer({
       dateStr: string;
       payments: BillPayment[];
       receipts: CreditReceipt[];
+      originalDueDate?: string | null;
     }> = [];
 
     filteredIncomeParents.forEach((p) => {
@@ -184,6 +208,7 @@ export function TrackerContainer({
     filteredBillParents.forEach((p) => {
       if (!p) return;
       p.occurrences.forEach((occ) => {
+        const billOcc = occ as BillOccurrence;
         list.push({
           occurrence: occ,
           type: "bill",
@@ -195,6 +220,7 @@ export function TrackerContainer({
           dateStr: occ.dueDate,
           payments: billPaymentsByOccurrenceMap?.get(occ.id) ?? [],
           receipts: [],
+          originalDueDate: resolveOriginalDueDate(billOcc),
         });
       });
     });
@@ -223,7 +249,7 @@ export function TrackerContainer({
       const score = { income: 0, credit: 1, bill: 2 };
       return score[a.type] - score[b.type];
     });
-  }, [filteredIncomeParents, filteredBillParents, filteredCreditParents, billPaymentsByOccurrenceMap, creditReceiptsByOccurrenceMap]);
+  }, [filteredIncomeParents, filteredBillParents, filteredCreditParents, billPaymentsByOccurrenceMap, creditReceiptsByOccurrenceMap, billOccurrenceMap]);
 
   // Category allocations compiler
   const categoryAllocations = useMemo(() => {
@@ -489,7 +515,7 @@ export function TrackerContainer({
               </div>
 
               <div className="pt-2">
-                {timelineOccurrences.map(({ occurrence, type, parentName, interval, categoryName, categoryColor, vendorName, payments, receipts }) => (
+                {timelineOccurrences.map(({ occurrence, type, parentName, interval, categoryName, categoryColor, vendorName, payments, receipts, originalDueDate }) => (
                   <TrackerOccurrenceRow
                     key={occurrence.id}
                     occurrence={occurrence}
@@ -501,6 +527,7 @@ export function TrackerContainer({
                     vendorName={vendorName}
                     payments={payments}
                     receipts={receipts}
+                    originalDueDate={originalDueDate}
                   />
                 ))}
               </div>

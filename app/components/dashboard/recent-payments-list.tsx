@@ -1,6 +1,8 @@
+import { useState } from "react";
 import { CreditCard } from "lucide-react";
 import { formatCurrency } from "~/lib/currency";
 import { formatRelativeDate } from "~/lib/dates";
+import { Link } from "@tanstack/react-router";
 import type { DashboardData } from "~/server/fn/dashboard";
 
 interface RecentPaymentsListProps {
@@ -29,9 +31,14 @@ export function RecentPaymentsList({
       <ul className="divide-y border-border">
         {recentPayments.map((payment) => (
           <li key={payment.id} className="flex items-center gap-3 py-3">
-            {/* Bill info */}
             <div className="min-w-0 flex-1">
-              <p className="truncate text-sm font-medium text-foreground">{payment.billName}</p>
+              <Link
+                to="/bills/$id"
+                params={{ id: payment.billId }}
+                className="truncate text-sm font-medium text-foreground hover:text-accent transition-colors"
+              >
+                {payment.billName}
+              </Link>
               {payment.vendorName && (
                 <p className="truncate text-xs text-muted-foreground">
                   {payment.vendorName}
@@ -39,17 +46,14 @@ export function RecentPaymentsList({
               )}
             </div>
 
-            {/* Paid date */}
             <span className="flex-shrink-0 text-xs text-muted-foreground">
               {formatRelativeDate(payment.paidDate, referenceDate)}
             </span>
 
-            {/* Amount */}
             <span className="flex-shrink-0 text-sm font-semibold tabular-nums text-foreground">
               {formatCurrency(payment.paidAmountCents)}
             </span>
 
-            {/* Badge */}
             <span className="flex-shrink-0 rounded-md border border-success/20 bg-success/10 px-2 py-0.5 text-xs font-semibold text-success">
               Paid
             </span>

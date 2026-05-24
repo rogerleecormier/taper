@@ -1,18 +1,19 @@
 import { createFileRoute } from "@tanstack/react-router";
 import { useState } from "react";
-import { startOfMonth, endOfMonth, addMonths } from "date-fns";
+import { startOfMonth, endOfMonth, addMonths, addDays, parseISO } from "date-fns";
 import { useDashboard } from "~/hooks/use-dashboard";
 import { SummaryCards } from "~/components/dashboard/summary-cards";
 import { UnallocatedBanner } from "~/components/dashboard/unallocated-banner";
 import { UpcomingBillsList } from "~/components/dashboard/upcoming-bills-list";
 import { OverdueBillsList } from "~/components/dashboard/overdue-bills-list";
 import { RecentPaymentsList } from "~/components/dashboard/recent-payments-list";
+import { CarriedForwardList } from "~/components/dashboard/carried-forward-list";
 import { IncomeExpenseChart } from "~/components/dashboard/income-expense-chart";
 import { CategoryBreakdownChart } from "~/components/dashboard/category-breakdown-chart";
 import { GoalsList } from "~/components/dashboard/goals-list";
 import { Separator } from "~/components/ui/separator";
 import { Card, CardContent } from "~/components/ui/card";
-import { toDateStr } from "~/lib/dates";
+import { getMostRecentPayday, toDateStr } from "~/lib/dates";
 import { cn } from "~/lib/utils";
 
 export const Route = createFileRoute("/_app/dashboard")({
@@ -155,6 +156,24 @@ function DashboardPage() {
             </CardContent>
           </Card>
         </div>
+      </section>
+
+      <Separator className="bg-border" />
+
+      <section className="space-y-4">
+        <div>
+          <h2 className="text-xs font-bold uppercase tracking-wider text-muted-foreground">
+            Deferred Balances
+          </h2>
+          <p className="text-xs text-muted-foreground/70 mt-0.5">
+            Expenses that were carried forward and are still unpaid — click any row to pay or take action.
+          </p>
+        </div>
+        <Card className="border border-border bg-card shadow-xs">
+          <CardContent className="p-0">
+            <CarriedForwardList />
+          </CardContent>
+        </Card>
       </section>
     </div>
   );
