@@ -249,6 +249,25 @@ export const deleteBill = createServerFn()
   .inputValidator(z.object({ id: z.string() }))
   .handler(async ({ data, context }) => {
     const { db, user } = context;
+
+    // Fetch all occurrence IDs for this bill so we can delete payments explicitly
+    // (SQLite foreign key cascades require PRAGMA foreign_keys=ON which D1 doesn't guarantee)
+    const occurrences = await db
+      .select({ id: billOccurrences.id })
+      .from(billOccurrences)
+      .where(and(eq(billOccurrences.billId, data.id), eq(billOccurrences.userId, user.id)))
+      .all();
+
+    if (occurrences.length > 0) {
+      const occurrenceIds = occurrences.map((o) => o.id);
+      await db
+        .delete(billPayments)
+        .where(and(eq(billPayments.userId, user.id), inArray(billPayments.occurrenceId, occurrenceIds)));
+      await db
+        .delete(billOccurrences)
+        .where(and(eq(billOccurrences.billId, data.id), eq(billOccurrences.userId, user.id)));
+    }
+
     await db
       .delete(bills)
       .where(and(eq(bills.id, data.id), eq(bills.userId, user.id)));

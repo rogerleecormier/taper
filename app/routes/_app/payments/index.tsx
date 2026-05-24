@@ -259,13 +259,14 @@ function PaymentsPage() {
           <span className="text-xs font-semibold uppercase tracking-wider text-muted-foreground w-16 flex-shrink-0">
             Status
           </span>
-          {(["overdue", "pending", "partial", "carried"] as OccurrenceStatus[]).map((s) => {
+          {(["overdue", "pending", "partial", "paid", "carried"] as OccurrenceStatus[]).map((s) => {
             const active = statusFilter.has(s);
             const count = statusCounts[s] ?? 0;
             const styles: Record<string, string> = {
               overdue:  active ? "border-danger/40 bg-danger/10 text-danger"       : "border-border text-muted-foreground hover:border-danger/30 hover:text-danger",
               pending:  active ? "border-border bg-muted text-foreground"           : "border-border text-muted-foreground hover:bg-muted/50",
               partial:  active ? "border-warning/40 bg-warning/10 text-warning"    : "border-border text-muted-foreground hover:border-warning/30 hover:text-warning",
+              paid:     active ? "border-success/40 bg-success/10 text-success"    : "border-border text-muted-foreground hover:border-success/30 hover:text-success",
               carried:  active ? "border-accent/40 bg-accent/10 text-accent"       : "border-border text-muted-foreground hover:border-accent/30 hover:text-accent",
             };
             return (
