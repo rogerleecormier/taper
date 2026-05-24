@@ -35,6 +35,7 @@ export type TrackerRow = {
   amountCents: number;
   interval: string;
   sortOrder: number;
+  hidden: boolean;
 };
 
 const PERIOD_STALE_MS = 5 * 60 * 1000;
@@ -176,6 +177,7 @@ export function useTrackerData(interval: TrackerInterval, periodStart: Date) {
         amountCents: b.amountCents,
         interval: b.interval,
         sortOrder: b.sortOrder,
+        hidden: b.hidden,
       }));
 
     const incomeRows: TrackerRow[] = incomeSrcs
@@ -190,6 +192,7 @@ export function useTrackerData(interval: TrackerInterval, periodStart: Date) {
         amountCents: s.amountCents,
         interval: s.interval,
         sortOrder: s.sortOrder,
+        hidden: false,
       }));
 
     const creditRows: TrackerRow[] = creditSeries
@@ -204,6 +207,7 @@ export function useTrackerData(interval: TrackerInterval, periodStart: Date) {
         amountCents: c.amountCents,
         interval: c.interval,
         sortOrder: c.sortOrder,
+        hidden: false,
       }));
 
     return [...billRows, ...incomeRows, ...creditRows].sort((a, b) => a.sortOrder - b.sortOrder);

@@ -88,14 +88,17 @@ export function TrackerContainer({
             billOccurrenceMap.get(entityId)?.values() ?? []
           ).sort((a, b) => a.dueDate.localeCompare(b.dueDate)) as BillOccurrence[];
           const visibleOccs = allOccs.filter((o) => {
-            if (!showHidden && o.hidden) return false;
+            if (!showHidden && (o.hidden || row.hidden)) return false;
             if (o.status === "carried" && o.carriedFromId) return false;
             if (!showCarried && o.status === "carried") return false;
             return true;
           });
           if (visibleOccs.length === 0) return null;
           const periodTotal = allOccs
-            .filter((o) => !o.hidden && TOTALLED_BILL_STATUSES.has(o.status))
+            .filter((o) => {
+              if (!showHidden && (o.hidden || row.hidden)) return false;
+              return TOTALLED_BILL_STATUSES.has(o.status);
+            })
             .reduce((s, o) => s + o.amountCents, 0);
           return { ...row, entityId, occurrences: visibleOccs, periodTotal };
         })
