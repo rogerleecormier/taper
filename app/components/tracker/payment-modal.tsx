@@ -1,7 +1,7 @@
 "use client";
 
 import { useState } from "react";
-import { Loader2, Trash2, CornerDownRight, AlertCircle } from "lucide-react";
+import { Loader2, Trash2, CornerDownRight, AlertCircle, CheckCircle2 } from "lucide-react";
 import {
   Dialog,
   DialogContent,
@@ -52,6 +52,7 @@ export function PaymentModal({
   const [date, setDate] = useState(today);
   const [notes, setNotes] = useState("");
   const [error, setError] = useState<string | null>(null);
+  const [lastRecorded, setLastRecorded] = useState<number | null>(null);
   const [carryDate, setCarryDate] = useState(() =>
     nextOccurrenceDate(occurrence.dueDate, interval)
   );
@@ -80,8 +81,7 @@ export function PaymentModal({
         paidDate: date,
         notes: notes.trim() || undefined,
       });
-      // Reset form for next payment
-      setAmount(String(Math.max(0, remaining - cents) / 100 || 0));
+      setLastRecorded(cents);
       setNotes("");
       setDate(today);
     } catch (e) {
@@ -188,7 +188,7 @@ export function PaymentModal({
         ) : null}
 
         {/* Add payment form */}
-        {remaining > 0 && (
+        {remaining > 0 && lastRecorded === null && (
           <div className="space-y-3 pt-1">
             <p className="text-xs font-semibold uppercase tracking-wide text-muted-foreground">
               Record Payment
@@ -252,7 +252,7 @@ export function PaymentModal({
         )}
 
         {/* Carry-forward section */}
-        {occurrence.status !== "skipped" && occurrence.status !== "carried" && remaining > 0 && (
+        {occurrence.status !== "skipped" && occurrence.status !== "carried" && remaining > 0 && lastRecorded === null && (
           <div className="rounded-md border border-dashed border-amber-200 bg-amber-50/50 px-3 py-2.5 space-y-2">
             <p className="text-xs font-semibold text-amber-800">
               Carry forward {formatCurrency(remaining)} to another date
@@ -280,11 +280,55 @@ export function PaymentModal({
           </div>
         )}
 
+        {lastRecorded !== null && remaining === 0 && (
+          <div className="flex items-center justify-between gap-3 rounded-md border border-green-200 bg-green-50 px-3 py-2.5">
+            <div className="flex items-center gap-2 text-sm text-green-800">
+              <CheckCircle2 className="h-4 w-4 flex-shrink-0" />
+              <span>Payment recorded. Bill is fully paid!</span>
+            </div>
+            <Button size="sm" variant="outline" className="h-7 text-xs border-green-300 text-green-800 hover:bg-green-100 flex-shrink-0" onClick={onClose}>
+              Close
+            </Button>
+          </div>
+        )}
+
+        {lastRecorded !== null && remaining > 0 && (
+          <div className="flex items-center justify-between gap-3 rounded-md border border-green-200 bg-green-50 px-3 py-2.5">
+            <div className="flex items-center gap-2 text-sm text-green-800">
+              <CheckCircle2 className="h-4 w-4 flex-shrink-0" />
+              <span>
+                {formatCurrency(lastRecorded)} recorded. Record another payment?
+              </span>
+            </div>
+            <div className="flex gap-2 flex-shrink-0">
+              <Button
+                size="sm"
+                variant="outline"
+                className="h-7 text-xs border-green-300 text-green-800 hover:bg-green-100"
+                onClick={() => {
+                  setLastRecorded(null);
+                  setAmount(String(remaining / 100));
+                }}
+              >
+                Yes
+              </Button>
+              <Button
+                size="sm"
+                variant="outline"
+                className="h-7 text-xs"
+                onClick={onClose}
+              >
+                No, close
+              </Button>
+            </div>
+          </div>
+        )}
+
         <DialogFooter className="flex gap-2 justify-end">
           <Button variant="outline" size="sm" onClick={onClose} disabled={isBusy}>
             {remaining === 0 ? "Close" : "Cancel"}
           </Button>
-          {remaining > 0 && (
+          {remaining > 0 && lastRecorded === null && (
             <Button
               size="sm"
               disabled={isBusy}
