@@ -162,7 +162,7 @@ function DashboardPage() {
       <section className="space-y-4">
         <div>
           <h2 className="text-xs font-bold uppercase tracking-wider text-muted-foreground">
-            Deferred Balances
+            Carried Balances
           </h2>
           <p className="text-xs text-muted-foreground/70 mt-0.5">
             Expenses that were carried forward and are still unpaid — click any row to pay or take action.
