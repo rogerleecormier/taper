@@ -8,11 +8,11 @@ import {
   flexRender,
   createColumnHelper,
 } from "@tanstack/react-table";
-import { Pencil, Trash2 } from "lucide-react";
+import { Eye, EyeOff, Pencil, Trash2 } from "lucide-react";
 import { Button } from "~/components/ui/button";
 import { Badge } from "~/components/ui/badge";
 import { formatCurrency } from "~/lib/currency";
-import { useDeleteBill } from "~/hooks/use-bills";
+import { useDeleteBill, useToggleBillHidden } from "~/hooks/use-bills";
 import { BillFormDialog } from "./bill-form-dialog";
 import type { Bill } from "~/db/schema/bills";
 
@@ -37,6 +37,7 @@ const columnHelper = createColumnHelper<BillWithRelations>();
 
 export function BillList({ bills }: BillListProps) {
   const deleteBill = useDeleteBill();
+  const toggleHidden = useToggleBillHidden();
   const [deletingId, setDeletingId] = useState<string | null>(null);
 
   async function handleDelete(id: string) {
@@ -145,8 +146,20 @@ export function BillList({ bills }: BillListProps) {
                 dayOfWeek: bill.dayOfWeek ?? null,
                 autoPay: bill.autoPay,
                 notes: bill.notes ?? "",
+                hidden: bill.hidden,
               }}
             />
+            <Button
+              variant="ghost"
+              size="sm"
+              className="h-8 w-8 p-0 text-muted-foreground hover:text-foreground"
+              onClick={() => toggleHidden.mutate({ id: bill.id, hidden: !bill.hidden })}
+              disabled={toggleHidden.isPending}
+              title={bill.hidden ? "Unhide" : "Hide"}
+            >
+              {bill.hidden ? <Eye className="h-3.5 w-3.5" /> : <EyeOff className="h-3.5 w-3.5" />}
+              <span className="sr-only">{bill.hidden ? "Unhide" : "Hide"}</span>
+            </Button>
             <Button
               variant="ghost"
               size="sm"
@@ -208,8 +221,20 @@ export function BillList({ bills }: BillListProps) {
                     dayOfWeek: bill.dayOfWeek ?? null,
                     autoPay: bill.autoPay,
                     notes: bill.notes ?? "",
+                    hidden: bill.hidden,
                   }}
                 />
+                <Button
+                  variant="ghost"
+                  size="sm"
+                  className="h-8 w-8 p-0 text-muted-foreground hover:text-foreground"
+                  onClick={() => toggleHidden.mutate({ id: bill.id, hidden: !bill.hidden })}
+                  disabled={toggleHidden.isPending}
+                  title={bill.hidden ? "Unhide" : "Hide"}
+                >
+                  {bill.hidden ? <Eye className="h-3.5 w-3.5" /> : <EyeOff className="h-3.5 w-3.5" />}
+                  <span className="sr-only">{bill.hidden ? "Unhide" : "Hide"}</span>
+                </Button>
                 <Button
                   variant="ghost"
                   size="sm"

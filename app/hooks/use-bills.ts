@@ -7,6 +7,7 @@ import {
   updateBill,
   deleteBill,
   reorderBills,
+  toggleBillHidden,
 } from "~/server/fn/bills";
 
 export const billKeys = {
@@ -75,6 +76,19 @@ export function useDeleteBill() {
   const qc = useQueryClient();
   return useMutation({
     mutationFn: (id: string) => deleteBill({ data: { id } }),
+    onSuccess: () => {
+      qc.invalidateQueries({ queryKey: billKeys.all() });
+      qc.invalidateQueries({ queryKey: ["bill-occurrences"] });
+      qc.invalidateQueries({ queryKey: ["dashboard"] });
+    },
+  });
+}
+
+export function useToggleBillHidden() {
+  const qc = useQueryClient();
+  return useMutation({
+    mutationFn: (data: { id: string; hidden: boolean }) =>
+      toggleBillHidden({ data }),
     onSuccess: () => {
       qc.invalidateQueries({ queryKey: billKeys.all() });
       qc.invalidateQueries({ queryKey: ["bill-occurrences"] });

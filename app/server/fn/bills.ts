@@ -37,6 +37,7 @@ const BillInputSchema = z.object({
   autoPay: z.boolean().optional(),
   notes: z.string().optional(),
   sortOrder: z.number().int().optional(),
+  hidden: z.boolean().optional(),
 });
 
 async function generateAndInsertOccurrences(
@@ -200,6 +201,7 @@ export const updateBill = createServerFn()
         autoPay: data.autoPay ?? false,
         notes: data.notes ?? null,
         sortOrder: data.sortOrder ?? 0,
+        hidden: data.hidden ?? false,
         updatedAt: now,
       })
       .where(and(eq(bills.id, data.id), eq(bills.userId, user.id)));
@@ -247,6 +249,17 @@ export const updateBill = createServerFn()
       invalidateUserDashboard(env.KV, user.id, currentPeriod),
       invalidateUserDashboard(env.KV, user.id, data.startDate.slice(0, 7)),
     ]);
+  });
+
+export const toggleBillHidden = createServerFn()
+  .middleware([authMiddleware])
+  .inputValidator(z.object({ id: z.string(), hidden: z.boolean() }))
+  .handler(async ({ data, context }) => {
+    const { db, user } = context;
+    await db
+      .update(bills)
+      .set({ hidden: data.hidden, updatedAt: new Date() })
+      .where(and(eq(bills.id, data.id), eq(bills.userId, user.id)));
   });
 
 export const deleteBill = createServerFn()

@@ -27,6 +27,7 @@ export type BillFormData = {
   dayOfWeek: number | null;
   autoPay: boolean;
   notes: string;
+  hidden: boolean;
 };
 
 interface BillFormProps {
@@ -80,6 +81,7 @@ export function BillForm({
     defaultValues?.dayOfWeek != null ? String(defaultValues.dayOfWeek) : ""
   );
   const [autoPay, setAutoPay] = useState(defaultValues?.autoPay ?? false);
+  const [hidden, setHidden] = useState(defaultValues?.hidden ?? false);
   const [notes, setNotes] = useState(defaultValues?.notes ?? "");
   const [error, setError] = useState<string | null>(null);
 
@@ -111,6 +113,7 @@ export function BillForm({
       dayOfMonth: showDayOfMonth && dayOfMonth ? parseInt(dayOfMonth, 10) : null,
       dayOfWeek: showDayOfWeek && dayOfWeek !== "" ? parseInt(dayOfWeek, 10) : null,
       autoPay,
+      hidden,
       notes,
     });
   }
@@ -264,6 +267,20 @@ export function BillForm({
         />
         <Label htmlFor="auto-pay" className="cursor-pointer font-normal">
           Auto-pay enabled
+        </Label>
+      </div>
+
+      {/* Hidden */}
+      <div className="flex items-center gap-2">
+        <input
+          id="bill-hidden"
+          type="checkbox"
+          checked={hidden}
+          onChange={(e) => setHidden(e.target.checked)}
+          className="h-4 w-4 rounded border-input bg-card text-primary focus:ring-primary focus:ring-offset-background cursor-pointer"
+        />
+        <Label htmlFor="bill-hidden" className="cursor-pointer font-normal">
+          Hide this expense
         </Label>
       </div>
 
