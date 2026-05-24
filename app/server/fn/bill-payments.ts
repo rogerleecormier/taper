@@ -298,9 +298,11 @@ export const updateBillPayment = createServerFn()
     return { occurrenceId: payment.occurrenceId };
   });
 
-// All pending / partial / overdue occurrences within [today, endDate], plus any overdue
-// from before today (those are always included regardless of range).
-// Generates any missing occurrences up to endDate before querying.
+// All occurrences up to endDate that should be visible in the payments page:
+// - pending, partial, overdue, carried, paid (all statuses except skipped)
+// - includes carried-forward items with their current due date
+// - filters out past paid/carried items (kept for history, not upcoming)
+// - generates any missing occurrences up to endDate before querying
 export const getScheduledPaymentsForPage = createServerFn()
   .middleware([authMiddleware])
   .inputValidator(
@@ -382,7 +384,9 @@ export const getScheduledPaymentsForPage = createServerFn()
       .where(
         and(
           eq(billOccurrences.userId, user.id),
+          // Show all statuses except skipped: pending, partial, overdue, carried, paid
           inArray(billOccurrences.status, ["pending", "partial", "overdue", "carried", "paid"]),
+          // Include all items with dueDate up to endDate
           lte(billOccurrences.dueDate, data.endDate)
         )
       )

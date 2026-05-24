@@ -89,8 +89,8 @@ const RANGE_OPTIONS = [
   { months: 12, label: "12 Mo" },
 ] as const;
 
-// Statuses shown in upcoming by default (carried excluded)
-const DEFAULT_STATUSES = new Set<OccurrenceStatus>(["overdue", "pending", "partial"]);
+// Statuses shown in upcoming by default (skipped excluded)
+const DEFAULT_STATUSES = new Set<OccurrenceStatus>(["overdue", "pending", "partial", "carried"]);
 
 // ─── Root page ────────────────────────────────────────────────────────────────
 
