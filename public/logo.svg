@@ -1,9 +1,9 @@
 <svg viewBox="0 0 100 100" xmlns="http://www.w3.org/2000/svg" fill="none">
   <defs>
     <style>
-      .wide { fill: #3b82f6; opacity: 0.25; }
-      .middle { fill: #3b82f6; opacity: 0.55; }
-      .point { fill: #f97316; opacity: 0.95; }
+      .wide { fill: #6b5eef; opacity: 0.25; }
+      .middle { fill: #6b5eef; opacity: 0.55; }
+      .point { fill: #4f9fdb; opacity: 0.95; }
     </style>
   </defs>
   <!-- Raw Monthly Income - Wide Translucent Wedge -->
