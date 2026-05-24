@@ -381,6 +381,7 @@ export function YearCalendarView({ periodStart }: YearCalendarViewProps) {
     });
 
     billOccs.forEach((o) => {
+      if (o.status === "carried") return;
       const p = billMap.get(o.billId);
       push(o.dueDate, {
         id: o.id,
@@ -398,6 +399,7 @@ export function YearCalendarView({ periodStart }: YearCalendarViewProps) {
     });
 
     creditOccs.forEach((o) => {
+      if (o.status === "carried") return;
       const p = creditMap.get(o.creditId);
       push(o.dueDate, {
         id: o.id,
