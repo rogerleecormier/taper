@@ -1,2 +1,2 @@
-# Fether
-Financial Tethering Budget Tracker.
+# Tper
+Financial Tapering Budget Tracker.
