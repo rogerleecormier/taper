@@ -73,18 +73,22 @@ async function generateAndInsertIncomeOccurrences(
   if (newDates.length === 0) return;
 
   const now = new Date();
-  await db.insert(incomeOccurrences).values(
-    newDates.map((expectedDate) => ({
-      id: nanoid(),
-      userId: source.userId,
-      incomeSourceId: source.id,
-      expectedDate,
-      amountCents: source.amountCents,
-      status: "pending" as const,
-      createdAt: now,
-      updatedAt: now,
-    }))
-  );
+  const BATCH_SIZE = 10;
+  for (let i = 0; i < newDates.length; i += BATCH_SIZE) {
+    const batch = newDates.slice(i, i + BATCH_SIZE);
+    await db.insert(incomeOccurrences).values(
+      batch.map((expectedDate) => ({
+        id: nanoid(),
+        userId: source.userId,
+        incomeSourceId: source.id,
+        expectedDate,
+        amountCents: source.amountCents,
+        status: "pending" as const,
+        createdAt: now,
+        updatedAt: now,
+      }))
+    );
+  }
 }
 
 export const getIncomeSources = createServerFn()

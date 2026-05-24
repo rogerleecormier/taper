@@ -68,18 +68,22 @@ async function generateAndInsertOccurrences(
   if (newDates.length === 0) return;
 
   const now = new Date();
-  await db.insert(billOccurrences).values(
-    newDates.map((dueDate) => ({
-      id: nanoid(),
-      userId: bill.userId,
-      billId: bill.id,
-      dueDate,
-      amountCents: bill.amountCents,
-      status: "pending" as const,
-      createdAt: now,
-      updatedAt: now,
-    }))
-  );
+  const BATCH_SIZE = 10;
+  for (let i = 0; i < newDates.length; i += BATCH_SIZE) {
+    const batch = newDates.slice(i, i + BATCH_SIZE);
+    await db.insert(billOccurrences).values(
+      batch.map((dueDate) => ({
+        id: nanoid(),
+        userId: bill.userId,
+        billId: bill.id,
+        dueDate,
+        amountCents: bill.amountCents,
+        status: "pending" as const,
+        createdAt: now,
+        updatedAt: now,
+      }))
+    );
+  }
 }
 
 export const getBills = createServerFn()

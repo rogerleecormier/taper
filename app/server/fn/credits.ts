@@ -75,18 +75,22 @@ async function generateAndInsertCreditOccurrences(
   if (newDates.length === 0) return;
 
   const now = new Date();
-  await db.insert(creditOccurrences).values(
-    newDates.map((dueDate) => ({
-      id: nanoid(),
-      userId: credit.userId,
-      creditId: credit.id,
-      dueDate,
-      amountCents: credit.amountCents,
-      status: "pending" as const,
-      createdAt: now,
-      updatedAt: now,
-    }))
-  );
+  const BATCH_SIZE = 10;
+  for (let i = 0; i < newDates.length; i += BATCH_SIZE) {
+    const batch = newDates.slice(i, i + BATCH_SIZE);
+    await db.insert(creditOccurrences).values(
+      batch.map((dueDate) => ({
+        id: nanoid(),
+        userId: credit.userId,
+        creditId: credit.id,
+        dueDate,
+        amountCents: credit.amountCents,
+        status: "pending" as const,
+        createdAt: now,
+        updatedAt: now,
+      }))
+    );
+  }
 }
 
 export const getCredits = createServerFn()
