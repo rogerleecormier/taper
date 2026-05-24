@@ -55,6 +55,7 @@ export function CreditReceiptModal({
   const [carryDate, setCarryDate] = useState(() =>
     nextOccurrenceDate(occurrence.dueDate, interval)
   );
+  const [carryAmount, setCarryAmount] = useState("");
 
   const addReceipt = useAddCreditReceipt();
   const deleteReceipt = useDeleteCreditReceipt();
@@ -99,7 +100,14 @@ export function CreditReceiptModal({
   async function handleCarryForward() {
     setError(null);
     try {
-      await carryForward.mutateAsync({ id: occurrence.id, targetDate: carryDate });
+      const carryAmountCents = carryAmount.trim()
+        ? Math.round(parseFloat(carryAmount) * 100)
+        : undefined;
+      await carryForward.mutateAsync({
+        id: occurrence.id,
+        targetDate: carryDate,
+        carryAmountCents,
+      });
       onClose();
     } catch (e) {
       setError(e instanceof Error ? e.message : "Failed to carry forward balance.");
@@ -253,19 +261,35 @@ export function CreditReceiptModal({
         {occurrence.status !== "skipped" && occurrence.status !== "carried" && remaining > 0 && (
           <div className="rounded-md border border-dashed border-amber-200 bg-amber-50/50 px-3 py-2.5 space-y-2">
             <p className="text-xs font-semibold text-amber-800">
-              Carry forward {formatCurrency(remaining)} to another date
+              Carry forward to another date
             </p>
-            <div className="flex items-center gap-2">
+            <div className="space-y-2">
+              <div className="flex items-center gap-2">
+                <Input
+                  type="number"
+                  placeholder={formatCurrency(remaining)}
+                  className="h-8 text-xs flex-1"
+                  value={carryAmount}
+                  onChange={(e) => setCarryAmount(e.target.value)}
+                  min="0"
+                  step="0.01"
+                />
+                <span className="text-xs text-muted-foreground flex-shrink-0">
+                  / {formatCurrency(remaining)}
+                </span>
+              </div>
               <Input
                 type="date"
-                className="h-8 text-xs flex-1"
+                className="h-8 text-xs"
                 value={carryDate}
                 onChange={(e) => setCarryDate(e.target.value)}
               />
+            </div>
+            <div className="flex items-center gap-2 justify-end">
               <Button
                 size="sm"
                 variant="outline"
-                className="h-8 text-xs border-amber-300 text-amber-800 hover:bg-amber-100 flex-shrink-0"
+                className="h-8 text-xs border-amber-300 text-amber-800 hover:bg-amber-100"
                 disabled={isBusy}
                 onClick={handleCarryForward}
               >

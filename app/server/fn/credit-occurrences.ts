@@ -44,6 +44,7 @@ export const carryForwardCreditOccurrence = createServerFn()
     z.object({
       id: z.string(),
       targetDate: z.string().regex(/^\d{4}-\d{2}-\d{2}$/),
+      carryAmountCents: z.number().int().positive().optional(),
     })
   )
   .handler(async ({ data, context }) => {
@@ -73,24 +74,48 @@ export const carryForwardCreditOccurrence = createServerFn()
 
     if (remaining <= 0) throw new Error("No balance remaining to carry forward");
 
+    const carryAmount = data.carryAmountCents ?? remaining;
+    if (carryAmount > remaining) {
+      throw new Error("Cannot carry forward more than the remaining balance");
+    }
+    if (carryAmount <= 0) {
+      throw new Error("Carry amount must be greater than zero");
+    }
+
     const now = new Date();
 
-    await db
-      .update(creditOccurrences)
-      .set({ status: "carried", updatedAt: now })
-      .where(
-        and(
-          eq(creditOccurrences.id, data.id),
-          eq(creditOccurrences.userId, user.id)
-        )
-      );
+    if (carryAmount === remaining) {
+      // Full carry forward: mark source as carried
+      await db
+        .update(creditOccurrences)
+        .set({ status: "carried", updatedAt: now })
+        .where(
+          and(
+            eq(creditOccurrences.id, data.id),
+            eq(creditOccurrences.userId, user.id)
+          )
+        );
+    } else {
+      // Partial carry forward: reduce the source amount, keep it pending/overdue
+      const newSourceAmount = occurrence.amountCents - carryAmount;
+      await db
+        .update(creditOccurrences)
+        .set({ amountCents: newSourceAmount, updatedAt: now })
+        .where(
+          and(
+            eq(creditOccurrences.id, data.id),
+            eq(creditOccurrences.userId, user.id)
+          )
+        );
+    }
 
+    // Always create a brand-new standalone occurrence — never mutate an existing one
     await db.insert(creditOccurrences).values({
       id: nanoid(),
       userId: user.id,
       creditId: occurrence.creditId,
       dueDate: data.targetDate,
-      amountCents: remaining,
+      amountCents: carryAmount,
       status: "pending",
       carriedFromId: data.id,
       createdAt: now,
