@@ -4,7 +4,7 @@ import { useState } from "react";
 import { useStore } from "@tanstack/react-store";
 import { CalendarClock } from "lucide-react";
 import { formatCurrency } from "~/lib/currency";
-import { formatRelativeDate, toDateStr } from "~/lib/dates";
+import { toDateStr } from "~/lib/dates";
 import { cn } from "~/lib/utils";
 import { trackerStore } from "~/store/tracker-store";
 import { OccurrenceDetailModal, type OccurrenceModalItem } from "~/components/tracker/occurrence-detail-modal";
@@ -33,6 +33,15 @@ function getFilteredBills(bills: UpcomingBill[], days: DayFilter, referenceDate:
   cutoff.setDate(cutoff.getDate() + days);
   const cutoffStr = toDateStr(cutoff);
   return bills.filter((b) => b.dueDate >= startStr && b.dueDate <= cutoffStr);
+}
+
+function formatDate(dateStr: string): string {
+  const [year, month, day] = dateStr.split("-").map(Number);
+  return new Date(year, month - 1, day).toLocaleDateString("en-US", {
+    month: "short",
+    day: "numeric",
+    year: "numeric",
+  });
 }
 
 export function UpcomingBillsList({ upcomingBills }: UpcomingBillsListProps) {
@@ -77,7 +86,7 @@ export function UpcomingBillsList({ upcomingBills }: UpcomingBillsListProps) {
             {filtered.map((bill) => (
               <li
                 key={bill.id}
-                className="group flex items-center gap-3 py-3 cursor-pointer hover:bg-muted/10 rounded-md px-1 -mx-1 transition-colors"
+                className="group py-3 cursor-pointer hover:bg-muted/10 rounded-md px-1 -mx-1 transition-colors"
                 onClick={() =>
                   setModalItem({
                     occurrenceId: bill.id,
@@ -96,34 +105,37 @@ export function UpcomingBillsList({ upcomingBills }: UpcomingBillsListProps) {
                   })
                 }
               >
-                <span
-                  className="h-2.5 w-2.5 flex-shrink-0 rounded-full"
-                  style={{ backgroundColor: bill.categoryColor ?? "#94a3b8" }}
-                />
-
-                <div className="min-w-0 flex-1">
-                  <p className="truncate text-sm font-medium text-accent group-hover:underline">{bill.billName}</p>
-                  {bill.vendorName && (
-                    <p className="truncate text-xs text-muted-foreground">{bill.vendorName}</p>
-                  )}
+                {/* Row 1: dot + name + amount */}
+                <div className="flex items-center gap-3">
+                  <span
+                    className="h-2.5 w-2.5 flex-shrink-0 rounded-full"
+                    style={{ backgroundColor: bill.categoryColor ?? "#94a3b8" }}
+                  />
+                  <span className="flex-1 text-sm font-medium text-accent group-hover:underline">
+                    {bill.billName}
+                  </span>
+                  <span className="flex-shrink-0 text-sm font-semibold tabular-nums">
+                    {formatCurrency(bill.amountCents)}
+                  </span>
                 </div>
 
-                <span className="flex-shrink-0 text-xs text-muted-foreground">
-                  {formatRelativeDate(bill.dueDate, referenceDate)}
-                </span>
-
-                <span className="flex-shrink-0 text-sm font-semibold tabular-nums">
-                  {formatCurrency(bill.amountCents)}
-                </span>
-
-                <span
-                  className={cn(
-                    "flex-shrink-0 rounded-md border px-2 py-0.5 text-xs font-semibold capitalize",
-                    STATUS_CLASSES[bill.status] ?? STATUS_CLASSES.pending
-                  )}
-                >
-                  {bill.status}
-                </span>
+                {/* Row 2: vendor | badge + date */}
+                <div className="flex items-center gap-2 mt-1 pl-5">
+                  <span className="flex-1 text-xs text-muted-foreground">
+                    {bill.vendorName ?? ""}
+                  </span>
+                  <span
+                    className={cn(
+                      "flex-shrink-0 rounded-md border px-2 py-0.5 text-xs font-semibold capitalize",
+                      STATUS_CLASSES[bill.status] ?? STATUS_CLASSES.pending
+                    )}
+                  >
+                    {bill.status}
+                  </span>
+                  <span className="flex-shrink-0 text-xs text-muted-foreground">
+                    {formatDate(bill.dueDate)}
+                  </span>
+                </div>
               </li>
             ))}
           </ul>

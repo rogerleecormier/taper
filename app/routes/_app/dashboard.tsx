@@ -151,7 +151,6 @@ function DashboardPage() {
             <CardContent className="p-6">
               <RecentPaymentsList
                 recentPayments={data.recentPayments}
-                referenceDate={new Date()}
               />
             </CardContent>
           </Card>

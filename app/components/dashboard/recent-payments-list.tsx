@@ -1,19 +1,22 @@
-import { useState } from "react";
 import { CreditCard } from "lucide-react";
 import { formatCurrency } from "~/lib/currency";
-import { formatRelativeDate } from "~/lib/dates";
 import { Link } from "@tanstack/react-router";
 import type { DashboardData } from "~/server/fn/dashboard";
 
 interface RecentPaymentsListProps {
   recentPayments: DashboardData["recentPayments"];
-  referenceDate: Date;
 }
 
-export function RecentPaymentsList({
-  recentPayments,
-  referenceDate,
-}: RecentPaymentsListProps) {
+function formatDate(dateStr: string): string {
+  const [year, month, day] = dateStr.split("-").map(Number);
+  return new Date(year, month - 1, day).toLocaleDateString("en-US", {
+    month: "short",
+    day: "numeric",
+    year: "numeric",
+  });
+}
+
+export function RecentPaymentsList({ recentPayments }: RecentPaymentsListProps) {
   if (recentPayments.length === 0) {
     return (
       <div className="flex flex-col items-center justify-center py-10 text-center text-muted-foreground">
@@ -30,33 +33,33 @@ export function RecentPaymentsList({
       </h3>
       <ul className="divide-y border-border">
         {recentPayments.map((payment) => (
-          <li key={payment.id} className="flex items-center gap-3 py-3">
-            <div className="min-w-0 flex-1">
+          <li key={payment.id} className="py-3">
+            {/* Row 1: name + amount */}
+            <div className="flex items-center gap-3">
               <Link
                 to="/bills/$id"
                 params={{ id: payment.billId }}
-                className="truncate text-sm font-medium text-foreground hover:text-accent transition-colors"
+                className="flex-1 text-sm font-medium text-foreground hover:text-accent transition-colors"
               >
                 {payment.billName}
               </Link>
-              {payment.vendorName && (
-                <p className="truncate text-xs text-muted-foreground">
-                  {payment.vendorName}
-                </p>
-              )}
+              <span className="flex-shrink-0 text-sm font-semibold tabular-nums">
+                {formatCurrency(payment.paidAmountCents)}
+              </span>
             </div>
 
-            <span className="flex-shrink-0 text-xs text-muted-foreground">
-              {formatRelativeDate(payment.paidDate, referenceDate)}
-            </span>
-
-            <span className="flex-shrink-0 text-sm font-semibold tabular-nums text-foreground">
-              {formatCurrency(payment.paidAmountCents)}
-            </span>
-
-            <span className="flex-shrink-0 rounded-md border border-success/20 bg-success/10 px-2 py-0.5 text-xs font-semibold text-success">
-              Paid
-            </span>
+            {/* Row 2: vendor | badge + date */}
+            <div className="flex items-center gap-2 mt-1">
+              <span className="flex-1 text-xs text-muted-foreground">
+                {payment.vendorName ?? ""}
+              </span>
+              <span className="flex-shrink-0 rounded-md border border-success/20 bg-success/10 px-2 py-0.5 text-xs font-semibold text-success">
+                Paid
+              </span>
+              <span className="flex-shrink-0 text-xs text-muted-foreground">
+                {formatDate(payment.paidDate)}
+              </span>
+            </div>
           </li>
         ))}
       </ul>
