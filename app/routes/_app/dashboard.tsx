@@ -1,8 +1,7 @@
 import { createFileRoute } from "@tanstack/react-router";
 import { useState } from "react";
-import { startOfMonth, endOfMonth, addMonths, addDays, parseISO } from "date-fns";
+import { startOfMonth, endOfMonth, addMonths } from "date-fns";
 import { useDashboard } from "~/hooks/use-dashboard";
-import { usePreferences, DEFAULT_PREFS } from "~/hooks/use-preferences";
 import { SummaryCards } from "~/components/dashboard/summary-cards";
 import { UnallocatedBanner } from "~/components/dashboard/unallocated-banner";
 import { UpcomingBillsList } from "~/components/dashboard/upcoming-bills-list";
@@ -13,58 +12,28 @@ import { CategoryBreakdownChart } from "~/components/dashboard/category-breakdow
 import { GoalsList } from "~/components/dashboard/goals-list";
 import { Separator } from "~/components/ui/separator";
 import { Card, CardContent } from "~/components/ui/card";
-import { getMostRecentPayday, toDateStr } from "~/lib/dates";
+import { toDateStr } from "~/lib/dates";
 import { cn } from "~/lib/utils";
 
 export const Route = createFileRoute("/_app/dashboard")({
   component: DashboardPage,
 });
 
-function computePeriod(
-  mode: "month" | "pay_period",
-  paydayInterval: "weekly" | "biweekly",
-  paydayAnchorDate: string | null,
-  viewingNext: boolean
-): { periodStart: string; periodEnd: string; canUsePayPeriod: boolean } {
+function computePeriod(viewingNext: boolean): { periodStart: string; periodEnd: string } {
   const today = new Date();
-
-  if (mode === "pay_period" && paydayAnchorDate) {
-    const intervalDays = paydayInterval === "weekly" ? 7 : 14;
-    const currentStart = getMostRecentPayday(paydayAnchorDate, paydayInterval, today);
-    const start = viewingNext
-      ? toDateStr(addDays(parseISO(currentStart), intervalDays))
-      : currentStart;
-    const end = toDateStr(addDays(parseISO(start), intervalDays - 1));
-    return { periodStart: start, periodEnd: end, canUsePayPeriod: true };
-  }
-
   const base = viewingNext ? addMonths(today, 1) : today;
   return {
     periodStart: toDateStr(startOfMonth(base)),
     periodEnd: toDateStr(endOfMonth(base)),
-    canUsePayPeriod: mode === "pay_period" && !paydayAnchorDate ? false : true,
   };
 }
 
 function DashboardPage() {
-  const { data: prefsData } = usePreferences();
-  const prefs = prefsData ?? DEFAULT_PREFS;
   const [viewingNext, setViewingNext] = useState(false);
 
-  const { periodStart, periodEnd, canUsePayPeriod } = computePeriod(
-    prefs.dashboardPeriodMode,
-    prefs.paydayInterval,
-    prefs.paydayAnchorDate,
-    viewingNext
-  );
+  const { periodStart, periodEnd } = computePeriod(viewingNext);
 
   const { data, isLoading, isError } = useDashboard(periodStart, periodEnd, 30);
-
-  const isPayPeriodMode = prefs.dashboardPeriodMode === "pay_period";
-  const needsAnchor = isPayPeriodMode && !canUsePayPeriod;
-
-  const thisLabel = isPayPeriodMode ? "This Period" : "This Month";
-  const nextLabel = isPayPeriodMode ? "Next Period" : "Next Month";
 
   if (isLoading) {
     return (
@@ -95,40 +64,32 @@ function DashboardPage() {
         </div>
 
         <div className="flex-shrink-0 mt-1">
-          {needsAnchor ? (
-            <p className="text-xs text-muted-foreground">
-              Set a payday anchor in{" "}
-              <a href="/settings" className="underline text-foreground">Settings</a>{" "}
-              to use pay period mode.
-            </p>
-          ) : (
-            <div className="inline-flex rounded-md border border-border bg-muted p-0.5 gap-0.5">
-              <button
-                type="button"
-                onClick={() => setViewingNext(false)}
-                className={cn(
-                  "rounded px-3 py-1.5 text-sm font-semibold transition-all cursor-pointer whitespace-nowrap",
-                  !viewingNext
-                    ? "bg-card text-foreground shadow-xs"
-                    : "text-muted-foreground hover:text-foreground"
-                )}
-              >
-                {thisLabel}
-              </button>
-              <button
-                type="button"
-                onClick={() => setViewingNext(true)}
-                className={cn(
-                  "rounded px-3 py-1.5 text-sm font-semibold transition-all cursor-pointer whitespace-nowrap",
-                  viewingNext
-                    ? "bg-card text-foreground shadow-xs"
-                    : "text-muted-foreground hover:text-foreground"
-                )}
-              >
-                {nextLabel}
-              </button>
-            </div>
-          )}
+          <div className="inline-flex rounded-md border border-border bg-muted p-0.5 gap-0.5">
+            <button
+              type="button"
+              onClick={() => setViewingNext(false)}
+              className={cn(
+                "rounded px-3 py-1.5 text-sm font-semibold transition-all cursor-pointer whitespace-nowrap",
+                !viewingNext
+                  ? "bg-card text-foreground shadow-xs"
+                  : "text-muted-foreground hover:text-foreground"
+              )}
+            >
+              This Month
+            </button>
+            <button
+              type="button"
+              onClick={() => setViewingNext(true)}
+              className={cn(
+                "rounded px-3 py-1.5 text-sm font-semibold transition-all cursor-pointer whitespace-nowrap",
+                viewingNext
+                  ? "bg-card text-foreground shadow-xs"
+                  : "text-muted-foreground hover:text-foreground"
+              )}
+            >
+              Next Month
+            </button>
+          </div>
         </div>
       </div>
 
