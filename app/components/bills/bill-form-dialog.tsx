@@ -12,6 +12,7 @@ import { BillForm, type BillFormData } from "./bill-form";
 import { useCreateBill, useUpdateBill } from "~/hooks/use-bills";
 import { useVendors } from "~/hooks/use-vendors";
 import { useCategories } from "~/hooks/use-categories";
+import { AlertCircle } from "lucide-react";
 
 interface BillFormDialogProps {
   trigger?: ReactNode;
@@ -48,15 +49,21 @@ export function BillFormDialog({
 
   const isEditing = !!billId;
   const isLoading = createBill.isPending || updateBill.isPending;
+  const [submitError, setSubmitError] = useState<string | null>(null);
 
   async function handleSubmit(data: BillFormData) {
-    if (isEditing) {
-      await updateBill.mutateAsync({ id: billId, ...data });
-    } else {
-      await createBill.mutateAsync(data);
+    setSubmitError(null);
+    try {
+      if (isEditing) {
+        await updateBill.mutateAsync({ id: billId, ...data });
+      } else {
+        await createBill.mutateAsync(data);
+      }
+      setOpen(false);
+      onSuccess?.();
+    } catch (e) {
+      setSubmitError(e instanceof Error ? e.message : "Failed to save. Please try again.");
     }
-    setOpen(false);
-    onSuccess?.();
   }
 
   const vendorOptions = vendors.map((v) => ({ id: v.id, name: v.name }));
@@ -69,6 +76,12 @@ export function BillFormDialog({
       <DialogHeader>
         <DialogTitle>{isEditing ? "Edit Expense" : "Add Expense"}</DialogTitle>
       </DialogHeader>
+      {submitError && (
+        <div className="flex items-start gap-2 rounded-md border border-destructive/30 bg-destructive/5 px-3 py-2 text-sm text-destructive">
+          <AlertCircle className="h-4 w-4 flex-shrink-0 mt-0.5" />
+          <span>{submitError}</span>
+        </div>
+      )}
       <BillForm
         defaultValues={defaultValues}
         onSubmit={handleSubmit}
