@@ -414,23 +414,83 @@ export const getScheduledPaymentsForPage = createServerFn()
     });
   });
 
-// All carried-forward occurrences that are still unpaid (pending/partial/overdue).
-// Used by the dashboard carry-forward activity list.
+// All carried-forward expenses that still have an unpaid balance, regardless of
+// scheduled payment date. Finds the leaf occurrence of every carry-forward chain
+// (i.e. not superseded by another carry) whose balance is not fully paid.
 export const getCarriedForwardUnpaid = createServerFn()
   .middleware([authMiddleware])
   .handler(async ({ context }) => {
     const { db, user } = context;
 
-    const carried = await db
+    // Fetch every occurrence that participates in any carry-forward chain:
+    // either it was a source (status="carried") or it is a destination (carriedFromId set).
+    // We need both ends to identify chain leaves and resolve original dates.
+    const allChainRows = await db
       .select({
-        occurrenceId: billOccurrences.id,
-        billId: bills.id,
+        id: billOccurrences.id,
         dueDate: billOccurrences.dueDate,
         amountCents: billOccurrences.amountCents,
         paidAmountCents: billOccurrences.paidAmountCents,
         status: billOccurrences.status,
-        notes: billOccurrences.notes,
         carriedFromId: billOccurrences.carriedFromId,
+        notes: billOccurrences.notes,
+        billId: billOccurrences.billId,
+      })
+      .from(billOccurrences)
+      .where(
+        and(
+          eq(billOccurrences.userId, user.id),
+          // sources have status "carried"; destinations have carriedFromId set
+          // SQLite doesn't support OR with isNotNull in a single inArray, so we
+          // fetch both sets: any "carried" status OR any non-null carriedFromId.
+          // We over-fetch slightly and filter in JS.
+          inArray(billOccurrences.status, ["carried", "pending", "partial", "overdue", "paid"]),
+        )
+      )
+      .all();
+
+    // Index every occurrence by id for chain traversal
+    const byId = new Map(allChainRows.map((r) => [r.id, r]));
+
+    // Identify all occurrence IDs that are themselves pointed to as a source —
+    // i.e. they have at least one occurrence whose carriedFromId === their id.
+    const supersededIds = new Set(
+      allChainRows.filter((r) => r.carriedFromId).map((r) => r.carriedFromId!)
+    );
+
+    // A leaf is an occurrence that:
+    //   1. Is part of a chain (has a carriedFromId, meaning it was carried into)
+    //   2. Has NOT itself been carried forward (not in supersededIds)
+    //   3. Still has an unpaid balance (status is not "paid" and not "skipped")
+    const leaves = allChainRows.filter(
+      (r) =>
+        r.carriedFromId !== null &&
+        !supersededIds.has(r.id) &&
+        r.status !== "paid" &&
+        r.status !== "skipped"
+    );
+
+    if (leaves.length === 0) return [];
+
+    // Resolve originalDueDate by walking the carriedFromId chain to the root
+    function resolveOriginalDueDate(startCarriedFromId: string): string {
+      let current = byId.get(startCarriedFromId);
+      if (!current) return startCarriedFromId; // fallback: shouldn't happen
+      let original = current.dueDate;
+      while (current?.carriedFromId) {
+        const parent = byId.get(current.carriedFromId);
+        if (!parent) break;
+        original = parent.dueDate;
+        current = parent;
+      }
+      return original;
+    }
+
+    // Fetch bill/vendor/category details for the leaf occurrences
+    const leafBillIds = [...new Set(leaves.map((r) => r.billId))];
+    const billDetails = await db
+      .select({
+        billId: bills.id,
         billName: bills.name,
         billInterval: bills.interval,
         vendorId: vendors.id,
@@ -438,55 +498,38 @@ export const getCarriedForwardUnpaid = createServerFn()
         categoryName: categories.name,
         categoryColor: categories.color,
       })
-      .from(billOccurrences)
-      .innerJoin(bills, eq(billOccurrences.billId, bills.id))
+      .from(bills)
       .leftJoin(vendors, eq(bills.vendorId, vendors.id))
       .leftJoin(categories, eq(bills.categoryId, categories.id))
-      .where(
-        and(
-          eq(billOccurrences.userId, user.id),
-          inArray(billOccurrences.status, ["pending", "partial", "overdue"]),
-          isNotNull(billOccurrences.carriedFromId),
-        )
-      )
-      .orderBy(asc(billOccurrences.dueDate))
+      .where(and(eq(bills.userId, user.id), inArray(bills.id, leafBillIds)))
       .all();
 
-    if (carried.length === 0) return [];
+    const billMap = new Map(billDetails.map((b) => [b.billId, b]));
 
-    // Resolve originalDueDate by walking the full carriedFromId chain.
-    // Fetch all ancestor occurrences iteratively until the chain is exhausted.
-    const ancestorMap = new Map<string, { id: string; dueDate: string; carriedFromId: string | null }>();
-    let idsToFetch = carried.map((r) => r.carriedFromId!);
-
-    while (idsToFetch.length > 0) {
-      const ancestors = await db
-        .select({ id: billOccurrences.id, dueDate: billOccurrences.dueDate, carriedFromId: billOccurrences.carriedFromId })
-        .from(billOccurrences)
-        .where(and(eq(billOccurrences.userId, user.id), inArray(billOccurrences.id, idsToFetch)))
-        .all();
-
-      const nextIds: string[] = [];
-      for (const a of ancestors) {
-        ancestorMap.set(a.id, a);
-        if (a.carriedFromId && !ancestorMap.has(a.carriedFromId)) {
-          nextIds.push(a.carriedFromId);
-        }
-      }
-      idsToFetch = nextIds;
-    }
-
-    return carried.map((r) => {
-      let current = ancestorMap.get(r.carriedFromId!);
-      let originalDueDate = current?.dueDate ?? r.dueDate;
-      while (current?.carriedFromId) {
-        const parent = ancestorMap.get(current.carriedFromId);
-        if (!parent) break;
-        originalDueDate = parent.dueDate;
-        current = parent;
-      }
-      return { ...r, originalDueDate };
-    });
+    return leaves
+      .map((r) => {
+        const bill = billMap.get(r.billId);
+        if (!bill) return null;
+        return {
+          occurrenceId: r.id,
+          billId: r.billId,
+          dueDate: r.dueDate,
+          amountCents: r.amountCents,
+          paidAmountCents: r.paidAmountCents,
+          status: r.status,
+          notes: r.notes,
+          carriedFromId: r.carriedFromId,
+          billName: bill.billName,
+          billInterval: bill.billInterval,
+          vendorId: bill.vendorId,
+          vendorName: bill.vendorName,
+          categoryName: bill.categoryName,
+          categoryColor: bill.categoryColor,
+          originalDueDate: resolveOriginalDueDate(r.carriedFromId!),
+        };
+      })
+      .filter((r): r is NonNullable<typeof r> => r !== null)
+      .sort((a, b) => a.dueDate.localeCompare(b.dueDate));
   });
 
 // Actual payment records from bill_payments, joined back to the occurrence and expense.

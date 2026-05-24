@@ -29,7 +29,7 @@ export function CarriedForwardList() {
 
   if (isLoading) {
     return (
-      <div className="space-y-2">
+      <div className="space-y-2 p-4">
         {Array.from({ length: 3 }).map((_, i) => (
           <div key={i} className="h-10 rounded-md bg-muted/40 animate-pulse" />
         ))}
@@ -59,15 +59,18 @@ export function CarriedForwardList() {
               <Th>Vendor</Th>
               <Th>Category</Th>
               <Th>Originally Due</Th>
-              <Th>Days Overdue</Th>
-              <Th>Current Due</Th>
+              <Th>Age</Th>
+              <Th>Scheduled For</Th>
               <Th right>Balance</Th>
               <Th>Status</Th>
             </tr>
           </thead>
           <tbody className="divide-y divide-border/60">
             {rows.map((row) => {
-              const daysAgo = differenceInDays(today, parseISO(row.originalDueDate));
+              const originalDate = parseISO(row.originalDueDate);
+              const scheduledDate = parseISO(row.dueDate);
+              const daysOld = differenceInDays(today, originalDate);
+              const isScheduledFuture = scheduledDate > today;
               const remaining = row.amountCents - (row.paidAmountCents ?? 0);
               const isOverdue = row.status === "overdue";
 
@@ -118,16 +121,21 @@ export function CarriedForwardList() {
                   <td className="px-4 py-3 text-warning font-medium tabular-nums whitespace-nowrap">
                     <span className="flex items-center gap-1">
                       <Clock className="h-3.5 w-3.5 flex-shrink-0" />
-                      {format(parseISO(row.originalDueDate), "MMM d, yyyy")}
+                      {format(originalDate, "MMM d, yyyy")}
                     </span>
                   </td>
                   <td className="px-4 py-3 tabular-nums whitespace-nowrap">
-                    <span className={cn("font-semibold", daysAgo > 0 ? "text-danger" : "text-muted-foreground")}>
-                      {daysAgo > 0 ? `${daysAgo}d` : "Today"}
+                    <span className={cn("font-semibold", daysOld > 0 ? "text-danger" : "text-muted-foreground")}>
+                      {daysOld === 0 ? "Today" : daysOld > 0 ? `${daysOld}d ago` : `in ${Math.abs(daysOld)}d`}
                     </span>
                   </td>
-                  <td className="px-4 py-3 tabular-nums text-foreground/80 whitespace-nowrap">
-                    {format(parseISO(row.dueDate), "MMM d, yyyy")}
+                  <td className="px-4 py-3 tabular-nums whitespace-nowrap">
+                    <span className={cn(isScheduledFuture ? "text-foreground/60" : "text-foreground/80")}>
+                      {format(scheduledDate, "MMM d, yyyy")}
+                    </span>
+                    {isScheduledFuture && (
+                      <span className="ml-1.5 text-xs text-muted-foreground/50">upcoming</span>
+                    )}
                   </td>
                   <td className="px-4 py-3 text-right font-semibold tabular-nums text-danger whitespace-nowrap">
                     {formatCurrency(remaining)}
