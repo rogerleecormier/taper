@@ -55,6 +55,7 @@ type CalendarItem = {
   interval: string;
   categoryName: string | null;
   vendorName: string | null;
+  isPayday?: boolean;
   occurrenceObj: BillOccurrence | IncomeOccurrence | CreditOccurrence;
 };
 
@@ -78,12 +79,14 @@ function MiniDayCell({
   isToday,
   items,
   onDayClick,
+  isPayday,
 }: {
   day: Date;
   isInMonth: boolean;
   isToday: boolean;
   items: CalendarItem[];
   onDayClick: () => void;
+  isPayday: boolean;
 }) {
   const hasItems = items.length > 0;
   const dotItems = items.slice(0, 4);
@@ -105,6 +108,8 @@ function MiniDayCell({
           "text-[10px] font-bold leading-none w-[18px] h-[18px] flex items-center justify-center rounded-full",
           isToday
             ? "bg-primary text-primary-foreground"
+            : isPayday
+            ? "bg-success/20 text-success ring-1 ring-success/40"
             : isInMonth
             ? "text-foreground"
             : "text-muted-foreground"
@@ -144,12 +149,14 @@ function MiniMonthCalendar({
   onDayClick,
   todayStr,
   monthRef,
+  paydayDates,
 }: {
   month: Date;
   itemsByDate: Map<string, CalendarItem[]>;
   onDayClick: (day: Date, items: CalendarItem[]) => void;
   todayStr: string;
   monthRef: (el: HTMLDivElement | null) => void;
+  paydayDates: Set<string>;
 }) {
   const calendarDays = useMemo(() => {
     const start = startOfWeek(startOfMonth(month));
@@ -262,6 +269,7 @@ function MiniMonthCalendar({
                   isToday={dateStr === todayStr}
                   items={dayItems}
                   onDayClick={() => onDayClick(day, dayItems)}
+                  isPayday={paydayDates.has(dateStr)}
                 />
               );
             })}
@@ -367,6 +375,7 @@ export function YearCalendarView({ periodStart }: YearCalendarViewProps) {
         interval: p?.interval ?? "monthly",
         categoryName: (p as any)?.category?.name ?? null,
         vendorName: (p as any)?.vendor?.name ?? null,
+        isPayday: p?.sourceType === "payroll",
         occurrenceObj: o,
       });
     });
@@ -407,6 +416,16 @@ export function YearCalendarView({ periodStart }: YearCalendarViewProps) {
 
     return map;
   }, [incomeOccs, billOccs, creditOccs, incomeMap, billMap, creditMap]);
+
+  const paydayDates = useMemo(() => {
+    const s = new Set<string>();
+    itemsByDate.forEach((items) => {
+      items.forEach((item) => {
+        if (item.isPayday) s.add(item.dateStr);
+      });
+    });
+    return s;
+  }, [itemsByDate]);
 
   const yearTotals = useMemo(() => {
     let income = 0;
@@ -570,6 +589,7 @@ export function YearCalendarView({ periodStart }: YearCalendarViewProps) {
             monthRef={(el) => {
               monthRefs.current[i] = el;
             }}
+            paydayDates={paydayDates}
           />
         ))}
       </div>

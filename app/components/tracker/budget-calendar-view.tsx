@@ -59,6 +59,7 @@ type CalendarItem = {
   interval: string;
   categoryName: string | null;
   vendorName: string | null;
+  isPayday?: boolean;
   occurrenceObj: BillOccurrence | IncomeOccurrence | CreditOccurrence;
 };
 
@@ -121,11 +122,13 @@ function DropDayCell({
   isCurrentMonth,
   items,
   onItemClick,
+  isPayday,
 }: {
   day: Date;
   isCurrentMonth: boolean;
   items: CalendarItem[];
   onItemClick: (item: CalendarItem) => void;
+  isPayday: boolean;
 }) {
   const dateStr = toDateStr(day);
   const { setNodeRef, isOver } = useDroppable({
@@ -146,7 +149,10 @@ function DropDayCell({
       )}
     >
       <div className="flex items-center justify-between px-0.5 text-[10px] font-extrabold text-muted-foreground">
-        <span className={cn(isToday && "rounded-full bg-primary text-primary-foreground px-1 py-0.2")}>
+        <span className={cn(
+          isToday && "rounded-full bg-primary text-primary-foreground px-1 py-0.2",
+          !isToday && isPayday && "rounded-full bg-success/20 text-success ring-1 ring-success/40 px-1 py-0.2"
+        )}>
           {format(day, "d")}
         </span>
         {items.length > 0 && (
@@ -261,6 +267,7 @@ export function BudgetCalendarView({ scope, interval, periodStart }: BudgetCalen
         interval: parent?.interval ?? "monthly",
         categoryName: (parent as any)?.category?.name ?? null,
         vendorName: (parent as any)?.vendor?.name ?? null,
+        isPayday: parent?.sourceType === "payroll",
         occurrenceObj: o,
       });
     });
@@ -311,6 +318,15 @@ export function BudgetCalendarView({ scope, interval, periodStart }: BudgetCalen
       map.set(item.dateStr, list);
     });
     return map;
+  }, [items]);
+
+  // Compute payday dates for fast lookup
+  const paydayDates = useMemo(() => {
+    const s = new Set<string>();
+    items.forEach((item) => {
+      if (item.isPayday) s.add(item.dateStr);
+    });
+    return s;
   }, [items]);
 
   // Reschedule drag-and-drop end handler
@@ -396,6 +412,7 @@ export function BudgetCalendarView({ scope, interval, periodStart }: BudgetCalen
                 isCurrentMonth={isCurrentMonth}
                 items={itemsByDate.get(dateStr) ?? []}
                 onItemClick={setActiveItem}
+                isPayday={paydayDates.has(dateStr)}
               />
             );
           })}

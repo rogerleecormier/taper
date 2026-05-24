@@ -279,18 +279,21 @@ export const generateOccurrencesForBill = createServerFn()
 
     if (newDates.length > 0) {
       const now = new Date();
-      await db.insert(billOccurrences).values(
-        newDates.map((dueDate) => ({
-          id: nanoid(),
-          userId: user.id,
-          billId: data.billId,
-          dueDate,
-          amountCents: bill.amountCents,
-          status: "pending" as const,
-          createdAt: now,
-          updatedAt: now,
-        }))
-      );
+      await db
+        .insert(billOccurrences)
+        .values(
+          newDates.map((dueDate) => ({
+            id: nanoid(),
+            userId: user.id,
+            billId: data.billId,
+            dueDate,
+            amountCents: bill.amountCents,
+            status: "pending" as const,
+            createdAt: now,
+            updatedAt: now,
+          }))
+        )
+        .onConflictDoNothing();
     }
 
     return { inserted: newDates.length };
