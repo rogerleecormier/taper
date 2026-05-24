@@ -9,6 +9,7 @@ import {
   BookOpen,
   ChevronDown,
   ChevronRight,
+  X,
 } from "lucide-react";
 import {
   useScheduledPaymentsForPage,
@@ -88,12 +89,20 @@ const RANGE_OPTIONS = [
   { months: 12, label: "12 Mo" },
 ] as const;
 
+// Statuses shown in upcoming by default (carried excluded)
+const DEFAULT_STATUSES = new Set<OccurrenceStatus>(["overdue", "pending", "partial"]);
+
 // ─── Root page ────────────────────────────────────────────────────────────────
 
 function PaymentsPage() {
   const [showPaid, setShowPaid] = useState(false);
   const [rangeMonths, setRangeMonths] = useState<1 | 3 | 6 | 12>(3);
+  // Status multi-select: which statuses to show in upcoming
+  const [statusFilter, setStatusFilter] = useState<Set<OccurrenceStatus>>(new Set(DEFAULT_STATUSES));
+  // Deferred-only toggle (sub-filter of upcoming)
+  const [deferredOnly, setDeferredOnly] = useState(false);
   const [vendorFilter, setVendorFilter] = useState<string>("all");
+  const [categoryFilter, setCategoryFilter] = useState<string>("all");
   const [occurrenceModal, setOccurrenceModal] = useState<OccurrenceModalItem | null>(null);
   const [paymentEditModal, setPaymentEditModal] = useState<PaymentEditItem | null>(null);
 
@@ -107,6 +116,7 @@ function PaymentsPage() {
   const { data: paidPayments = [], isLoading: paidLoading, isError: paidError } =
     usePaidPaymentsForPage({ startDate: rangeStart, endDate: today });
 
+  // Build vendor and category option lists from all data
   const vendors = useMemo(() => {
     const seen = new Map<string, string>();
     for (const r of scheduled) {
@@ -120,22 +130,81 @@ function PaymentsPage() {
       .sort((a, b) => a.name.localeCompare(b.name));
   }, [scheduled, paidPayments]);
 
+  const categories = useMemo(() => {
+    const seen = new Map<string, string>(); // name → color
+    for (const r of scheduled) {
+      if (r.categoryName) seen.set(r.categoryName, r.categoryColor ?? "#94a3b8");
+    }
+    for (const r of paidPayments) {
+      if (r.categoryName) seen.set(r.categoryName, r.categoryColor ?? "#94a3b8");
+    }
+    return Array.from(seen.entries())
+      .map(([name, color]) => ({ name, color }))
+      .sort((a, b) => a.name.localeCompare(b.name));
+  }, [scheduled, paidPayments]);
+
+  // Status counts across ALL scheduled rows (pre-filter) so chips show real counts
+  const statusCounts = useMemo(() => {
+    const counts: Partial<Record<OccurrenceStatus, number>> = {};
+    for (const r of scheduled) {
+      counts[r.status] = (counts[r.status] ?? 0) + 1;
+    }
+    // "deferred" is a sub-type of pending/overdue rows, track separately
+    counts["carried"] = counts["carried"] ?? 0;
+    return counts;
+  }, [scheduled]);
+
   const filteredScheduled = useMemo(() => {
-    if (vendorFilter === "all") return scheduled;
-    if (vendorFilter === "__none__") return scheduled.filter((r) => !r.vendorId);
-    return scheduled.filter((r) => r.vendorId === vendorFilter);
-  }, [scheduled, vendorFilter]);
+    return scheduled.filter((r) => {
+      if (!statusFilter.has(r.status)) return false;
+      if (deferredOnly && !r.carriedFromId) return false;
+      if (vendorFilter !== "all") {
+        if (vendorFilter === "__none__" && r.vendorId) return false;
+        if (vendorFilter !== "__none__" && r.vendorId !== vendorFilter) return false;
+      }
+      if (categoryFilter !== "all") {
+        if (categoryFilter === "__none__" && r.categoryName) return false;
+        if (categoryFilter !== "__none__" && r.categoryName !== categoryFilter) return false;
+      }
+      return true;
+    });
+  }, [scheduled, statusFilter, deferredOnly, vendorFilter, categoryFilter]);
 
   const filteredPaid = useMemo(() => {
-    if (vendorFilter === "all") return paidPayments;
-    if (vendorFilter === "__none__") return paidPayments.filter((r) => !r.vendorId);
-    return paidPayments.filter((r) => r.vendorId === vendorFilter);
-  }, [paidPayments, vendorFilter]);
+    return paidPayments.filter((r) => {
+      if (vendorFilter !== "all") {
+        if (vendorFilter === "__none__" && r.vendorId) return false;
+        if (vendorFilter !== "__none__" && r.vendorId !== vendorFilter) return false;
+      }
+      if (categoryFilter !== "all") {
+        if (categoryFilter === "__none__" && r.categoryName) return false;
+        if (categoryFilter !== "__none__" && r.categoryName !== categoryFilter) return false;
+      }
+      return true;
+    });
+  }, [paidPayments, vendorFilter, categoryFilter]);
 
-  const deferredCount = useMemo(
-    () => scheduled.filter((r) => !!r.carriedFromId).length,
-    [scheduled]
-  );
+  function toggleStatus(s: OccurrenceStatus) {
+    setStatusFilter((prev) => {
+      const next = new Set(prev);
+      next.has(s) ? next.delete(s) : next.add(s);
+      return next;
+    });
+  }
+
+  const hasActiveFilters =
+    statusFilter.size !== DEFAULT_STATUSES.size ||
+    [...statusFilter].some((s) => !DEFAULT_STATUSES.has(s)) ||
+    deferredOnly ||
+    vendorFilter !== "all" ||
+    categoryFilter !== "all";
+
+  function resetFilters() {
+    setStatusFilter(new Set(DEFAULT_STATUSES));
+    setDeferredOnly(false);
+    setVendorFilter("all");
+    setCategoryFilter("all");
+  }
 
   const isLoading = scheduledLoading || (showPaid && paidLoading);
   const isError = scheduledError || (showPaid && paidError);
@@ -183,15 +252,62 @@ function PaymentsPage() {
         </p>
       </div>
 
-      {/* Toolbar */}
-      <div className="flex flex-wrap items-center gap-3">
-        {vendors.length > 0 && (
-          <div className="flex items-center gap-2">
-            <label htmlFor="vendor-filter" className="text-sm font-medium text-foreground/80 whitespace-nowrap">
-              Vendor
-            </label>
+      {/* Filters */}
+      <div className="space-y-2.5">
+        {/* Row 1: Status chips */}
+        <div className="flex flex-wrap items-center gap-2">
+          <span className="text-xs font-semibold uppercase tracking-wider text-muted-foreground w-16 flex-shrink-0">
+            Status
+          </span>
+          {(["overdue", "pending", "partial", "carried"] as OccurrenceStatus[]).map((s) => {
+            const active = statusFilter.has(s);
+            const count = statusCounts[s] ?? 0;
+            const styles: Record<string, string> = {
+              overdue:  active ? "border-danger/40 bg-danger/10 text-danger"       : "border-border text-muted-foreground hover:border-danger/30 hover:text-danger",
+              pending:  active ? "border-border bg-muted text-foreground"           : "border-border text-muted-foreground hover:bg-muted/50",
+              partial:  active ? "border-warning/40 bg-warning/10 text-warning"    : "border-border text-muted-foreground hover:border-warning/30 hover:text-warning",
+              carried:  active ? "border-accent/40 bg-accent/10 text-accent"       : "border-border text-muted-foreground hover:border-accent/30 hover:text-accent",
+            };
+            return (
+              <button
+                key={s}
+                onClick={() => toggleStatus(s)}
+                className={cn(
+                  "inline-flex items-center gap-1.5 rounded-full border px-3 py-1 text-xs font-medium transition-colors",
+                  styles[s]
+                )}
+              >
+                {STATUS_STYLES[s].label}
+                {count > 0 && (
+                  <span className="tabular-nums opacity-70">{count}</span>
+                )}
+              </button>
+            );
+          })}
+
+          {/* Deferred sub-filter */}
+          <button
+            onClick={() => setDeferredOnly((p) => !p)}
+            className={cn(
+              "inline-flex items-center gap-1.5 rounded-full border px-3 py-1 text-xs font-medium transition-colors",
+              deferredOnly
+                ? "border-warning/40 bg-warning/10 text-warning"
+                : "border-border text-muted-foreground hover:border-warning/30 hover:text-warning"
+            )}
+          >
+            <Clock className="h-3 w-3" />
+            Deferred only
+          </button>
+        </div>
+
+        {/* Row 2: Dropdowns + history toggle */}
+        <div className="flex flex-wrap items-center gap-3">
+          <span className="text-xs font-semibold uppercase tracking-wider text-muted-foreground w-16 flex-shrink-0">
+            Filter
+          </span>
+
+          {vendors.length > 0 && (
             <select
-              id="vendor-filter"
               value={vendorFilter}
               onChange={(e) => setVendorFilter(e.target.value)}
               className="rounded-md border border-input bg-card px-3 py-1.5 text-sm text-foreground shadow-sm focus:border-primary focus:outline-none focus:ring-1 focus:ring-primary"
@@ -202,53 +318,68 @@ function PaymentsPage() {
               ))}
               <option value="__none__">No vendor</option>
             </select>
-          </div>
-        )}
-
-        {/* Deferred count badge — informational only */}
-        {deferredCount > 0 && (
-          <span className="inline-flex items-center gap-1.5 rounded-full border border-warning/40 bg-warning/10 px-3 py-1 text-xs font-medium text-warning">
-            <Clock className="h-3 w-3" />
-            {deferredCount} deferred
-          </span>
-        )}
-
-        {/* Show paid toggle */}
-        <button
-          onClick={() => setShowPaid((p) => !p)}
-          className={cn(
-            "inline-flex items-center gap-1.5 rounded-full border px-3 py-1 text-xs font-medium transition-colors",
-            showPaid
-              ? "border-success/40 bg-success/10 text-success"
-              : "border-border bg-muted/50 text-muted-foreground hover:border-success/40 hover:bg-success/10 hover:text-success"
           )}
-        >
-          <ChevronDown className={cn("h-3 w-3 transition-transform", showPaid && "rotate-180")} />
-          History
-        </button>
 
-        {/* Range selector — only relevant when paid is shown */}
-        {showPaid && (
-          <div className="flex items-center gap-1 ml-auto">
-            <span className="text-xs text-muted-foreground mr-1">Range:</span>
-            <div className="inline-flex rounded-md border border-border bg-secondary/30 p-0.5">
-              {RANGE_OPTIONS.map((opt) => (
-                <button
-                  key={opt.months}
-                  onClick={() => setRangeMonths(opt.months)}
-                  className={cn(
-                    "rounded px-2.5 py-0.5 text-xs font-medium transition-colors",
-                    rangeMonths === opt.months
-                      ? "bg-card text-foreground shadow-sm"
-                      : "text-muted-foreground hover:text-foreground"
-                  )}
-                >
-                  {opt.label}
-                </button>
+          {categories.length > 0 && (
+            <select
+              value={categoryFilter}
+              onChange={(e) => setCategoryFilter(e.target.value)}
+              className="rounded-md border border-input bg-card px-3 py-1.5 text-sm text-foreground shadow-sm focus:border-primary focus:outline-none focus:ring-1 focus:ring-primary"
+            >
+              <option value="all">All categories</option>
+              {categories.map((c) => (
+                <option key={c.name} value={c.name}>{c.name}</option>
               ))}
-            </div>
+              <option value="__none__">No category</option>
+            </select>
+          )}
+
+          {/* Clear filters */}
+          {hasActiveFilters && (
+            <button
+              onClick={resetFilters}
+              className="inline-flex items-center gap-1 text-xs text-muted-foreground hover:text-foreground transition-colors"
+            >
+              <X className="h-3 w-3" />
+              Reset
+            </button>
+          )}
+
+          {/* History toggle — pushed right */}
+          <div className="ml-auto flex items-center gap-3">
+            <button
+              onClick={() => setShowPaid((p) => !p)}
+              className={cn(
+                "inline-flex items-center gap-1.5 rounded-full border px-3 py-1 text-xs font-medium transition-colors",
+                showPaid
+                  ? "border-success/40 bg-success/10 text-success"
+                  : "border-border bg-muted/50 text-muted-foreground hover:border-success/40 hover:bg-success/10 hover:text-success"
+              )}
+            >
+              <ChevronDown className={cn("h-3 w-3 transition-transform", showPaid && "rotate-180")} />
+              History
+            </button>
+
+            {showPaid && (
+              <div className="inline-flex rounded-md border border-border bg-secondary/30 p-0.5">
+                {RANGE_OPTIONS.map((opt) => (
+                  <button
+                    key={opt.months}
+                    onClick={() => setRangeMonths(opt.months)}
+                    className={cn(
+                      "rounded px-2.5 py-0.5 text-xs font-medium transition-colors",
+                      rangeMonths === opt.months
+                        ? "bg-card text-foreground shadow-sm"
+                        : "text-muted-foreground hover:text-foreground"
+                    )}
+                  >
+                    {opt.label}
+                  </button>
+                ))}
+              </div>
+            )}
           </div>
-        )}
+        </div>
       </div>
 
       {isLoading && (
