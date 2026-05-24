@@ -34,7 +34,7 @@ function getFilteredPayments(
 }
 
 export function RecentPaymentsList({ recentPayments }: RecentPaymentsListProps) {
-  const [selectedDays, setSelectedDays] = useState<DayFilter>(30);
+  const [selectedDays, setSelectedDays] = useState<DayFilter>(7);
 
   const filtered = getFilteredPayments(recentPayments, selectedDays);
 
