@@ -273,6 +273,7 @@ export function BudgetCalendarView({ scope, interval, periodStart }: BudgetCalen
     });
 
     billOccs.forEach((o) => {
+      if (o.status === "carried") return;
       const parent = billNameMap.get(o.billId);
       list.push({
         id: o.id,
@@ -290,6 +291,7 @@ export function BudgetCalendarView({ scope, interval, periodStart }: BudgetCalen
     });
 
     creditOccs.forEach((o) => {
+      if (o.status === "carried") return;
       const parent = creditNameMap.get(o.creditId);
       list.push({
         id: o.id,

@@ -140,7 +140,7 @@ function PaymentRow({
       <span className="w-24 flex-shrink-0 tabular-nums font-bold text-success">
         {formatCurrency(payment.amountCents)}
       </span>
-      <span className="rounded-md border border-success/20 bg-success/5 px-2 py-0.5 text-[10px] font-bold text-success flex-shrink-0">
+      <span className="rounded-md border border-success/20 bg-success/5 px-2 py-0.5 text-[10px] font-extrabold tracking-wide uppercase text-success flex-shrink-0">
         Paid
       </span>
       {payment.notes && (
@@ -179,7 +179,7 @@ function ReceiptRow({
       <span className="w-24 flex-shrink-0 tabular-nums font-bold text-accent">
         {formatCurrency(receipt.amountCents)}
       </span>
-      <span className="rounded-md border border-accent/20 bg-accent/5 px-2 py-0.5 text-[10px] font-bold text-accent flex-shrink-0">
+      <span className="rounded-md border border-accent/20 bg-accent/5 px-2 py-0.5 text-[10px] font-extrabold tracking-wide uppercase text-accent flex-shrink-0">
         Received
       </span>
       {receipt.notes && (
@@ -395,7 +395,7 @@ export function TrackerOccurrenceRow({
                 />
               )}
               {categoryName && (
-                <span className="inline-flex items-center gap-1 rounded bg-secondary px-1.5 py-0.5 text-[10px] font-medium text-muted-foreground">
+                <span className="inline-flex items-center gap-1 rounded bg-secondary px-1.5 py-0.5 text-[10px] font-extrabold tracking-wide uppercase text-muted-foreground">
                   <Tag className="h-2.5 w-2.5" />
                   {categoryName}
                 </span>
@@ -427,7 +427,7 @@ export function TrackerOccurrenceRow({
               {status}
             </span>
             {(isBill(occurrence) || isCredit(occurrence)) && occurrence.carriedFromId && (
-              <span className="rounded-md border border-orange/20 bg-orange/5 px-2 py-0.5 text-[10px] font-bold text-orange">
+              <span className="rounded-md border border-orange/20 bg-orange/5 px-2 py-0.5 text-[10px] font-extrabold tracking-wide uppercase text-orange">
                 Carried From
               </span>
             )}
