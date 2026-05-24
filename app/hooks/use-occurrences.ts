@@ -13,6 +13,7 @@ import {
   getBillPayments,
   getBillPaymentsForPeriod,
   deleteBillPayment,
+  updateBillPayment,
   getScheduledPaymentsForPage,
   getPaidPaymentsForPage,
   getCarriedForwardUnpaid,
@@ -149,10 +150,31 @@ export function useDeleteBillPayment() {
       qc.invalidateQueries({ queryKey: ["bill-occurrences"] });
       qc.invalidateQueries({ queryKey: ["bill-payments-period"] });
       qc.invalidateQueries({ queryKey: ["bill-history"] });
+      qc.invalidateQueries({ queryKey: ["payments-page-paid"] });
+      qc.invalidateQueries({ queryKey: ["payments-page-scheduled"] });
       qc.invalidateQueries({
         queryKey: occurrenceKeys.payments(variables.occurrenceId),
       });
       qc.invalidateQueries({ queryKey: ["dashboard"] });
+    },
+  });
+}
+
+export function useUpdateBillPayment() {
+  const qc = useQueryClient();
+  return useMutation({
+    mutationFn: (data: Parameters<typeof updateBillPayment>[0]["data"]) =>
+      updateBillPayment({ data }),
+    onSuccess: (result) => {
+      qc.invalidateQueries({ queryKey: ["bill-occurrences"] });
+      qc.invalidateQueries({ queryKey: ["bill-payments-period"] });
+      qc.invalidateQueries({ queryKey: ["bill-history"] });
+      qc.invalidateQueries({ queryKey: ["dashboard"] });
+      qc.invalidateQueries({ queryKey: ["payments-page-scheduled"] });
+      qc.invalidateQueries({ queryKey: ["payments-page-paid"] });
+      if (result?.occurrenceId) {
+        qc.invalidateQueries({ queryKey: occurrenceKeys.payments(result.occurrenceId) });
+      }
     },
   });
 }

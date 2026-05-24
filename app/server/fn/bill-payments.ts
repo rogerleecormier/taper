@@ -230,6 +230,74 @@ export const deleteBillPayment = createServerFn()
     return { occurrenceId: payment.occurrenceId };
   });
 
+export const updateBillPayment = createServerFn()
+  .middleware([authMiddleware])
+  .inputValidator(
+    z.object({
+      id: z.string(),
+      amountCents: z.number().int().positive(),
+      paidDate: z.string().regex(/^\d{4}-\d{2}-\d{2}$/),
+      notes: z.string().optional(),
+    })
+  )
+  .handler(async ({ data, context }) => {
+    const { db, user, env } = context;
+
+    const payment = await db
+      .select()
+      .from(billPayments)
+      .where(and(eq(billPayments.id, data.id), eq(billPayments.userId, user.id)))
+      .get();
+
+    if (!payment) throw new Error("Payment not found");
+
+    await db
+      .update(billPayments)
+      .set({
+        amountCents: data.amountCents,
+        paidDate: data.paidDate,
+        notes: data.notes ?? null,
+        updatedAt: new Date(),
+      })
+      .where(and(eq(billPayments.id, data.id), eq(billPayments.userId, user.id)));
+
+    // Re-sum all payments for the occurrence to keep totals accurate
+    const allPayments = await db
+      .select({ amountCents: billPayments.amountCents, paidDate: billPayments.paidDate })
+      .from(billPayments)
+      .where(and(eq(billPayments.userId, user.id), eq(billPayments.occurrenceId, payment.occurrenceId)))
+      .orderBy(desc(billPayments.paidDate))
+      .all();
+
+    const newTotal = allPayments.reduce((s, p) => s + p.amountCents, 0);
+    const lastPaymentDate = allPayments[0]?.paidDate ?? null;
+
+    const occurrence = await db
+      .select({ amountCents: billOccurrences.amountCents, dueDate: billOccurrences.dueDate })
+      .from(billOccurrences)
+      .where(and(eq(billOccurrences.id, payment.occurrenceId), eq(billOccurrences.userId, user.id)))
+      .get();
+
+    if (occurrence) {
+      await db
+        .update(billOccurrences)
+        .set({
+          paidAmountCents: newTotal > 0 ? newTotal : null,
+          paidDate: lastPaymentDate,
+          status: deriveStatus(newTotal, occurrence.amountCents, occurrence.dueDate),
+          updatedAt: new Date(),
+        })
+        .where(and(eq(billOccurrences.id, payment.occurrenceId), eq(billOccurrences.userId, user.id)));
+    }
+
+    await invalidateUserDashboard(env.KV, user.id, data.paidDate.slice(0, 7));
+    if (payment.paidDate.slice(0, 7) !== data.paidDate.slice(0, 7)) {
+      await invalidateUserDashboard(env.KV, user.id, payment.paidDate.slice(0, 7));
+    }
+
+    return { occurrenceId: payment.occurrenceId };
+  });
+
 // All pending / partial / overdue occurrences within [today, endDate], plus any overdue
 // from before today (those are always included regardless of range).
 // Generates any missing occurrences up to endDate before querying.
@@ -290,7 +358,7 @@ export const getScheduledPaymentsForPage = createServerFn()
       }
     }
 
-    return db
+    const rows = await db
       .select({
         occurrenceId: billOccurrences.id,
         billId: bills.id,
@@ -320,6 +388,30 @@ export const getScheduledPaymentsForPage = createServerFn()
       )
       .orderBy(asc(billOccurrences.dueDate))
       .all();
+
+    // Resolve originalDueDate for carried-forward items by walking the chain
+    const carriedSourceIds = rows.filter((r) => r.carriedFromId).map((r) => r.carriedFromId!);
+    const sources = carriedSourceIds.length > 0
+      ? await db
+          .select({ id: billOccurrences.id, dueDate: billOccurrences.dueDate, carriedFromId: billOccurrences.carriedFromId })
+          .from(billOccurrences)
+          .where(and(eq(billOccurrences.userId, user.id), inArray(billOccurrences.id, carriedSourceIds)))
+          .all()
+      : [];
+    const sourceMap = new Map(sources.map((s) => [s.id, s]));
+
+    return rows.map((r) => {
+      if (!r.carriedFromId) return { ...r, originalDueDate: null };
+      let current = sourceMap.get(r.carriedFromId);
+      let originalDueDate = current?.dueDate ?? r.dueDate;
+      while (current?.carriedFromId) {
+        const parent = sourceMap.get(current.carriedFromId);
+        if (!parent) break;
+        originalDueDate = parent.dueDate;
+        current = parent;
+      }
+      return { ...r, originalDueDate };
+    });
   });
 
 // All carried-forward occurrences that are still unpaid (pending/partial/overdue).
