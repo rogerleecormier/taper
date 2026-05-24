@@ -57,6 +57,7 @@ export type DashboardData = {
     paidDate: string;
     paidAmountCents: number;
     vendorName: string | null;
+    categoryColor: string | null;
   }>;
   categoryBreakdown: Array<{
     categoryId: string | null;
@@ -199,6 +200,7 @@ export const getDashboardData = createServerFn()
             payment: billPayments,
             bill: bills,
             vendor: vendors,
+            category: categories,
           })
           .from(billPayments)
           .innerJoin(
@@ -207,6 +209,7 @@ export const getDashboardData = createServerFn()
           )
           .innerJoin(bills, eq(billOccurrences.billId, bills.id))
           .leftJoin(vendors, eq(bills.vendorId, vendors.id))
+          .leftJoin(categories, eq(bills.categoryId, categories.id))
           .where(
             and(
               eq(billPayments.userId, user.id),
@@ -319,6 +322,7 @@ export const getDashboardData = createServerFn()
           paidDate: r.payment.paidDate,
           paidAmountCents: r.payment.amountCents,
           vendorName: r.vendor?.name ?? null,
+          categoryColor: r.category?.color ?? null,
         })),
         categoryBreakdown,
       };
