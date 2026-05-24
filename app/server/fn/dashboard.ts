@@ -144,7 +144,9 @@ export const getDashboardData = createServerFn()
               eq(billOccurrences.userId, user.id),
               gte(billOccurrences.dueDate, periodStart),
               lte(billOccurrences.dueDate, periodEnd),
-              inArray(billOccurrences.status, ["pending", "partial", "paid", "overdue"])
+              inArray(billOccurrences.status, ["pending", "partial", "paid", "overdue"]),
+              eq(billOccurrences.hidden, false),
+              eq(bills.hidden, false)
             )
           )
           .all(),
@@ -172,7 +174,9 @@ export const getDashboardData = createServerFn()
               eq(billOccurrences.userId, user.id),
               gte(billOccurrences.dueDate, actualToday),
               lte(billOccurrences.dueDate, upcomingEnd),
-              inArray(billOccurrences.status, ["pending", "partial"])
+              inArray(billOccurrences.status, ["pending", "partial"]),
+              eq(billOccurrences.hidden, false),
+              eq(bills.hidden, false)
             )
           )
           .orderBy(asc(billOccurrences.dueDate))
@@ -190,7 +194,9 @@ export const getDashboardData = createServerFn()
             and(
               eq(billOccurrences.userId, user.id),
               lt(billOccurrences.dueDate, actualToday),
-              inArray(billOccurrences.status, ["pending", "partial", "overdue"])
+              inArray(billOccurrences.status, ["pending", "partial", "overdue"]),
+              eq(billOccurrences.hidden, false),
+              eq(bills.hidden, false)
             )
           )
           .orderBy(asc(billOccurrences.dueDate))
@@ -216,7 +222,9 @@ export const getDashboardData = createServerFn()
             and(
               eq(billPayments.userId, user.id),
               gte(billPayments.paidDate, periodStart),
-              lte(billPayments.paidDate, periodEnd <= actualToday ? periodEnd : actualToday)
+              lte(billPayments.paidDate, periodEnd <= actualToday ? periodEnd : actualToday),
+              eq(billPayments.hidden, false),
+              eq(bills.hidden, false)
             )
           )
           .orderBy(desc(billPayments.paidDate))

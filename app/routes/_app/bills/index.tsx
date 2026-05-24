@@ -5,6 +5,7 @@ import { useBills } from "~/hooks/use-bills";
 import { BillList } from "~/components/bills/bill-list";
 import { BillFormDialog } from "~/components/bills/bill-form-dialog";
 import { Button } from "~/components/ui/button";
+import { trackerStore } from "~/lib/store";
 
 export const Route = createFileRoute("/_app/bills/")({
   component: BillsPage,
@@ -13,10 +14,12 @@ export const Route = createFileRoute("/_app/bills/")({
 function BillsPage() {
   const [isDialogOpen, setIsDialogOpen] = useState(false);
   const [showStandaloneExpenses, setShowStandaloneExpenses] = useState(false);
+  const showHidden = trackerStore.use.showHidden();
   const { data: bills, isLoading, isError } = useBills();
-  const visibleBills = (bills ?? []).filter((bill) =>
-    showStandaloneExpenses ? true : bill.interval !== "standalone"
-  );
+  const visibleBills = (bills ?? []).filter((bill) => {
+    if (!showHidden && bill.hidden) return false;
+    return showStandaloneExpenses ? true : bill.interval !== "standalone";
+  });
 
   return (
     <div className="p-6 space-y-6 max-w-7xl mx-auto">
@@ -32,15 +35,26 @@ function BillsPage() {
           Add Expense
         </Button>
       </div>
-      <label className="inline-flex w-fit items-center gap-2 text-sm text-muted-foreground cursor-pointer select-none">
-        <input
-          type="checkbox"
-          checked={showStandaloneExpenses}
-          onChange={(e) => setShowStandaloneExpenses(e.target.checked)}
-          className="h-4 w-4 rounded border-input bg-card text-primary focus:ring-primary focus:ring-offset-background"
-        />
-        Show standalone expenses
-      </label>
+      <div className="flex flex-col gap-2 sm:flex-row sm:gap-4">
+        <label className="inline-flex w-fit items-center gap-2 text-sm text-muted-foreground cursor-pointer select-none">
+          <input
+            type="checkbox"
+            checked={showStandaloneExpenses}
+            onChange={(e) => setShowStandaloneExpenses(e.target.checked)}
+            className="h-4 w-4 rounded border-input bg-card text-primary focus:ring-primary focus:ring-offset-background"
+          />
+          Show standalone expenses
+        </label>
+        <label className="inline-flex w-fit items-center gap-2 text-sm text-muted-foreground cursor-pointer select-none">
+          <input
+            type="checkbox"
+            checked={showHidden}
+            onChange={(e) => trackerStore.setState({ showHidden: e.target.checked })}
+            className="h-4 w-4 rounded border-input bg-card text-primary focus:ring-primary focus:ring-offset-background"
+          />
+          Show hidden
+        </label>
+      </div>
 
       {isLoading && (
         <div className="space-y-2">

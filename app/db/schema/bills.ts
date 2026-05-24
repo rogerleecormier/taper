@@ -33,6 +33,7 @@ export const bills = sqliteTable("bills", {
   isActive: integer("is_active", { mode: "boolean" }).notNull().default(true),
   autoPay: integer("auto_pay", { mode: "boolean" }).notNull().default(false),
   notes: text("notes"),
+  hidden: integer("hidden", { mode: "boolean" }).notNull().default(false),
   sortOrder: integer("sort_order").notNull().default(0),
   createdAt: integer("created_at", { mode: "timestamp" }).notNull(),
   updatedAt: integer("updated_at", { mode: "timestamp" }).notNull(),

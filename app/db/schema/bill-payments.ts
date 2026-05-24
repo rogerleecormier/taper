@@ -13,6 +13,7 @@ export const billPayments = sqliteTable("bill_payments", {
   amountCents: integer("amount_cents").notNull(),
   paidDate: text("paid_date").notNull(),
   notes: text("notes"),
+  hidden: integer("hidden", { mode: "boolean" }).notNull().default(false),
   createdAt: integer("created_at", { mode: "timestamp" }).notNull(),
   updatedAt: integer("updated_at", { mode: "timestamp" }).notNull(),
 });

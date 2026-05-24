@@ -55,6 +55,7 @@ type ScheduledRow = {
   categoryName: string | null;
   categoryColor: string | null;
   hidden: boolean;
+  billHidden: boolean;
 };
 
 type PaidRow = {
@@ -62,6 +63,7 @@ type PaidRow = {
   paymentAmountCents: number;
   paidDate: string;
   paymentNotes: string | null;
+  paymentHidden: boolean;
   occurrenceId: string;
   occurrenceDueDate: string;
   occurrenceAmountCents: number;
@@ -74,6 +76,7 @@ type PaidRow = {
   vendorName: string | null;
   categoryName: string | null;
   categoryColor: string | null;
+  billHidden: boolean;
 };
 
 // ─── Constants ────────────────────────────────────────────────────────────────
@@ -164,7 +167,7 @@ function PaymentsPage() {
     return scheduled.filter((r) => {
       if (!statusFilter.has(r.status)) return false;
       if (carriedOnly && !r.carriedFromId) return false;
-      if (!showHidden && r.hidden) return false;
+      if (!showHidden && (r.hidden || r.billHidden)) return false;
       if (vendorFilter !== "all") {
         if (vendorFilter === "__none__" && r.vendorId) return false;
         if (vendorFilter !== "__none__" && r.vendorId !== vendorFilter) return false;
@@ -179,6 +182,7 @@ function PaymentsPage() {
 
   const filteredPaid = useMemo(() => {
     return paidPayments.filter((r) => {
+      if (!showHidden && (r.paymentHidden || r.billHidden)) return false;
       if (vendorFilter !== "all") {
         if (vendorFilter === "__none__" && r.vendorId) return false;
         if (vendorFilter !== "__none__" && r.vendorId !== vendorFilter) return false;
@@ -189,7 +193,7 @@ function PaymentsPage() {
       }
       return true;
     });
-  }, [paidPayments, vendorFilter, categoryFilter]);
+  }, [paidPayments, vendorFilter, categoryFilter, showHidden]);
 
   function toggleStatus(s: OccurrenceStatus) {
     setStatusFilter((prev) => {
