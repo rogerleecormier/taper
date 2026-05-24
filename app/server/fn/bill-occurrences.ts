@@ -179,6 +179,9 @@ export const reverseCarryForward = createServerFn()
       restoredStatus = "pending";
     }
 
+    // Restore the carried amount back to the source
+    const restoredAmount = source.amountCents + dest.amountCents;
+
     await db
       .delete(billOccurrences)
       .where(
@@ -190,7 +193,7 @@ export const reverseCarryForward = createServerFn()
 
     await db
       .update(billOccurrences)
-      .set({ status: restoredStatus, updatedAt: now })
+      .set({ amountCents: restoredAmount, status: restoredStatus, updatedAt: now })
       .where(
         and(
           eq(billOccurrences.id, source.id),
@@ -246,12 +249,15 @@ export const reverseCarryForwardBySource = createServerFn()
       restoredStatus = "pending";
     }
 
+    // Restore the carried amount back to the source
+    const restoredAmount = source.amountCents + dest.amountCents;
+
     await db.delete(billOccurrences).where(
       and(eq(billOccurrences.id, dest.id), eq(billOccurrences.userId, user.id))
     );
 
     await db.update(billOccurrences)
-      .set({ status: restoredStatus, updatedAt: now })
+      .set({ amountCents: restoredAmount, status: restoredStatus, updatedAt: now })
       .where(and(eq(billOccurrences.id, source.id), eq(billOccurrences.userId, user.id)));
 
     const sourcePeriod = source.dueDate.slice(0, 7);

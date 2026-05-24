@@ -179,6 +179,9 @@ export const reverseCreditCarryForward = createServerFn()
       restoredStatus = "pending";
     }
 
+    // Restore the carried amount back to the source
+    const restoredAmount = source.amountCents + dest.amountCents;
+
     await db
       .delete(creditOccurrences)
       .where(
@@ -190,7 +193,7 @@ export const reverseCreditCarryForward = createServerFn()
 
     await db
       .update(creditOccurrences)
-      .set({ status: restoredStatus, updatedAt: now })
+      .set({ amountCents: restoredAmount, status: restoredStatus, updatedAt: now })
       .where(
         and(
           eq(creditOccurrences.id, source.id),
