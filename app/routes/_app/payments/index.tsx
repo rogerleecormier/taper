@@ -1,6 +1,7 @@
 import { createFileRoute, Link } from "@tanstack/react-router";
 import { useMemo, useState } from "react";
 import { format, parseISO, subMonths, addMonths } from "date-fns";
+import { useStore } from "@tanstack/react-store";
 import {
   CreditCard,
   ArrowRight,
@@ -10,11 +11,14 @@ import {
   ChevronDown,
   ChevronRight,
   X,
+  Eye,
+  EyeOff,
 } from "lucide-react";
 import {
   useScheduledPaymentsForPage,
   usePaidPaymentsForPage,
 } from "~/hooks/use-occurrences";
+import { trackerStore, setShowHidden } from "~/store/tracker-store";
 import {
   OccurrenceDetailModal,
   type OccurrenceModalItem,
@@ -106,6 +110,7 @@ function PaymentsPage() {
   const [categoryFilter, setCategoryFilter] = useState<string>("all");
   const [occurrenceModal, setOccurrenceModal] = useState<OccurrenceModalItem | null>(null);
   const [paymentEditModal, setPaymentEditModal] = useState<PaymentEditItem | null>(null);
+  const showHidden = useStore(trackerStore, (s) => s.showHidden);
 
   const today = toDateStr(new Date());
   const rangeEnd = toDateStr(addMonths(new Date(), rangeMonths));
@@ -159,6 +164,7 @@ function PaymentsPage() {
     return scheduled.filter((r) => {
       if (!statusFilter.has(r.status)) return false;
       if (carriedOnly && !r.carriedFromId) return false;
+      if (!showHidden && r.hidden) return false;
       if (vendorFilter !== "all") {
         if (vendorFilter === "__none__" && r.vendorId) return false;
         if (vendorFilter !== "__none__" && r.vendorId !== vendorFilter) return false;
@@ -169,7 +175,7 @@ function PaymentsPage() {
       }
       return true;
     });
-  }, [scheduled, statusFilter, carriedOnly, vendorFilter, categoryFilter]);
+  }, [scheduled, statusFilter, carriedOnly, showHidden, vendorFilter, categoryFilter]);
 
   const filteredPaid = useMemo(() => {
     return paidPayments.filter((r) => {
@@ -347,6 +353,20 @@ function PaymentsPage() {
               Reset
             </button>
           )}
+
+          {/* Show hidden toggle */}
+          <button
+            onClick={() => setShowHidden(!showHidden)}
+            className={cn(
+              "inline-flex items-center gap-1.5 rounded-full border px-3 py-1 text-xs font-medium transition-colors",
+              showHidden
+                ? "border-accent/40 bg-accent/10 text-accent"
+                : "border-border bg-muted/50 text-muted-foreground hover:border-accent/30 hover:text-accent"
+            )}
+          >
+            {showHidden ? <Eye className="h-3 w-3" /> : <EyeOff className="h-3 w-3" />}
+            Hidden
+          </button>
 
           {/* History toggle — pushed right */}
           <div className="ml-auto flex items-center gap-3">

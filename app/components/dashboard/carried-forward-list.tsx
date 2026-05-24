@@ -1,9 +1,11 @@
 "use client";
 
 import { useState } from "react";
+import { useStore } from "@tanstack/react-store";
 import { format, parseISO, differenceInDays } from "date-fns";
-import { ArrowRight, Clock, AlertCircle } from "lucide-react";
+import { ArrowRight, Clock, AlertCircle, Eye, EyeOff } from "lucide-react";
 import { useCarriedForwardUnpaid } from "~/hooks/use-occurrences";
+import { trackerStore, setShowHidden } from "~/store/tracker-store";
 import { OccurrenceDetailModal, type OccurrenceModalItem } from "~/components/tracker/occurrence-detail-modal";
 import { formatCurrency } from "~/lib/currency";
 import { cn } from "~/lib/utils";
@@ -17,6 +19,8 @@ const STATUS_STYLES: Record<string, string> = {
 export function CarriedForwardList() {
   const { data: rows = [], isLoading, isError } = useCarriedForwardUnpaid();
   const [modalItem, setModalItem] = useState<OccurrenceModalItem | null>(null);
+  const showHidden = useStore(trackerStore, (s) => s.showHidden);
+  const visibleRows = rows.filter((r) => !r.hidden || showHidden);
 
   if (isError) {
     return (
@@ -37,7 +41,7 @@ export function CarriedForwardList() {
     );
   }
 
-  if (rows.length === 0) {
+  if (visibleRows.length === 0) {
     return (
       <div className="flex flex-col items-center justify-center py-8 text-center text-muted-foreground">
         <ArrowRight className="mb-2 h-7 w-7 opacity-30" />
@@ -51,6 +55,23 @@ export function CarriedForwardList() {
 
   return (
     <>
+      <div className="mb-4 flex items-center justify-between">
+        <h3 className="text-sm font-semibold text-muted-foreground uppercase tracking-wide">
+          Carried Forward
+        </h3>
+        <button
+          onClick={() => setShowHidden(!showHidden)}
+          className={cn(
+            "inline-flex items-center gap-1.5 rounded-full border px-3 py-1 text-xs font-medium transition-colors",
+            showHidden
+              ? "border-accent/40 bg-accent/10 text-accent"
+              : "border-border bg-muted/50 text-muted-foreground hover:border-accent/30 hover:text-accent"
+          )}
+        >
+          {showHidden ? <Eye className="h-3 w-3" /> : <EyeOff className="h-3 w-3" />}
+          Hidden
+        </button>
+      </div>
       <div className="overflow-x-auto">
         <table className="min-w-full divide-y divide-border text-sm">
           <thead>
@@ -66,7 +87,7 @@ export function CarriedForwardList() {
             </tr>
           </thead>
           <tbody className="divide-y divide-border/60">
-            {rows.map((row) => {
+            {visibleRows.map((row) => {
               const originalDate = parseISO(row.originalDueDate);
               const scheduledDate = parseISO(row.dueDate);
               const daysOld = differenceInDays(today, originalDate);

@@ -1,6 +1,9 @@
 import { useState } from "react";
-import { CheckCircle, AlertCircle } from "lucide-react";
+import { useStore } from "@tanstack/react-store";
+import { CheckCircle, AlertCircle, Eye, EyeOff } from "lucide-react";
 import { formatCurrency } from "~/lib/currency";
+import { cn } from "~/lib/utils";
+import { trackerStore, setShowHidden } from "~/store/tracker-store";
 import { OccurrenceDetailModal, type OccurrenceModalItem } from "~/components/tracker/occurrence-detail-modal";
 import type { DashboardData } from "~/server/fn/dashboard";
 
@@ -26,8 +29,10 @@ function formatDate(dateStr: string): string {
 
 export function OverdueBillsList({ overdueBills }: OverdueBillsListProps) {
   const [modalItem, setModalItem] = useState<OccurrenceModalItem | null>(null);
+  const showHidden = useStore(trackerStore, (s) => s.showHidden);
+  const visibleBills = overdueBills.filter((b) => !b.hidden || showHidden);
 
-  if (overdueBills.length === 0) {
+  if (visibleBills.length === 0) {
     return (
       <div className="flex flex-col items-center justify-center py-10 text-center text-muted-foreground">
         <CheckCircle className="mb-2 h-8 w-8 text-success opacity-85" />
@@ -40,11 +45,25 @@ export function OverdueBillsList({ overdueBills }: OverdueBillsListProps) {
   return (
     <>
       <div className="space-y-3">
-        <h3 className="text-sm font-semibold text-muted-foreground uppercase tracking-wide">
-          Overdue Expenses
-        </h3>
+        <div className="flex items-center justify-between">
+          <h3 className="text-sm font-semibold text-muted-foreground uppercase tracking-wide">
+            Overdue Expenses
+          </h3>
+          <button
+            onClick={() => setShowHidden(!showHidden)}
+            className={cn(
+              "inline-flex items-center gap-1.5 rounded-full border px-3 py-1 text-xs font-medium transition-colors",
+              showHidden
+                ? "border-accent/40 bg-accent/10 text-accent"
+                : "border-border bg-muted/50 text-muted-foreground hover:border-accent/30 hover:text-accent"
+            )}
+          >
+            {showHidden ? <Eye className="h-3 w-3" /> : <EyeOff className="h-3 w-3" />}
+            Hidden
+          </button>
+        </div>
         <ul className="divide-y border-border">
-          {overdueBills.map((bill) => {
+          {visibleBills.map((bill) => {
             const days = daysOverdue(bill.dueDate);
             const isPartial = bill.status === "partial";
             const remainingCents = bill.amountCents - bill.paidAmountCents;

@@ -2,11 +2,11 @@
 
 import { useState } from "react";
 import { useStore } from "@tanstack/react-store";
-import { CalendarClock } from "lucide-react";
+import { CalendarClock, Eye, EyeOff } from "lucide-react";
 import { formatCurrency } from "~/lib/currency";
 import { toDateStr } from "~/lib/dates";
 import { cn } from "~/lib/utils";
-import { trackerStore } from "~/store/tracker-store";
+import { trackerStore, setShowHidden } from "~/store/tracker-store";
 import { OccurrenceDetailModal, type OccurrenceModalItem } from "~/components/tracker/occurrence-detail-modal";
 import type { DashboardData } from "~/server/fn/dashboard";
 
@@ -25,14 +25,14 @@ const STATUS_CLASSES: Record<string, string> = {
   skipped: "border-border bg-muted/50 text-muted-foreground",
 };
 
-function getFilteredBills(bills: UpcomingBill[], days: DayFilter, referenceDate: Date) {
+function getFilteredBills(bills: UpcomingBill[], days: DayFilter, referenceDate: Date, showHidden: boolean) {
   const referenceStr = toDateStr(referenceDate);
   const todayStr = toDateStr(new Date());
   const startStr = referenceStr > todayStr ? referenceStr : todayStr;
   const cutoff = new Date(`${startStr}T00:00:00`);
   cutoff.setDate(cutoff.getDate() + days);
   const cutoffStr = toDateStr(cutoff);
-  return bills.filter((b) => b.dueDate >= startStr && b.dueDate <= cutoffStr);
+  return bills.filter((b) => b.dueDate >= startStr && b.dueDate <= cutoffStr && (!b.hidden || showHidden));
 }
 
 function formatDate(dateStr: string): string {
@@ -48,31 +48,46 @@ export function UpcomingBillsList({ upcomingBills }: UpcomingBillsListProps) {
   const [selectedDays, setSelectedDays] = useState<DayFilter>(7);
   const [modalItem, setModalItem] = useState<OccurrenceModalItem | null>(null);
   const referenceDate = useStore(trackerStore, (s) => s.periodStart);
+  const showHidden = useStore(trackerStore, (s) => s.showHidden);
 
-  const filtered = getFilteredBills(upcomingBills, selectedDays, referenceDate);
+  const filtered = getFilteredBills(upcomingBills, selectedDays, referenceDate, showHidden);
 
   return (
     <>
       <div className="space-y-3">
-        <div className="flex items-center justify-between">
+        <div className="flex items-center justify-between gap-3">
           <h3 className="text-sm font-semibold text-muted-foreground uppercase tracking-wide">
             Upcoming Expenses
           </h3>
-          <div className="inline-flex rounded-md border bg-muted p-0.5">
-            {([7, 14, 30] as DayFilter[]).map((days) => (
-              <button
-                key={days}
-                onClick={() => setSelectedDays(days)}
-                className={cn(
-                  "rounded px-3 py-1 text-xs font-medium transition-colors",
-                  selectedDays === days
-                    ? "bg-background text-foreground shadow"
-                    : "text-muted-foreground hover:text-foreground"
-                )}
-              >
-                {days}d
-              </button>
-            ))}
+          <div className="flex items-center gap-2">
+            <button
+              onClick={() => setShowHidden(!showHidden)}
+              className={cn(
+                "inline-flex items-center gap-1.5 rounded-full border px-3 py-1 text-xs font-medium transition-colors",
+                showHidden
+                  ? "border-accent/40 bg-accent/10 text-accent"
+                  : "border-border bg-muted/50 text-muted-foreground hover:border-accent/30 hover:text-accent"
+              )}
+            >
+              {showHidden ? <Eye className="h-3 w-3" /> : <EyeOff className="h-3 w-3" />}
+              Hidden
+            </button>
+            <div className="inline-flex rounded-md border bg-muted p-0.5">
+              {([7, 14, 30] as DayFilter[]).map((days) => (
+                <button
+                  key={days}
+                  onClick={() => setSelectedDays(days)}
+                  className={cn(
+                    "rounded px-3 py-1 text-xs font-medium transition-colors",
+                    selectedDays === days
+                      ? "bg-background text-foreground shadow"
+                      : "text-muted-foreground hover:text-foreground"
+                  )}
+                >
+                  {days}d
+                </button>
+              ))}
+            </div>
           </div>
         </div>
 
