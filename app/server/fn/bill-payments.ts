@@ -1,7 +1,7 @@
 import { createServerFn } from "@tanstack/react-start";
 import { z } from "zod";
 import { nanoid } from "nanoid";
-import { eq, and, gte, lte, asc, desc, inArray } from "drizzle-orm";
+import { eq, and, gte, lte, asc, desc, inArray, isNotNull } from "drizzle-orm";
 import { authMiddleware } from "~/server/middleware";
 import { billPayments } from "~/db/schema/bill-payments";
 import { billOccurrences } from "~/db/schema/bill-occurrences";
@@ -421,7 +421,7 @@ export const getCarriedForwardUnpaid = createServerFn()
   .handler(async ({ context }) => {
     const { db, user } = context;
 
-    const rows = await db
+    const carried = await db
       .select({
         occurrenceId: billOccurrences.id,
         billId: bills.id,
@@ -446,32 +446,41 @@ export const getCarriedForwardUnpaid = createServerFn()
         and(
           eq(billOccurrences.userId, user.id),
           inArray(billOccurrences.status, ["pending", "partial", "overdue"]),
+          isNotNull(billOccurrences.carriedFromId),
         )
       )
       .orderBy(asc(billOccurrences.dueDate))
       .all();
 
-    // Filter to only those with a carriedFromId (i.e. were carried forward)
-    const carried = rows.filter((r) => r.carriedFromId);
+    if (carried.length === 0) return [];
 
-    // Resolve originalDueDate by walking the carriedFromId chain
-    const sourceIds = carried.map((r) => r.carriedFromId!);
-    const sources = sourceIds.length > 0
-      ? await db
-          .select({ id: billOccurrences.id, dueDate: billOccurrences.dueDate, carriedFromId: billOccurrences.carriedFromId })
-          .from(billOccurrences)
-          .where(and(eq(billOccurrences.userId, user.id), inArray(billOccurrences.id, sourceIds)))
-          .all()
-      : [];
+    // Resolve originalDueDate by walking the full carriedFromId chain.
+    // Fetch all ancestor occurrences iteratively until the chain is exhausted.
+    const ancestorMap = new Map<string, { id: string; dueDate: string; carriedFromId: string | null }>();
+    let idsToFetch = carried.map((r) => r.carriedFromId!);
 
-    const sourceMap = new Map(sources.map((s) => [s.id, s]));
+    while (idsToFetch.length > 0) {
+      const ancestors = await db
+        .select({ id: billOccurrences.id, dueDate: billOccurrences.dueDate, carriedFromId: billOccurrences.carriedFromId })
+        .from(billOccurrences)
+        .where(and(eq(billOccurrences.userId, user.id), inArray(billOccurrences.id, idsToFetch)))
+        .all();
+
+      const nextIds: string[] = [];
+      for (const a of ancestors) {
+        ancestorMap.set(a.id, a);
+        if (a.carriedFromId && !ancestorMap.has(a.carriedFromId)) {
+          nextIds.push(a.carriedFromId);
+        }
+      }
+      idsToFetch = nextIds;
+    }
 
     return carried.map((r) => {
-      // Walk chain to find original date
-      let current = sourceMap.get(r.carriedFromId!);
+      let current = ancestorMap.get(r.carriedFromId!);
       let originalDueDate = current?.dueDate ?? r.dueDate;
       while (current?.carriedFromId) {
-        const parent = sourceMap.get(current.carriedFromId);
+        const parent = ancestorMap.get(current.carriedFromId);
         if (!parent) break;
         originalDueDate = parent.dueDate;
         current = parent;
