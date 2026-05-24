@@ -268,6 +268,7 @@ export function useUpdateBillOccurrence() {
       qc.invalidateQueries({ queryKey: ["bill-occurrences"] });
       qc.invalidateQueries({ queryKey: ["bill-history"] });
       qc.invalidateQueries({ queryKey: ["dashboard"] });
+      qc.invalidateQueries({ queryKey: ["carried-forward-unpaid"] });
     },
   });
 }

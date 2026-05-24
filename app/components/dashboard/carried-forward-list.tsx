@@ -55,7 +55,7 @@ export function CarriedForwardList() {
 
   return (
     <>
-      <div className="mb-4 flex items-center justify-between">
+      <div className="px-4 pt-4 pb-3 flex items-center justify-between">
         <h3 className="text-sm font-semibold text-muted-foreground uppercase tracking-wide">
           Carried Forward
         </h3>

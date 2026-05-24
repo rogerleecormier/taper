@@ -1,0 +1,1 @@
+ALTER TABLE `bill_payments` ADD `hidden` integer DEFAULT false NOT NULL;
