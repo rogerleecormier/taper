@@ -16,6 +16,8 @@ import {
   Receipt,
   BadgeDollarSign,
   Target,
+  Eye,
+  EyeOff,
 } from "lucide-react";
 import { useBills } from "~/hooks/use-bills";
 import { useIncomeSources } from "~/hooks/use-income";
@@ -296,6 +298,7 @@ export function YearCalendarView({ periodStart }: YearCalendarViewProps) {
     day: Date;
     items: CalendarItem[];
   } | null>(null);
+  const [showHidden, setShowHidden] = useState(false);
 
   const monthRefs = useRef<(HTMLDivElement | null)[]>([]);
 
@@ -383,6 +386,7 @@ export function YearCalendarView({ periodStart }: YearCalendarViewProps) {
     billOccs.forEach((o) => {
       if (o.status === "carried") return;
       const p = billMap.get(o.billId);
+      if (!showHidden && (o.hidden || p?.hidden)) return;
       push(o.dueDate, {
         id: o.id,
         type: "bill",
@@ -417,7 +421,7 @@ export function YearCalendarView({ periodStart }: YearCalendarViewProps) {
     });
 
     return map;
-  }, [incomeOccs, billOccs, creditOccs, incomeMap, billMap, creditMap]);
+  }, [incomeOccs, billOccs, creditOccs, incomeMap, billMap, creditMap, showHidden]);
 
   const paydayDates = useMemo(() => {
     const s = new Set<string>();
@@ -577,6 +581,18 @@ export function YearCalendarView({ periodStart }: YearCalendarViewProps) {
             );
           })}
         </div>
+        <button
+          onClick={() => setShowHidden((p) => !p)}
+          className={cn(
+            "ml-auto inline-flex items-center gap-1.5 rounded-full border px-3 py-1 text-xs font-medium transition-colors",
+            showHidden
+              ? "border-accent/40 bg-accent/10 text-accent"
+              : "border-border bg-muted/50 text-muted-foreground hover:border-accent/30 hover:text-accent"
+          )}
+        >
+          {showHidden ? <Eye className="h-3 w-3" /> : <EyeOff className="h-3 w-3" />}
+          Hidden
+        </button>
       </div>
 
       {/* 12-month grid */}

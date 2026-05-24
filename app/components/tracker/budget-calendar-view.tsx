@@ -14,7 +14,7 @@ import {
   startOfMonth,
   startOfWeek,
 } from "date-fns";
-import { Loader2, Calendar as CalendarIcon, ArrowLeft, ArrowRight, Check, X, Pencil, Minus, HelpCircle } from "lucide-react";
+import { Loader2, Calendar as CalendarIcon, ArrowLeft, ArrowRight, Check, X, Pencil, Minus, HelpCircle, Eye, EyeOff } from "lucide-react";
 import { useBills } from "~/hooks/use-bills";
 import { useIncomeSources } from "~/hooks/use-income";
 import { useCredits } from "~/hooks/use-credits";
@@ -177,6 +177,7 @@ function DropDayCell({
 
 export function BudgetCalendarView({ scope, interval, periodStart }: BudgetCalendarViewProps) {
   const [activeItem, setActiveItem] = useState<CalendarItem | null>(null);
+  const [showHidden, setShowHidden] = useState(false);
 
   // Compute active month calendar days
   const calendarDays = useMemo(() => {
@@ -275,6 +276,7 @@ export function BudgetCalendarView({ scope, interval, periodStart }: BudgetCalen
     billOccs.forEach((o) => {
       if (o.status === "carried") return;
       const parent = billNameMap.get(o.billId);
+      if (!showHidden && (o.hidden || parent?.hidden)) return;
       list.push({
         id: o.id,
         type: "bill",
@@ -309,7 +311,7 @@ export function BudgetCalendarView({ scope, interval, periodStart }: BudgetCalen
     });
 
     return list;
-  }, [incomeOccs, billOccs, creditOccs, incomeNameMap, billNameMap, creditNameMap]);
+  }, [incomeOccs, billOccs, creditOccs, incomeNameMap, billNameMap, creditNameMap, showHidden]);
 
   // Map items to date buckets for rendering
   const itemsByDate = useMemo(() => {
@@ -389,6 +391,20 @@ export function BudgetCalendarView({ scope, interval, periodStart }: BudgetCalen
 
   return (
     <DndContext onDragEnd={onDragEnd}>
+      <div className="mb-2 flex justify-end">
+        <button
+          onClick={() => setShowHidden((p) => !p)}
+          className={cn(
+            "inline-flex items-center gap-1.5 rounded-full border px-3 py-1 text-xs font-medium transition-colors",
+            showHidden
+              ? "border-accent/40 bg-accent/10 text-accent"
+              : "border-border bg-muted/50 text-muted-foreground hover:border-accent/30 hover:text-accent"
+          )}
+        >
+          {showHidden ? <Eye className="h-3 w-3" /> : <EyeOff className="h-3 w-3" />}
+          Hidden
+        </button>
+      </div>
       <div className="rounded-2xl border border-border bg-card shadow-sm overflow-hidden">
         {/* Days of the Week Header */}
         <div className="grid grid-cols-7 border-b border-border bg-secondary/15">
