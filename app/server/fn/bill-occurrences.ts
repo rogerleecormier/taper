@@ -75,7 +75,7 @@ export const carryForwardOccurrence = createServerFn()
 
     const now = new Date();
 
-    // Mark source as carried — partially paid, remaining balance deferred to new instance
+    // Mark source as carried — partially paid, remaining balance carried to new instance
     await db
       .update(billOccurrences)
       .set({ status: "carried", updatedAt: now })

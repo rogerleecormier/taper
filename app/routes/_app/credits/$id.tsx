@@ -215,7 +215,7 @@ function OccurrenceCard({
             </span>
             {occurrence.carriedFromId && (
               <span className="inline-flex rounded border border-warning/20 bg-warning/10 px-1.5 py-0.5 text-[11px] font-medium text-warning">
-                Deferred
+                Carried
               </span>
             )}
             <span

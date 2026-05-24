@@ -223,7 +223,7 @@ function OccurrenceCard({
             </span>
             {occurrence.carriedFromId && (
               <span className="inline-flex rounded border border-warning/20 bg-warning/10 px-1.5 py-0.5 text-[11px] font-medium text-warning">
-                Deferred
+                Carried
               </span>
             )}
             {occurrence.originalDueDate && occurrence.originalDueDate !== occurrence.dueDate && (
@@ -232,7 +232,7 @@ function OccurrenceCard({
                 Originally: {occurrence.originalDueDate}
                 {" "}
                 <span className="text-warning">
-                  ({differenceInDays(parseISO(occurrence.dueDate), parseISO(occurrence.originalDueDate))}d deferred)
+                  ({differenceInDays(parseISO(occurrence.dueDate), parseISO(occurrence.originalDueDate))}d carried)
                 </span>
               </span>
             )}

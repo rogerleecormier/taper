@@ -99,8 +99,8 @@ function PaymentsPage() {
   const [rangeMonths, setRangeMonths] = useState<1 | 3 | 6 | 12>(3);
   // Status multi-select: which statuses to show in upcoming
   const [statusFilter, setStatusFilter] = useState<Set<OccurrenceStatus>>(new Set(DEFAULT_STATUSES));
-  // Deferred-only toggle (sub-filter of upcoming)
-  const [deferredOnly, setDeferredOnly] = useState(false);
+  // Carried-only toggle (sub-filter of upcoming)
+  const [carriedOnly, setCarriedOnly] = useState(false);
   const [vendorFilter, setVendorFilter] = useState<string>("all");
   const [categoryFilter, setCategoryFilter] = useState<string>("all");
   const [occurrenceModal, setOccurrenceModal] = useState<OccurrenceModalItem | null>(null);
@@ -149,7 +149,7 @@ function PaymentsPage() {
     for (const r of scheduled) {
       counts[r.status] = (counts[r.status] ?? 0) + 1;
     }
-    // "deferred" is a sub-type of pending/overdue rows, track separately
+    // "carried" is a sub-type of pending/overdue rows, track separately
     counts["carried"] = counts["carried"] ?? 0;
     return counts;
   }, [scheduled]);
@@ -157,7 +157,7 @@ function PaymentsPage() {
   const filteredScheduled = useMemo(() => {
     return scheduled.filter((r) => {
       if (!statusFilter.has(r.status)) return false;
-      if (deferredOnly && !r.carriedFromId) return false;
+      if (carriedOnly && !r.carriedFromId) return false;
       if (vendorFilter !== "all") {
         if (vendorFilter === "__none__" && r.vendorId) return false;
         if (vendorFilter !== "__none__" && r.vendorId !== vendorFilter) return false;
@@ -168,7 +168,7 @@ function PaymentsPage() {
       }
       return true;
     });
-  }, [scheduled, statusFilter, deferredOnly, vendorFilter, categoryFilter]);
+  }, [scheduled, statusFilter, carriedOnly, vendorFilter, categoryFilter]);
 
   const filteredPaid = useMemo(() => {
     return paidPayments.filter((r) => {
@@ -195,13 +195,13 @@ function PaymentsPage() {
   const hasActiveFilters =
     statusFilter.size !== DEFAULT_STATUSES.size ||
     [...statusFilter].some((s) => !DEFAULT_STATUSES.has(s)) ||
-    deferredOnly ||
+    carriedOnly ||
     vendorFilter !== "all" ||
     categoryFilter !== "all";
 
   function resetFilters() {
     setStatusFilter(new Set(DEFAULT_STATUSES));
-    setDeferredOnly(false);
+    setCarriedOnly(false);
     setVendorFilter("all");
     setCategoryFilter("all");
   }
@@ -286,18 +286,18 @@ function PaymentsPage() {
             );
           })}
 
-          {/* Deferred sub-filter */}
+          {/* Carried sub-filter */}
           <button
-            onClick={() => setDeferredOnly((p) => !p)}
+            onClick={() => setCarriedOnly((p) => !p)}
             className={cn(
               "inline-flex items-center gap-1.5 rounded-full border px-3 py-1 text-xs font-medium transition-colors",
-              deferredOnly
+              carriedOnly
                 ? "border-warning/40 bg-warning/10 text-warning"
                 : "border-border text-muted-foreground hover:border-warning/30 hover:text-warning"
             )}
           >
             <Clock className="h-3 w-3" />
-            Deferred only
+            Carried only
           </button>
         </div>
 
@@ -454,7 +454,7 @@ function UpcomingSection({
       ) : (
         <div className="space-y-2">
           {rows.map((row) => {
-            const isDeferred = !!row.carriedFromId;
+            const isCarried = !!row.carriedFromId;
             const remaining = row.amountCents - (row.paidAmountCents ?? 0);
             const s = STATUS_STYLES[row.status];
 
@@ -464,7 +464,7 @@ function UpcomingSection({
                 className={cn(
                   "group relative flex items-stretch rounded-lg border bg-card shadow-sm overflow-hidden transition-shadow hover:shadow-md",
                   row.status === "overdue" && "border-danger/30",
-                  isDeferred && row.status !== "overdue" && "border-warning/30"
+                  isCarried && row.status !== "overdue" && "border-warning/30"
                 )}
               >
                 {/* Category color strip */}
@@ -491,8 +491,8 @@ function UpcomingSection({
                       )}
                     </div>
 
-                    {/* Deferred date chain */}
-                    {isDeferred && row.originalDueDate && row.originalDueDate !== row.dueDate ? (
+                    {/* Carried date chain */}
+                    {isCarried && row.originalDueDate && row.originalDueDate !== row.dueDate ? (
                       <div className="flex items-center gap-1 mt-0.5 text-[11px] text-warning">
                         <Clock className="h-3 w-3 flex-shrink-0" />
                         <span className="tabular-nums">
@@ -544,7 +544,7 @@ function UpcomingSection({
                     "flex-shrink-0 inline-flex items-center rounded-full border px-2 py-0.5 text-[11px] font-medium",
                     s.className
                   )}>
-                    {isDeferred ? "Deferred" : s.label}
+                    {isCarried ? "Carried" : s.label}
                   </span>
                 </button>
 

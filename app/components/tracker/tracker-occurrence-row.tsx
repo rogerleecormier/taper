@@ -418,7 +418,7 @@ export function TrackerOccurrenceRow({
             </span>
             {(isBill(occurrence) || isCredit(occurrence)) && occurrence.carriedFromId && (
               <span className="rounded-md border border-warning/20 bg-warning/5 px-2 py-0.5 text-[10px] font-bold text-warning">
-                Deferred
+                Carried
               </span>
             )}
             {originalDueDate && originalDueDate !== dateStr && (

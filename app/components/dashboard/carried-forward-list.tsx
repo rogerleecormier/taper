@@ -22,7 +22,7 @@ export function CarriedForwardList() {
     return (
       <div className="flex flex-col items-center justify-center py-8 text-center text-danger">
         <AlertCircle className="mb-2 h-7 w-7 opacity-60" />
-        <p className="text-sm font-medium">Failed to load deferred balances</p>
+        <p className="text-sm font-medium">Failed to load carried balances</p>
       </div>
     );
   }
@@ -42,7 +42,7 @@ export function CarriedForwardList() {
       <div className="flex flex-col items-center justify-center py-8 text-center text-muted-foreground">
         <ArrowRight className="mb-2 h-7 w-7 opacity-30" />
         <p className="text-sm font-medium">No carried-forward expenses</p>
-        <p className="text-xs text-muted-foreground/70 mt-0.5">All deferred balances have been settled</p>
+        <p className="text-xs text-muted-foreground/70 mt-0.5">All carried balances have been settled</p>
       </div>
     );
   }

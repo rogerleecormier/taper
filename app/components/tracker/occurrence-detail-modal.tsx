@@ -50,7 +50,7 @@ export interface OccurrenceModalItem {
   vendorName: string | null;
   categoryName: string | null;
   categoryColor: string | null;
-  /** The first due date in the carry-forward chain, if this was deferred */
+  /** The first due date in the carry-forward chain, if this was carried */
   originalDueDate?: string | null;
 }
 

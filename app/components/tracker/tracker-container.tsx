@@ -437,7 +437,7 @@ export function TrackerContainer({
                 )}
               >
                 {!showCarried ? <Eye className="h-3.5 w-3.5" /> : <EyeOff className="h-3.5 w-3.5" />}
-                <span>{!showCarried ? "Show Deferred" : "Hide Deferred"}</span>
+                <span>{!showCarried ? "Show Carried" : "Hide Carried"}</span>
               </button>
             )}
 
