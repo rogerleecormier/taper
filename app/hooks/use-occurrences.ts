@@ -3,6 +3,7 @@ import {
   getBillOccurrences,
   carryForwardOccurrence,
   reverseCarryForward,
+  reverseCarryForwardBySource,
   reopenOccurrence,
   updateBillOccurrence,
   deleteOccurrence,
@@ -176,6 +177,21 @@ export function useReverseCarryForward() {
   const qc = useQueryClient();
   return useMutation({
     mutationFn: (id: string) => reverseCarryForward({ data: { id } }),
+    onSuccess: () => {
+      qc.invalidateQueries({ queryKey: ["bill-occurrences"] });
+      qc.invalidateQueries({ queryKey: ["bill-payments-period"] });
+      qc.invalidateQueries({ queryKey: ["bill-history"] });
+      qc.invalidateQueries({ queryKey: ["dashboard"] });
+      qc.invalidateQueries({ queryKey: ["carried-forward-unpaid"] });
+      qc.invalidateQueries({ queryKey: ["payments-page-scheduled"] });
+    },
+  });
+}
+
+export function useReverseCarryForwardBySource() {
+  const qc = useQueryClient();
+  return useMutation({
+    mutationFn: (sourceId: string) => reverseCarryForwardBySource({ data: { sourceId } }),
     onSuccess: () => {
       qc.invalidateQueries({ queryKey: ["bill-occurrences"] });
       qc.invalidateQueries({ queryKey: ["bill-payments-period"] });

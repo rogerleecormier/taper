@@ -183,6 +183,62 @@ export const reverseCarryForward = createServerFn()
     }
   });
 
+// Reverse a carry-forward by supplying the *source* (carried) occurrence ID.
+// Finds the unpaid destination occurrence and reverses it.
+export const reverseCarryForwardBySource = createServerFn()
+  .middleware([authMiddleware])
+  .inputValidator(z.object({ sourceId: z.string() }))
+  .handler(async ({ data, context }) => {
+    const { db, user, env } = context;
+
+    const source = await db
+      .select()
+      .from(billOccurrences)
+      .where(and(eq(billOccurrences.id, data.sourceId), eq(billOccurrences.userId, user.id)))
+      .get();
+
+    if (!source) throw new Error("Source occurrence not found");
+    if (source.status !== "carried") throw new Error("Source occurrence is not in carried status");
+
+    const dest = await db
+      .select()
+      .from(billOccurrences)
+      .where(and(eq(billOccurrences.carriedFromId, data.sourceId), eq(billOccurrences.userId, user.id)))
+      .get();
+
+    if (!dest) throw new Error("Destination occurrence not found");
+    if (dest.paidAmountCents && dest.paidAmountCents > 0)
+      throw new Error("Cannot reverse a carry forward that already has payments");
+
+    const now = new Date();
+    const today = toDateStr(now);
+
+    const sourcePaid = source.paidAmountCents ?? 0;
+    let restoredStatus: OccurrenceStatus;
+    if (sourcePaid > 0) {
+      restoredStatus = "partial";
+    } else if (source.dueDate < today) {
+      restoredStatus = "overdue";
+    } else {
+      restoredStatus = "pending";
+    }
+
+    await db.delete(billOccurrences).where(
+      and(eq(billOccurrences.id, dest.id), eq(billOccurrences.userId, user.id))
+    );
+
+    await db.update(billOccurrences)
+      .set({ status: restoredStatus, updatedAt: now })
+      .where(and(eq(billOccurrences.id, source.id), eq(billOccurrences.userId, user.id)));
+
+    const sourcePeriod = source.dueDate.slice(0, 7);
+    const destPeriod = dest.dueDate.slice(0, 7);
+    await invalidateUserDashboard(env.KV, user.id, sourcePeriod);
+    if (destPeriod !== sourcePeriod) {
+      await invalidateUserDashboard(env.KV, user.id, destPeriod);
+    }
+  });
+
 export const generateOccurrencesForBill = createServerFn()
   .middleware([authMiddleware])
   .inputValidator(

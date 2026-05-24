@@ -25,6 +25,7 @@ import {
   useDeleteBillPayment,
   useCarryForwardOccurrence,
   useReverseCarryForward,
+  useReverseCarryForwardBySource,
   useReopenOccurrence,
   useUpdateBillOccurrence,
   useDeleteOccurrence,
@@ -96,10 +97,12 @@ function OccurrenceCard({
   occurrence,
   billName,
   interval,
+  canUndoFromSource = false,
 }: {
   occurrence: BillOccurrence & { payments: BillPayment[]; originalDueDate?: string | null };
   billName: string;
   interval: string;
+  canUndoFromSource?: boolean;
 }) {
   const [payModalOpen, setPayModalOpen] = useState(false);
   const [editMode, setEditMode] = useState(false);
@@ -117,6 +120,7 @@ function OccurrenceCard({
   const updateOccurrence = useUpdateBillOccurrence();
   const carryForward = useCarryForwardOccurrence();
   const reverseCarry = useReverseCarryForward();
+  const reverseCarryBySource = useReverseCarryForwardBySource();
   const reopen = useReopenOccurrence();
   const deleteOcc = useDeleteOccurrence();
   const [carryError, setCarryError] = useState<string | null>(null);
@@ -325,8 +329,24 @@ function OccurrenceCard({
 
       {/* Skipped / carried notice */}
       {occurrence.status === "carried" && (
-        <div className="px-4 py-2 text-xs text-accent bg-accent/5 border-b">
-          Balance of {formatCurrency(remaining)} carried forward to a new instance
+        <div className="flex items-center justify-between px-4 py-2 bg-accent/5 border-b gap-3">
+          <span className="text-xs text-accent">
+            Balance of {formatCurrency(remaining)} carried forward to a new instance
+          </span>
+          {canUndoFromSource && (
+            <Button
+              size="sm"
+              variant="ghost"
+              className="h-7 px-2.5 text-xs text-warning hover:text-warning/80 flex-shrink-0"
+              disabled={reverseCarryBySource.isPending}
+              onClick={() => reverseCarryBySource.mutate(occurrence.id)}
+            >
+              {reverseCarryBySource.isPending ? (
+                <Loader2 className="h-3 w-3 animate-spin mr-1" />
+              ) : null}
+              Undo Carry
+            </Button>
+          )}
         </div>
       )}
       {occurrence.status === "skipped" && paidTotal === 0 && (
@@ -471,6 +491,13 @@ function BillDetailPage() {
 
   const { bill, occurrences } = data;
 
+  // Build a set of carried occurrence IDs whose destination is still unpaid (reversible)
+  const reversibleSourceIds = new Set(
+    occurrences
+      .filter((o) => o.carriedFromId && (o.paidAmountCents ?? 0) === 0 && o.payments.length === 0)
+      .map((o) => o.carriedFromId!)
+  );
+
   // Exclude "carried" occurrences from totals — their balance is already represented
   // by the destination occurrence, so counting both would double the amount.
   const nonCarried = occurrences.filter((o) => o.status !== "carried");
@@ -592,6 +619,7 @@ function BillDetailPage() {
               occurrence={occ}
               billName={bill.name}
               interval={bill.interval}
+              canUndoFromSource={reversibleSourceIds.has(occ.id)}
             />
           ))
         )}
