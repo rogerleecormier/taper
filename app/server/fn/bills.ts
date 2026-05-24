@@ -79,6 +79,7 @@ async function generateAndInsertOccurrences(
         dueDate,
         amountCents: bill.amountCents,
         status: "pending" as const,
+        hidden: false,
         createdAt: now,
         updatedAt: now,
       }))
