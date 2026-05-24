@@ -142,7 +142,7 @@ export const getDashboardData = createServerFn()
               eq(billOccurrences.userId, user.id),
               gte(billOccurrences.dueDate, periodStart),
               lte(billOccurrences.dueDate, periodEnd),
-              inArray(billOccurrences.status, ["pending", "partial", "paid", "overdue", "carried"])
+              inArray(billOccurrences.status, ["pending", "partial", "paid", "overdue"])
             )
           )
           .all(),
