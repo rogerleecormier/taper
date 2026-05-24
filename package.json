@@ -53,6 +53,7 @@
   "devDependencies": {
     "@cloudflare/vite-plugin": "^1.37.0",
     "@cloudflare/workers-types": "^4.20260514.0",
+    "@playwright/test": "^1.60.0",
     "@tailwindcss/vite": "^4.1.0",
     "@types/react": "^19.1.0",
     "@types/react-dom": "^19.1.0",
