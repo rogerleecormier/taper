@@ -94,6 +94,7 @@ export function CarriedForwardList() {
                       categoryName: row.categoryName,
                       categoryColor: row.categoryColor,
                       originalDueDate: row.originalDueDate,
+                      hidden: row.hidden,
                     })
                   }
                 >

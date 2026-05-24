@@ -335,6 +335,7 @@ export const updateBillOccurrence = createServerFn()
       id: z.string(),
       amountCents: z.number().int().positive().optional(),
       dueDate: z.string().regex(/^\d{4}-\d{2}-\d{2}$/).optional(),
+      hidden: z.boolean().optional(),
     })
   )
   .handler(async ({ data, context }) => {
@@ -342,6 +343,7 @@ export const updateBillOccurrence = createServerFn()
     const patch: Record<string, unknown> = { updatedAt: new Date() };
     if (data.amountCents !== undefined) patch.amountCents = data.amountCents;
     if (data.dueDate !== undefined) patch.dueDate = data.dueDate;
+    if (data.hidden !== undefined) patch.hidden = data.hidden ? 1 : 0;
     await db
       .update(billOccurrences)
       .set(patch)

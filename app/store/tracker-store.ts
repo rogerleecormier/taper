@@ -10,6 +10,7 @@ type TrackerState = {
   selectedCell: { rowId: string; colDateStr: string } | null;
   showIncome: boolean;
   showBills: boolean;
+  showHidden: boolean;
 };
 
 export const trackerStore = new Store<TrackerState>({
@@ -19,6 +20,7 @@ export const trackerStore = new Store<TrackerState>({
   selectedCell: null,
   showIncome: true,
   showBills: true,
+  showHidden: false,
 });
 
 export function setTrackerInterval(interval: TrackerInterval) {
@@ -37,4 +39,8 @@ export function setSelectedCell(
   cell: { rowId: string; colDateStr: string } | null
 ) {
   trackerStore.setState((s) => ({ ...s, selectedCell: cell }));
+}
+
+export function setShowHidden(showHidden: boolean) {
+  trackerStore.setState((s) => ({ ...s, showHidden }));
 }

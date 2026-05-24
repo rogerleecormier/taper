@@ -50,6 +50,7 @@ type ScheduledRow = {
   vendorName: string | null;
   categoryName: string | null;
   categoryColor: string | null;
+  hidden: boolean;
 };
 
 type PaidRow = {
@@ -225,6 +226,7 @@ function PaymentsPage() {
       categoryName: row.categoryName,
       categoryColor: row.categoryColor,
       originalDueDate: row.originalDueDate,
+      hidden: row.hidden,
     });
   }
 

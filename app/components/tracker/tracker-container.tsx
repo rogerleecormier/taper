@@ -3,7 +3,8 @@
 import { useMemo, useState } from "react";
 import { TrendingUp, Receipt, Loader2, Eye, EyeOff, BadgeDollarSign, Target, Calendar, PieChart, Layers } from "lucide-react";
 import { useTrackerData } from "~/hooks/use-tracker";
-import { setTrackerInterval, setTrackerPeriodStart } from "~/store/tracker-store";
+import { setTrackerInterval, setTrackerPeriodStart, setShowHidden } from "~/store/tracker-store";
+import { trackerStore } from "~/store/tracker-store";
 import { formatCurrency } from "~/lib/currency";
 import { cn } from "~/lib/utils";
 import type { TrackerInterval } from "~/lib/dates";
@@ -51,9 +52,15 @@ export function TrackerContainer({
   } = useTrackerData(interval, periodStart);
 
   const [showReceived, setShowReceived] = useState(false);
-  const [showCarried, setShowCarried] = useState(true);
+  const [showCarried, setShowCarried] = useState(false);
+  const [showHidden, setShowHiddenLocal] = useState(false);
   const [selectedVendor, setSelectedVendor] = useState<string>("__all__");
   const [activeTab, setActiveTab] = useState<"timeline" | "categories">("timeline");
+
+  const handleShowHidden = (value: boolean) => {
+    setShowHiddenLocal(value);
+    setShowHidden(value);
+  };
 
   const billRows = useMemo(() => rows.filter((r) => r.type === "bill"), [rows]);
   const incomeRows = useMemo(() => rows.filter((r) => r.type === "income"), [rows]);
@@ -81,18 +88,19 @@ export function TrackerContainer({
             billOccurrenceMap.get(entityId)?.values() ?? []
           ).sort((a, b) => a.dueDate.localeCompare(b.dueDate)) as BillOccurrence[];
           const visibleOccs = allOccs.filter((o) => {
+            if (!showHidden && o.hidden) return false;
             if (o.status === "carried" && o.carriedFromId) return false;
             if (!showCarried && o.status === "carried") return false;
             return true;
           });
           if (visibleOccs.length === 0) return null;
           const periodTotal = allOccs
-            .filter((o) => TOTALLED_BILL_STATUSES.has(o.status))
+            .filter((o) => !o.hidden && TOTALLED_BILL_STATUSES.has(o.status))
             .reduce((s, o) => s + o.amountCents, 0);
           return { ...row, entityId, occurrences: visibleOccs, periodTotal };
         })
         .filter(Boolean),
-    [billRows, billOccurrenceMap, showCarried]
+    [billRows, billOccurrenceMap, showCarried, showHidden]
   );
 
   const creditParents = useMemo(
@@ -426,6 +434,21 @@ export function TrackerContainer({
           </div>
 
           <div className="flex items-center gap-2">
+            {billRows.length > 0 && (
+              <button
+                onClick={() => handleShowHidden(!showHidden)}
+                className={cn(
+                  "inline-flex h-8 shrink-0 items-center gap-1.5 whitespace-nowrap rounded-lg border px-3 text-xs font-bold transition-all duration-200 cursor-pointer",
+                  showHidden
+                    ? "border-border bg-background text-muted-foreground hover:text-foreground"
+                    : "border-muted/20 bg-muted/5 text-muted-foreground hover:bg-muted/10"
+                )}
+              >
+                {showHidden ? <Eye className="h-3.5 w-3.5" /> : <EyeOff className="h-3.5 w-3.5" />}
+                <span>{showHidden ? "Hiding Hidden" : "Show Hidden"}</span>
+              </button>
+            )}
+
             {billRows.length > 0 && (
               <button
                 onClick={() => setShowCarried((v) => !v)}

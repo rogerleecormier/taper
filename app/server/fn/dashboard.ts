@@ -40,6 +40,7 @@ export type DashboardData = {
     paidAmountCents: number | null;
     carriedFromId: string | null;
     status: string;
+    hidden: boolean;
   }>;
   overdueBills: Array<{
     id: string;
@@ -49,6 +50,7 @@ export type DashboardData = {
     amountCents: number;
     paidAmountCents: number;
     status: string;
+    hidden: boolean;
   }>;
   recentPayments: Array<{
     id: string;
@@ -305,6 +307,7 @@ export const getDashboardData = createServerFn()
           paidAmountCents: r.occurrence.paidAmountCents,
           carriedFromId: r.occurrence.carriedFromId,
           status: r.occurrence.status,
+          hidden: r.occurrence.hidden,
         })),
         overdueBills: overdueOccurrences.map((r) => ({
           id: r.occurrence.id,
@@ -314,6 +317,7 @@ export const getDashboardData = createServerFn()
           amountCents: r.occurrence.amountCents,
           paidAmountCents: r.occurrence.paidAmountCents ?? 0,
           status: r.occurrence.status,
+          hidden: r.occurrence.hidden,
         })),
         recentPayments: recentPayments.map((r) => ({
           id: r.payment.id,

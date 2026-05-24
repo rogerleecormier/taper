@@ -12,6 +12,8 @@ import {
   ExternalLink,
   Calendar,
   Clock,
+  Eye,
+  EyeOff,
 } from "lucide-react";
 import { format, parseISO, differenceInDays } from "date-fns";
 import { Link } from "@tanstack/react-router";
@@ -33,6 +35,7 @@ import {
   useDeleteBillPayment,
   useCarryForwardOccurrence,
   useReverseCarryForward,
+  useUpdateBillOccurrence,
 } from "~/hooks/use-occurrences";
 
 export interface OccurrenceModalItem {
@@ -50,6 +53,7 @@ export interface OccurrenceModalItem {
   vendorName: string | null;
   categoryName: string | null;
   categoryColor: string | null;
+  hidden: boolean;
   /** The first due date in the carry-forward chain, if this was carried */
   originalDueDate?: string | null;
 }
@@ -102,8 +106,9 @@ export function OccurrenceDetailModal({ item, open, onClose }: OccurrenceDetailM
   const deletePayment = useDeleteBillPayment();
   const carryForward = useCarryForwardOccurrence();
   const reverseCarry = useReverseCarryForward();
+  const updateOccurrence = useUpdateBillOccurrence();
 
-  const isBusy = addPayment.isPending || deletePayment.isPending || carryForward.isPending || reverseCarry.isPending;
+  const isBusy = addPayment.isPending || deletePayment.isPending || carryForward.isPending || reverseCarry.isPending || updateOccurrence.isPending;
 
   function handleClose() {
     setCarryMode(false);
@@ -164,6 +169,19 @@ export function OccurrenceDetailModal({ item, open, onClose }: OccurrenceDetailM
       handleClose();
     } catch (e) {
       setError(e instanceof Error ? e.message : "Failed to reverse carry forward.");
+    }
+  }
+
+  async function handleToggleHidden() {
+    if (!item) return;
+    setError(null);
+    try {
+      await updateOccurrence.mutateAsync({
+        id: item.occurrenceId,
+        hidden: !item.hidden,
+      });
+    } catch (e) {
+      setError(e instanceof Error ? e.message : "Failed to update occurrence.");
     }
   }
 
@@ -468,6 +486,27 @@ export function OccurrenceDetailModal({ item, open, onClose }: OccurrenceDetailM
               Undo Carry
             </Button>
           )}
+          <Button
+            size="sm"
+            variant="outline"
+            className={cn(
+              "text-xs",
+              item.hidden
+                ? "border-muted/20 bg-muted/5 text-muted-foreground hover:bg-muted/10"
+                : "border-border text-muted-foreground hover:bg-muted/5"
+            )}
+            disabled={isBusy}
+            onClick={handleToggleHidden}
+          >
+            {updateOccurrence.isPending ? (
+              <Loader2 className="h-3.5 w-3.5 animate-spin mr-1" />
+            ) : item.hidden ? (
+              <EyeOff className="h-3.5 w-3.5 mr-1" />
+            ) : (
+              <Eye className="h-3.5 w-3.5 mr-1" />
+            )}
+            {item.hidden ? "Unhide" : "Hide"}
+          </Button>
           <Button
             variant="outline"
             size="sm"

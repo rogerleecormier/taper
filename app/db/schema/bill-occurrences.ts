@@ -26,6 +26,7 @@ export const billOccurrences = sqliteTable(
     carriedFromId: text("carried_from_id"),
     receiptKey: text("receipt_key"),
     notes: text("notes"),
+    hidden: integer("hidden", { mode: "boolean" }).notNull().default(false),
     createdAt: integer("created_at", { mode: "timestamp" }).notNull(),
     updatedAt: integer("updated_at", { mode: "timestamp" }).notNull(),
   },

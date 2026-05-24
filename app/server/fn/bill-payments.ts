@@ -370,6 +370,7 @@ export const getScheduledPaymentsForPage = createServerFn()
         status: billOccurrences.status,
         notes: billOccurrences.notes,
         carriedFromId: billOccurrences.carriedFromId,
+        hidden: billOccurrences.hidden,
         billName: bills.name,
         billInterval: bills.interval,
         vendorId: vendors.id,
@@ -439,6 +440,7 @@ export const getCarriedForwardUnpaid = createServerFn()
         carriedFromId: billOccurrences.carriedFromId,
         notes: billOccurrences.notes,
         billId: billOccurrences.billId,
+        hidden: billOccurrences.hidden,
       })
       .from(billOccurrences)
       .where(
@@ -523,6 +525,7 @@ export const getCarriedForwardUnpaid = createServerFn()
           status: r.status,
           notes: r.notes,
           carriedFromId: r.carriedFromId,
+          hidden: r.hidden,
           billName: bill.billName,
           billInterval: bill.billInterval,
           vendorId: bill.vendorId,

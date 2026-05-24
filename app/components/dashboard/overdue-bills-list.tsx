@@ -67,6 +67,7 @@ export function OverdueBillsList({ overdueBills }: OverdueBillsListProps) {
                     vendorName: null,
                     categoryName: null,
                     categoryColor: null,
+                    hidden: bill.hidden,
                   })
                 }
               >

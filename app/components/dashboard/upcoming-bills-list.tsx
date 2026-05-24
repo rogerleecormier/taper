@@ -102,6 +102,7 @@ export function UpcomingBillsList({ upcomingBills }: UpcomingBillsListProps) {
                     vendorName: bill.vendorName,
                     categoryName: bill.categoryName,
                     categoryColor: bill.categoryColor,
+                    hidden: bill.hidden,
                   })
                 }
               >
