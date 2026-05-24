@@ -39,6 +39,7 @@ import {
 } from "~/hooks/use-occurrences";
 import { PaymentModal } from "./payment-modal";
 import { CreditReceiptModal } from "./credit-receipt-modal";
+import { CarryForwardModal } from "./carry-forward-modal";
 import type { BillOccurrence } from "~/db/schema/bill-occurrences";
 import type { BillPayment } from "~/db/schema/bill-payments";
 import type { IncomeOccurrence } from "~/db/schema/income-occurrences";
@@ -211,9 +212,10 @@ export function TrackerOccurrenceRow({
   vendorName,
   originalDueDate,
 }: Props) {
-  const [mode, setMode] = useState<"view" | "edit" | "income-pay" | "carry">("view");
+  const [mode, setMode] = useState<"view" | "edit" | "income-pay">("view");
   const [payModalOpen, setPayModalOpen] = useState(false);
   const [receiptModalOpen, setReceiptModalOpen] = useState(false);
+  const [carryForwardModalOpen, setCarryForwardModalOpen] = useState(false);
   const today = toDateStr(new Date());
 
   const isIncome = type === "income";
@@ -247,11 +249,6 @@ export function TrackerOccurrenceRow({
     String(occurrence.amountCents / 100)
   );
   const [incomePayDate, setIncomePayDate] = useState(today);
-  const [carryDate, setCarryDate] = useState(() =>
-    (isBill(occurrence) || isCredit(occurrence))
-      ? nextOccurrenceDate(occurrence.dueDate, interval)
-      : today
-  );
 
   const carryForward = useCarryForwardOccurrence();
   const reverseCarry = useReverseCarryForward();
@@ -362,6 +359,19 @@ export function TrackerOccurrenceRow({
         />
       )}
 
+      {/* Carry Forward Modal */}
+      {(type === "bill" || type === "credit") && (isBill(occurrence) || isCredit(occurrence)) && (
+        <CarryForwardModal
+          open={carryForwardModalOpen}
+          onClose={() => setCarryForwardModalOpen(false)}
+          occurrence={occurrence}
+          name={billName}
+          interval={interval}
+          type={type}
+          remaining={type === "bill" ? remaining : creditRemaining}
+        />
+      )}
+
       {/* Occurrence Card */}
       <div
         className={cn(
@@ -417,8 +427,8 @@ export function TrackerOccurrenceRow({
               {status}
             </span>
             {(isBill(occurrence) || isCredit(occurrence)) && occurrence.carriedFromId && (
-              <span className="rounded-md border border-warning/20 bg-warning/5 px-2 py-0.5 text-[10px] font-bold text-warning">
-                Carried
+              <span className="rounded-md border border-orange/20 bg-orange/5 px-2 py-0.5 text-[10px] font-bold text-orange">
+                Carried From
               </span>
             )}
             {originalDueDate && originalDueDate !== dateStr && (
@@ -524,7 +534,7 @@ export function TrackerOccurrenceRow({
             )}
           </div>
 
-          {/* Inline mode save/cancel actions */}
+          {/* Edit/Income Pay mode save/cancel actions */}
           {(mode === "edit" || mode === "income-pay") && (
             <div className="flex items-center gap-1.5 self-end">
               <Button
@@ -557,56 +567,6 @@ export function TrackerOccurrenceRow({
           )}
         </div>
 
-        {/* Carry Forward Panel */}
-        {mode === "carry" && (
-          <div className="flex flex-wrap items-center gap-3 p-3 mb-3 bg-warning/5 border border-warning/15 rounded-xl">
-            <span className="text-xs text-warning font-bold">
-              Carry {formatCurrency(carryAmount)} forward to:
-            </span>
-            <Input
-              type="date"
-              value={carryDate}
-              onChange={(e) => setCarryDate(e.target.value)}
-              className="h-8 w-36 text-xs border-input bg-card text-foreground focus:ring-ring"
-            />
-            <div className="ml-auto flex items-center gap-1">
-              <Button
-                size="sm"
-                className="h-8 px-3 text-xs bg-warning hover:bg-warning/90 text-white font-bold cursor-pointer rounded-lg"
-                disabled={isCredit_ ? carryForwardCredit.isPending : carryForward.isPending}
-                onClick={async () => {
-                  try {
-                    if (isCredit_) {
-                      await carryForwardCredit.mutateAsync({ id: occurrence.id, targetDate: carryDate });
-                    } else {
-                      await carryForward.mutateAsync({ id: occurrence.id, targetDate: carryDate });
-                    }
-                    setMode("view");
-                  } catch (e) {
-                    // Handled internally by react query
-                  }
-                }}
-              >
-                {(isCredit_ ? carryForwardCredit.isPending : carryForward.isPending) ? (
-                  <Loader2 className="h-3 w-3 animate-spin" />
-                ) : (
-                  <>
-                    <Check className="h-3.5 w-3.5 mr-1" />
-                    Confirm
-                  </>
-                )}
-              </Button>
-              <Button
-                size="sm"
-                variant="ghost"
-                className="h-8 w-8 p-0 cursor-pointer rounded-lg"
-                onClick={() => setMode("view")}
-              >
-                <X className="h-4 w-4" />
-              </Button>
-            </div>
-          </div>
-        )}
 
         {/* Action Panel in view mode */}
         {mode === "view" && (
@@ -659,7 +619,7 @@ export function TrackerOccurrenceRow({
                 size="sm"
                 variant="outline"
                 className="h-8 px-3 text-xs font-bold border-warning/20 text-warning bg-warning/5 hover:bg-warning/15 hover:border-warning/35 transition-all rounded-lg cursor-pointer"
-                onClick={() => setMode("carry")}
+                onClick={() => setCarryForwardModalOpen(true)}
                 disabled={isBusy}
               >
                 <ArrowRight className="h-3.5 w-3.5 mr-1 shrink-0" />
