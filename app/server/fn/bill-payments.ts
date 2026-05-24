@@ -382,7 +382,7 @@ export const getScheduledPaymentsForPage = createServerFn()
       .where(
         and(
           eq(billOccurrences.userId, user.id),
-          inArray(billOccurrences.status, ["pending", "partial", "overdue"]),
+          inArray(billOccurrences.status, ["pending", "partial", "overdue", "carried"]),
           lte(billOccurrences.dueDate, data.endDate)
         )
       )

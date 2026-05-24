@@ -92,7 +92,6 @@ const RANGE_OPTIONS = [
 
 function PaymentsPage() {
   const [showPaid, setShowPaid] = useState(false);
-  const [showDeferredOnly, setShowDeferredOnly] = useState(false);
   const [rangeMonths, setRangeMonths] = useState<1 | 3 | 6 | 12>(3);
   const [vendorFilter, setVendorFilter] = useState<string>("all");
   const [occurrenceModal, setOccurrenceModal] = useState<OccurrenceModalItem | null>(null);
@@ -122,12 +121,10 @@ function PaymentsPage() {
   }, [scheduled, paidPayments]);
 
   const filteredScheduled = useMemo(() => {
-    let rows = vendorFilter === "all" ? scheduled
-      : vendorFilter === "__none__" ? scheduled.filter((r) => !r.vendorId)
-      : scheduled.filter((r) => r.vendorId === vendorFilter);
-    if (showDeferredOnly) rows = rows.filter((r) => !!r.carriedFromId);
-    return rows;
-  }, [scheduled, vendorFilter, showDeferredOnly]);
+    if (vendorFilter === "all") return scheduled;
+    if (vendorFilter === "__none__") return scheduled.filter((r) => !r.vendorId);
+    return scheduled.filter((r) => r.vendorId === vendorFilter);
+  }, [scheduled, vendorFilter]);
 
   const filteredPaid = useMemo(() => {
     if (vendorFilter === "all") return paidPayments;
@@ -208,30 +205,13 @@ function PaymentsPage() {
           </div>
         )}
 
-        {/* Deferred toggle */}
-        <button
-          onClick={() => setShowDeferredOnly((p) => !p)}
-          className={cn(
-            "inline-flex items-center gap-1.5 rounded-full border px-3 py-1 text-xs font-medium transition-colors",
-            showDeferredOnly
-              ? "border-warning/40 bg-warning/10 text-warning"
-              : deferredCount > 0
-                ? "border-border bg-muted/50 text-muted-foreground hover:border-warning/40 hover:bg-warning/10 hover:text-warning"
-                : "border-border bg-muted/30 text-muted-foreground/50 cursor-default"
-          )}
-          disabled={deferredCount === 0}
-        >
-          <Clock className="h-3 w-3" />
-          Deferred
-          {deferredCount > 0 && (
-            <span className={cn(
-              "inline-flex items-center justify-center rounded-full w-4 h-4 text-[10px] font-bold",
-              showDeferredOnly ? "bg-warning/30" : "bg-muted text-muted-foreground"
-            )}>
-              {deferredCount}
-            </span>
-          )}
-        </button>
+        {/* Deferred count badge — informational only */}
+        {deferredCount > 0 && (
+          <span className="inline-flex items-center gap-1.5 rounded-full border border-warning/40 bg-warning/10 px-3 py-1 text-xs font-medium text-warning">
+            <Clock className="h-3 w-3" />
+            {deferredCount} deferred
+          </span>
+        )}
 
         {/* Show paid toggle */}
         <button
@@ -291,7 +271,6 @@ function PaymentsPage() {
         <div className="space-y-8">
           <UpcomingSection
             rows={filteredScheduled}
-            showDeferredOnly={showDeferredOnly}
             onOpenModal={openOccurrenceModal}
           />
           {showPaid && (
@@ -322,18 +301,16 @@ function PaymentsPage() {
 
 function UpcomingSection({
   rows,
-  showDeferredOnly,
   onOpenModal,
 }: {
   rows: ScheduledRow[];
-  showDeferredOnly: boolean;
   onOpenModal: (r: ScheduledRow) => void;
 }) {
   return (
     <div>
       <div className="flex items-center justify-between mb-3">
         <h2 className="text-xs font-bold uppercase tracking-wider text-muted-foreground">
-          Upcoming{showDeferredOnly ? " · Deferred" : ""}
+          Upcoming
           <span className="ml-1.5 font-normal normal-case text-muted-foreground/60">
             ({rows.length})
           </span>
@@ -341,13 +318,7 @@ function UpcomingSection({
       </div>
 
       {rows.length === 0 ? (
-        <EmptyState
-          message={
-            showDeferredOnly
-              ? "No deferred payments pending."
-              : "No upcoming payments scheduled."
-          }
-        />
+        <EmptyState message="No upcoming payments scheduled." />
       ) : (
         <div className="space-y-2">
           {rows.map((row) => {
