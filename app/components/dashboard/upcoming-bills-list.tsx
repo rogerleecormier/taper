@@ -77,7 +77,7 @@ export function UpcomingBillsList({ upcomingBills }: UpcomingBillsListProps) {
             {filtered.map((bill) => (
               <li
                 key={bill.id}
-                className="flex items-center gap-3 py-3 cursor-pointer hover:bg-muted/10 rounded-md px-1 -mx-1 transition-colors"
+                className="group flex items-center gap-3 py-3 cursor-pointer hover:bg-muted/10 rounded-md px-1 -mx-1 transition-colors"
                 onClick={() =>
                   setModalItem({
                     occurrenceId: bill.id,
@@ -86,10 +86,10 @@ export function UpcomingBillsList({ upcomingBills }: UpcomingBillsListProps) {
                     billInterval: "monthly",
                     dueDate: bill.dueDate,
                     amountCents: bill.amountCents,
-                    paidAmountCents: null,
+                    paidAmountCents: bill.paidAmountCents,
                     status: bill.status,
                     notes: null,
-                    carriedFromId: null,
+                    carriedFromId: bill.carriedFromId,
                     vendorName: bill.vendorName,
                     categoryName: bill.categoryName,
                     categoryColor: bill.categoryColor,
@@ -102,7 +102,7 @@ export function UpcomingBillsList({ upcomingBills }: UpcomingBillsListProps) {
                 />
 
                 <div className="min-w-0 flex-1">
-                  <p className="truncate text-sm font-medium">{bill.billName}</p>
+                  <p className="truncate text-sm font-medium text-accent group-hover:underline">{bill.billName}</p>
                   {bill.vendorName && (
                     <p className="truncate text-xs text-muted-foreground">{bill.vendorName}</p>
                   )}

@@ -56,7 +56,7 @@ export function CreditList({ credits }: CreditListProps) {
         <Link
           to="/credits/$id"
           params={{ id: info.row.original.id }}
-          className="font-medium hover:text-primary hover:underline underline-offset-4"
+          className="font-medium text-accent hover:underline underline-offset-4"
         >
           {info.getValue()}
         </Link>
@@ -178,7 +178,7 @@ export function CreditList({ credits }: CreditListProps) {
                 <Link
                   to="/credits/$id"
                   params={{ id: credit.id }}
-                  className="font-medium hover:text-primary hover:underline underline-offset-4 break-words"
+                  className="font-medium text-accent hover:underline underline-offset-4 break-words"
                 >
                   {credit.name}
                 </Link>

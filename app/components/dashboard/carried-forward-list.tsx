@@ -85,8 +85,8 @@ export function CarriedForwardList() {
                     })
                   }
                 >
-                  <td className="px-4 py-3 font-medium text-foreground group-hover:text-accent transition-colors">
-                    <span className="flex items-center gap-1.5">
+                  <td className="px-4 py-3 font-medium text-accent transition-colors">
+                    <span className="flex items-center gap-1.5 group-hover:underline">
                       {row.billName}
                       {isOverdue && <AlertCircle className="h-3.5 w-3.5 text-danger flex-shrink-0" />}
                     </span>

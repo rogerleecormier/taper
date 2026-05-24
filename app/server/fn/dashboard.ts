@@ -37,6 +37,8 @@ export type DashboardData = {
     categoryColor: string | null;
     dueDate: string;
     amountCents: number;
+    paidAmountCents: number | null;
+    carriedFromId: string | null;
     status: string;
   }>;
   overdueBills: Array<{
@@ -297,6 +299,8 @@ export const getDashboardData = createServerFn()
           categoryColor: r.category?.color ?? null,
           dueDate: r.occurrence.dueDate,
           amountCents: r.occurrence.amountCents,
+          paidAmountCents: r.occurrence.paidAmountCents,
+          carriedFromId: r.occurrence.carriedFromId,
           status: r.occurrence.status,
         })),
         overdueBills: overdueOccurrences.map((r) => ({
