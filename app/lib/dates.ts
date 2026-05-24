@@ -149,7 +149,8 @@ export function nextOccurrenceDate(dueDate: string, interval: string): string {
 }
 
 export function formatRelativeDate(dateStr: string, referenceDate: Date = new Date()): string {
-  const date = parseISO(dateStr);
+  const [year, month, day] = dateStr.split("-").map(Number);
+  const date = new Date(year, month - 1, day);
   const today = startOfDay(referenceDate);
   const diff = Math.round(
     (date.getTime() - today.getTime()) / (1000 * 60 * 60 * 24)
