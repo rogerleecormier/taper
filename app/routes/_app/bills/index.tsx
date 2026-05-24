@@ -1,11 +1,12 @@
 import { createFileRoute } from "@tanstack/react-router";
 import { useState } from "react";
+import { useStore } from "@tanstack/react-store";
 import { Plus, Receipt } from "lucide-react";
 import { useBills } from "~/hooks/use-bills";
 import { BillList } from "~/components/bills/bill-list";
 import { BillFormDialog } from "~/components/bills/bill-form-dialog";
 import { Button } from "~/components/ui/button";
-import { trackerStore } from "~/lib/store";
+import { trackerStore, setShowHidden } from "~/store/tracker-store";
 
 export const Route = createFileRoute("/_app/bills/")({
   component: BillsPage,
@@ -14,7 +15,7 @@ export const Route = createFileRoute("/_app/bills/")({
 function BillsPage() {
   const [isDialogOpen, setIsDialogOpen] = useState(false);
   const [showStandaloneExpenses, setShowStandaloneExpenses] = useState(false);
-  const showHidden = trackerStore.use.showHidden();
+  const showHidden = useStore(trackerStore, (state) => state.showHidden);
   const { data: bills, isLoading, isError } = useBills();
   const visibleBills = (bills ?? []).filter((bill) => {
     if (!showHidden && bill.hidden) return false;
@@ -49,7 +50,7 @@ function BillsPage() {
           <input
             type="checkbox"
             checked={showHidden}
-            onChange={(e) => trackerStore.setState({ showHidden: e.target.checked })}
+            onChange={(e) => setShowHidden(e.target.checked)}
             className="h-4 w-4 rounded border-input bg-card text-primary focus:ring-primary focus:ring-offset-background"
           />
           Show hidden
