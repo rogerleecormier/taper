@@ -93,6 +93,10 @@ export function useToggleBillHidden() {
       qc.invalidateQueries({ queryKey: billKeys.all() });
       qc.invalidateQueries({ queryKey: ["bill-occurrences"] });
       qc.invalidateQueries({ queryKey: ["dashboard"] });
+      qc.invalidateQueries({ queryKey: ["payments-page-scheduled"] });
+      qc.invalidateQueries({ queryKey: ["payments-page-paid"] });
+      qc.invalidateQueries({ queryKey: ["bill-payments-period"] });
+      qc.invalidateQueries({ queryKey: ["carried-forward-unpaid"] });
     },
   });
 }
