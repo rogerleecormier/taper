@@ -15,8 +15,17 @@ const STATUS_STYLES: Record<string, string> = {
 };
 
 export function CarriedForwardList() {
-  const { data: rows = [], isLoading } = useCarriedForwardUnpaid();
+  const { data: rows = [], isLoading, isError } = useCarriedForwardUnpaid();
   const [modalItem, setModalItem] = useState<OccurrenceModalItem | null>(null);
+
+  if (isError) {
+    return (
+      <div className="flex flex-col items-center justify-center py-8 text-center text-danger">
+        <AlertCircle className="mb-2 h-7 w-7 opacity-60" />
+        <p className="text-sm font-medium">Failed to load deferred balances</p>
+      </div>
+    );
+  }
 
   if (isLoading) {
     return (
