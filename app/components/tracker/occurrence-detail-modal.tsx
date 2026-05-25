@@ -66,11 +66,11 @@ interface OccurrenceDetailModalProps {
 
 const STATUS_STYLES: Record<string, string> = {
   paid: "border-success/20 bg-success/10 text-success",
-  partial: "border-warning/20 bg-warning/10 text-warning",
+  partial: "border-primary/20 bg-primary/10 text-primary",
   pending: "border-border bg-muted/50 text-muted-foreground",
-  overdue: "border-danger/20 bg-danger/10 text-danger",
+  overdue: "border-destructive/20 bg-destructive/10 text-destructive",
   skipped: "border-border bg-muted/50 text-muted-foreground",
-  carried: "border-accent/20 bg-accent/10 text-accent",
+  carried: "border-orange/20 bg-orange/10 text-orange",
 };
 
 const STATUS_LABELS: Record<string, string> = {
@@ -294,7 +294,7 @@ export function OccurrenceDetailModal({ item, open, onClose }: OccurrenceDetailM
           {remaining > 0 && !isCarried && (
             <div className="flex items-center justify-between border-t pt-1 mt-0.5">
               <span className="font-semibold">Balance remaining</span>
-              <span className="font-bold tabular-nums text-danger">{formatCurrency(remaining)}</span>
+              <span className="font-bold tabular-nums text-destructive">{formatCurrency(remaining)}</span>
             </div>
           )}
           {item.notes && (

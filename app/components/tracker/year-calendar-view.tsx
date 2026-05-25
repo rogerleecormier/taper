@@ -126,9 +126,7 @@ function MiniDayCell({
               key={item.id}
               className={cn(
                 "h-[3px] w-[3px] rounded-full shrink-0",
-                item.type === "credit" && item.status === "received"
-                  ? "bg-accent"
-                  : (STATUS_COLORS[item.status] ?? "bg-warning")
+                STATUS_COLORS[item.status] ?? "bg-warning"
               )}
             />
           ))}
