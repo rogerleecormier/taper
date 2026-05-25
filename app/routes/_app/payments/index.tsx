@@ -264,13 +264,13 @@ function PaymentsPage() {
   }
 
   return (
-    <div className="p-6 space-y-6 max-w-5xl mx-auto">
+    <div className="entity-page max-w-5xl">
       {/* Header */}
       <div>
-        <h1 className="text-3xl font-extrabold font-heading text-foreground tracking-tight">
+        <h1 className="entity-title">
           Payments
         </h1>
-        <p className="mt-1 text-sm text-muted-foreground">
+        <p className="entity-subtitle">
           Upcoming scheduled payments and recorded payment history.
         </p>
       </div>
@@ -279,7 +279,7 @@ function PaymentsPage() {
       <div className="space-y-2.5">
         {/* Row 1: Status chips */}
         <div className="flex flex-wrap items-center gap-2">
-          <span className="text-xs font-semibold uppercase tracking-wider text-muted-foreground w-16 flex-shrink-0">
+          <span className="text-xs font-semibold uppercase tracking-wider text-muted-foreground w-14 flex-shrink-0">
             Status
           </span>
           {(["overdue", "pending", "partial", "paid", "carried"] as OccurrenceStatus[]).map((s) => {
@@ -326,7 +326,7 @@ function PaymentsPage() {
 
         {/* Row 2: Dropdowns + history toggle */}
         <div className="flex flex-wrap items-center gap-3">
-          <span className="text-xs font-semibold uppercase tracking-wider text-muted-foreground w-16 flex-shrink-0">
+          <span className="text-xs font-semibold uppercase tracking-wider text-muted-foreground w-14 flex-shrink-0">
             Filter
           </span>
 

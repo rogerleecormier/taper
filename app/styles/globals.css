@@ -47,6 +47,43 @@
 }
 
 @layer utilities {
+  .entity-page {
+    @apply mx-auto max-w-7xl space-y-5 px-4 py-4 sm:space-y-6 sm:px-6 sm:py-6;
+  }
+  .entity-header {
+    @apply flex flex-col gap-3 sm:flex-row sm:items-start sm:justify-between;
+  }
+  .entity-title {
+    @apply text-2xl font-extrabold font-heading tracking-tight text-foreground sm:text-3xl;
+  }
+  .entity-subtitle {
+    @apply mt-1 text-sm text-muted-foreground;
+  }
+  .entity-list-card {
+    @apply rounded-lg border border-border bg-card p-3 shadow-sm sm:p-4;
+  }
+  .entity-table-shell {
+    @apply hidden w-full overflow-x-auto rounded-lg border border-border bg-card shadow-sm md:block;
+  }
+  .entity-table-head {
+    @apply border-b border-border bg-secondary/30;
+  }
+  .entity-table-head-cell {
+    @apply px-4 py-3 text-left text-xs font-semibold uppercase tracking-wider text-muted-foreground;
+  }
+  .entity-table-row {
+    @apply hover:bg-muted/15;
+  }
+  .entity-table-cell {
+    @apply px-4 py-3;
+  }
+  .entity-accent-chip {
+    @apply border-primary/20 bg-primary/10 text-primary;
+  }
+  .entity-teal-chip {
+    @apply border-accent/20 bg-accent/10 text-accent;
+  }
+
   .glass-card {
     background-color: oklch(1 0 0 / 0.8);
     backdrop-filter: blur(12px);

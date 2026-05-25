@@ -26,15 +26,15 @@ function CategoriesPage() {
   const { data: categories, isLoading, isError } = useCategories();
 
   return (
-    <div className="p-6 space-y-6 max-w-7xl mx-auto">
-      <div className="flex items-center justify-between">
+    <div className="entity-page">
+      <div className="entity-header">
         <div>
-          <h1 className="text-3xl font-extrabold font-heading text-foreground tracking-tight">Categories</h1>
-          <p className="mt-1 text-sm text-muted-foreground">
+          <h1 className="entity-title">Categories</h1>
+          <p className="entity-subtitle">
             Organize your expenses and income into categories
           </p>
         </div>
-        <Button onClick={() => setIsDialogOpen(true)} className="gap-2">
+        <Button onClick={() => setIsDialogOpen(true)} className="gap-2 sm:self-center">
           <Plus className="h-4 w-4" />
           Add Category
         </Button>

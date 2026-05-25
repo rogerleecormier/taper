@@ -185,7 +185,7 @@ export function BillList({ bills }: BillListProps) {
     <>
       <div className="space-y-3 md:hidden">
         {bills.map((bill) => (
-          <div key={bill.id} className="rounded-md border border-border bg-card p-3 shadow-sm">
+          <div key={bill.id} className="entity-list-card">
             <div className="flex items-start justify-between gap-3">
               <div className="min-w-0">
                 <Link
@@ -257,15 +257,15 @@ export function BillList({ bills }: BillListProps) {
         ))}
       </div>
 
-      <div className="hidden w-full overflow-x-auto rounded-md border border-border bg-card shadow-sm md:block">
+      <div className="entity-table-shell">
       <table className="w-full text-sm">
-        <thead className="border-b border-border bg-secondary/30">
+        <thead className="entity-table-head">
           {table.getHeaderGroups().map((hg) => (
             <tr key={hg.id}>
               {hg.headers.map((header) => (
                 <th
                   key={header.id}
-                  className="px-4 py-3 text-left text-xs font-semibold uppercase tracking-wider text-muted-foreground"
+                  className="entity-table-head-cell"
                 >
                   {header.isPlaceholder
                     ? null
@@ -280,9 +280,9 @@ export function BillList({ bills }: BillListProps) {
         </thead>
         <tbody className="divide-y divide-border">
           {table.getRowModel().rows.map((row) => (
-            <tr key={row.id} className="hover:bg-muted/10">
+            <tr key={row.id} className="entity-table-row">
               {row.getVisibleCells().map((cell) => (
-                <td key={cell.id} className="px-4 py-3">
+                <td key={cell.id} className="entity-table-cell">
                   {flexRender(cell.column.columnDef.cell, cell.getContext())}
                 </td>
               ))}

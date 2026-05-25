@@ -34,15 +34,15 @@ function BillsPage() {
   });
 
   return (
-    <div className="p-6 space-y-6 max-w-7xl mx-auto">
-      <div className="flex items-center justify-between">
+    <div className="entity-page">
+      <div className="entity-header">
         <div>
-          <h1 className="text-3xl font-extrabold font-heading text-foreground tracking-tight">Expenses</h1>
-          <p className="mt-1 text-sm text-muted-foreground">
+          <h1 className="entity-title">Expenses</h1>
+          <p className="entity-subtitle">
             Manage your recurring and one-time expenses
           </p>
         </div>
-        <Button onClick={() => setIsDialogOpen(true)} className="gap-2">
+        <Button onClick={() => setIsDialogOpen(true)} className="gap-2 sm:self-center">
           <Plus className="h-4 w-4" />
           Add Expense
         </Button>

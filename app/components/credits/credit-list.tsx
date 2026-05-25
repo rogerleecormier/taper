@@ -172,7 +172,7 @@ export function CreditList({ credits }: CreditListProps) {
     <>
       <div className="space-y-3 md:hidden">
         {credits.map((credit) => (
-          <div key={credit.id} className="rounded-md border p-3">
+          <div key={credit.id} className="entity-list-card">
             <div className="flex items-start justify-between gap-3">
               <div className="min-w-0">
                 <Link
@@ -237,15 +237,15 @@ export function CreditList({ credits }: CreditListProps) {
         ))}
       </div>
 
-      <div className="hidden w-full overflow-x-auto rounded-md border md:block">
+      <div className="entity-table-shell">
         <table className="w-full text-sm">
-          <thead className="border-b bg-muted/50">
+          <thead className="entity-table-head">
             {table.getHeaderGroups().map((hg) => (
               <tr key={hg.id}>
                 {hg.headers.map((header) => (
                   <th
                     key={header.id}
-                    className="px-4 py-3 text-left text-xs font-semibold uppercase tracking-wide text-muted-foreground"
+                    className="entity-table-head-cell"
                   >
                     {header.isPlaceholder
                       ? null
@@ -258,11 +258,11 @@ export function CreditList({ credits }: CreditListProps) {
               </tr>
             ))}
           </thead>
-          <tbody className="divide-y">
+          <tbody className="divide-y divide-border">
             {table.getRowModel().rows.map((row) => (
-              <tr key={row.id} className="hover:bg-muted/30">
+              <tr key={row.id} className="entity-table-row">
                 {row.getVisibleCells().map((cell) => (
-                  <td key={cell.id} className="px-4 py-3">
+                  <td key={cell.id} className="entity-table-cell">
                     {flexRender(cell.column.columnDef.cell, cell.getContext())}
                   </td>
                 ))}

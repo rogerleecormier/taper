@@ -59,7 +59,7 @@ export function IncomeList({ incomeSources }: IncomeListProps) {
           <div className="flex items-center gap-2">
             <span className="font-medium">{info.getValue()}</span>
             {src.sourceType === "payroll" && (
-              <Badge className="border-accent/20 bg-accent/10 text-accent text-xs">
+              <Badge className="entity-teal-chip text-xs">
                 Payroll
               </Badge>
             )}
@@ -192,13 +192,13 @@ export function IncomeList({ incomeSources }: IncomeListProps) {
     <>
       <div className="space-y-3 md:hidden">
         {incomeSources.map((src) => (
-          <div key={src.id} className="rounded-md border p-3">
+          <div key={src.id} className="entity-list-card">
             <div className="flex items-start justify-between gap-3">
               <div className="min-w-0">
                 <div className="flex flex-wrap items-center gap-2">
                   <span className="font-medium break-words">{src.name}</span>
                   {src.sourceType === "payroll" && (
-                    <Badge className="border-accent/20 bg-accent/10 text-accent text-xs">
+                    <Badge className="entity-teal-chip text-xs">
                       Payroll
                     </Badge>
                   )}
@@ -266,15 +266,15 @@ export function IncomeList({ incomeSources }: IncomeListProps) {
         ))}
       </div>
 
-      <div className="hidden w-full overflow-x-auto rounded-md border md:block">
+      <div className="entity-table-shell">
       <table className="w-full text-sm">
-        <thead className="border-b bg-muted/50">
+        <thead className="entity-table-head">
           {table.getHeaderGroups().map((hg) => (
             <tr key={hg.id}>
               {hg.headers.map((header) => (
                 <th
                   key={header.id}
-                  className="px-4 py-3 text-left text-xs font-semibold uppercase tracking-wide text-muted-foreground"
+                  className="entity-table-head-cell"
                 >
                   {header.isPlaceholder
                     ? null
@@ -287,11 +287,11 @@ export function IncomeList({ incomeSources }: IncomeListProps) {
             </tr>
           ))}
         </thead>
-        <tbody className="divide-y">
+        <tbody className="divide-y divide-border">
           {table.getRowModel().rows.map((row) => (
-            <tr key={row.id} className="hover:bg-muted/30">
+            <tr key={row.id} className="entity-table-row">
               {row.getVisibleCells().map((cell) => (
-                <td key={cell.id} className="px-4 py-3">
+                <td key={cell.id} className="entity-table-cell">
                   {flexRender(cell.column.columnDef.cell, cell.getContext())}
                 </td>
               ))}

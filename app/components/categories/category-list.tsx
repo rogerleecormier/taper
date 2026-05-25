@@ -164,7 +164,7 @@ export function CategoryList({ categories }: CategoryListProps) {
     <>
       <div className="space-y-3 md:hidden">
         {categories.map((cat) => (
-          <div key={cat.id} className="rounded-md border p-3">
+          <div key={cat.id} className="entity-list-card">
             <div className="flex items-start justify-between gap-3">
               <div className="min-w-0">
                 <div className="flex items-center gap-2.5">
@@ -217,9 +217,9 @@ export function CategoryList({ categories }: CategoryListProps) {
         ))}
       </div>
 
-      <div className="hidden w-full overflow-x-auto rounded-md border md:block">
+      <div className="entity-table-shell">
       <table className="w-full text-sm">
-        <thead className="border-b bg-muted/50">
+        <thead className="entity-table-head">
           {table.getHeaderGroups().map((hg) => (
             <tr key={hg.id}>
               {hg.headers.map((header) => {
@@ -228,7 +228,7 @@ export function CategoryList({ categories }: CategoryListProps) {
                 return (
                   <th
                     key={header.id}
-                    className="px-4 py-3 text-left text-xs font-semibold uppercase tracking-wide text-muted-foreground"
+                    className="entity-table-head-cell"
                   >
                     {header.isPlaceholder ? null : canSort ? (
                       <button
@@ -247,11 +247,11 @@ export function CategoryList({ categories }: CategoryListProps) {
             </tr>
           ))}
         </thead>
-        <tbody className="divide-y">
+        <tbody className="divide-y divide-border">
           {table.getRowModel().rows.map((row) => (
-            <tr key={row.id} className="hover:bg-muted/30">
+            <tr key={row.id} className="entity-table-row">
               {row.getVisibleCells().map((cell) => (
-                <td key={cell.id} className="px-4 py-3">
+                <td key={cell.id} className="entity-table-cell">
                   {flexRender(cell.column.columnDef.cell, cell.getContext())}
                 </td>
               ))}
