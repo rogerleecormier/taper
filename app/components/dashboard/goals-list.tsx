@@ -1,12 +1,22 @@
+import { useState } from "react";
 import { Target } from "lucide-react";
 import { formatCurrency } from "~/lib/currency";
+import { cn } from "~/lib/utils";
 import type { DashboardData } from "~/server/fn/dashboard";
 
 interface GoalsListProps {
   goals: DashboardData["goals"];
 }
 
+const GOALS_PAGE_SIZE = 3;
+
 export function GoalsList({ goals }: GoalsListProps) {
+  const [page, setPage] = useState(1);
+  const totalPages = Math.max(1, Math.ceil(goals.length / GOALS_PAGE_SIZE));
+  const safePage = Math.min(page, totalPages);
+  const start = (safePage - 1) * GOALS_PAGE_SIZE;
+  const paginatedGoals = goals.slice(start, start + GOALS_PAGE_SIZE);
+
   if (goals.length === 0) {
     return (
       <div>
@@ -20,7 +30,7 @@ export function GoalsList({ goals }: GoalsListProps) {
     <div>
       <h3 className="text-sm font-semibold">Goals</h3>
       <div className="mt-3 space-y-3">
-        {goals.map((goal) => {
+        {paginatedGoals.map((goal) => {
           const width = Math.max(0, Math.min(100, goal.progressPercent));
           const isReached = goal.progressPercent >= 100;
           return (
@@ -48,6 +58,37 @@ export function GoalsList({ goals }: GoalsListProps) {
           );
         })}
       </div>
+      {totalPages > 1 && (
+        <div className="mt-3 flex items-center justify-between">
+          <button
+            onClick={() => setPage((p) => Math.max(1, p - 1))}
+            disabled={safePage === 1}
+            className={cn(
+              "rounded-md border px-3 py-1.5 text-xs font-medium transition-colors",
+              safePage === 1
+                ? "cursor-not-allowed border-border/60 bg-muted/30 text-muted-foreground/60"
+                : "border-border bg-muted/40 text-muted-foreground hover:bg-muted hover:text-foreground"
+            )}
+          >
+            Previous
+          </button>
+          <span className="text-xs text-muted-foreground">
+            Page {safePage} of {totalPages}
+          </span>
+          <button
+            onClick={() => setPage((p) => Math.min(totalPages, p + 1))}
+            disabled={safePage === totalPages}
+            className={cn(
+              "rounded-md border px-3 py-1.5 text-xs font-medium transition-colors",
+              safePage === totalPages
+                ? "cursor-not-allowed border-border/60 bg-muted/30 text-muted-foreground/60"
+                : "border-border bg-muted/40 text-muted-foreground hover:bg-muted hover:text-foreground"
+            )}
+          >
+            Next
+          </button>
+        </div>
+      )}
     </div>
   );
 }

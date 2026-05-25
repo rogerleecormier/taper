@@ -19,10 +19,13 @@ const STATUS_STYLES: Record<string, string> = {
 export function CarriedForwardList() {
   const { data: rows = [], isLoading, isError } = useCarriedForwardUnpaid();
   const [modalItem, setModalItem] = useState<OccurrenceModalItem | null>(null);
-  const [showAll, setShowAll] = useState(false);
+  const [page, setPage] = useState(1);
   const showHidden = useStore(trackerStore, (s) => s.showHidden);
   const visibleRows = rows.filter((r) => !r.hidden || showHidden);
-  const displayedRows = showAll ? visibleRows : visibleRows.slice(0, 5);
+  const totalPages = Math.max(1, Math.ceil(visibleRows.length / 5));
+  const safePage = Math.min(page, totalPages);
+  const start = (safePage - 1) * 5;
+  const displayedRows = visibleRows.slice(start, start + 5);
 
   if (isError) {
     return (
@@ -176,13 +179,34 @@ export function CarriedForwardList() {
         </table>
       </div>
 
-      {visibleRows.length > 5 && (
-        <div className="px-4 pb-4 pt-2 flex justify-center">
+      {totalPages > 1 && (
+        <div className="px-4 pb-4 pt-2 flex items-center justify-between">
           <button
-            onClick={() => setShowAll((prev) => !prev)}
-            className="rounded-md border border-border bg-muted/40 px-3 py-1.5 text-xs font-medium text-muted-foreground transition-colors hover:bg-muted hover:text-foreground"
+            onClick={() => setPage((p) => Math.max(1, p - 1))}
+            disabled={safePage === 1}
+            className={cn(
+              "rounded-md border px-3 py-1.5 text-xs font-medium transition-colors",
+              safePage === 1
+                ? "cursor-not-allowed border-border/60 bg-muted/30 text-muted-foreground/60"
+                : "border-border bg-muted/40 text-muted-foreground hover:bg-muted hover:text-foreground"
+            )}
           >
-            {showAll ? "View less" : `View more (${visibleRows.length - 5} more)`}
+            Previous
+          </button>
+          <span className="text-xs text-muted-foreground">
+            Page {safePage} of {totalPages}
+          </span>
+          <button
+            onClick={() => setPage((p) => Math.min(totalPages, p + 1))}
+            disabled={safePage === totalPages}
+            className={cn(
+              "rounded-md border px-3 py-1.5 text-xs font-medium transition-colors",
+              safePage === totalPages
+                ? "cursor-not-allowed border-border/60 bg-muted/30 text-muted-foreground/60"
+                : "border-border bg-muted/40 text-muted-foreground hover:bg-muted hover:text-foreground"
+            )}
+          >
+            Next
           </button>
         </div>
       )}

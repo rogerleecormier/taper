@@ -47,7 +47,7 @@ function formatDate(dateStr: string): string {
 export function UpcomingBillsList({ upcomingBills }: UpcomingBillsListProps) {
   const [modalItem, setModalItem] = useState<OccurrenceModalItem | null>(null);
   const [showHidden, setShowHidden] = useState(false);
-  const [showAll, setShowAll] = useState(false);
+  const [page, setPage] = useState(1);
   const referenceDate = useStore(trackerStore, (s) => s.periodStart);
 
   const filtered = getFilteredBills(
@@ -56,7 +56,10 @@ export function UpcomingBillsList({ upcomingBills }: UpcomingBillsListProps) {
     referenceDate,
     showHidden
   );
-  const visibleRows = showAll ? filtered : filtered.slice(0, 5);
+  const totalPages = Math.max(1, Math.ceil(filtered.length / 5));
+  const safePage = Math.min(page, totalPages);
+  const start = (safePage - 1) * 5;
+  const visibleRows = filtered.slice(start, start + 5);
 
   return (
     <>
@@ -147,13 +150,34 @@ export function UpcomingBillsList({ upcomingBills }: UpcomingBillsListProps) {
               ))}
             </ul>
 
-            {filtered.length > 5 && (
-              <div className="flex justify-center pt-1">
+            {totalPages > 1 && (
+              <div className="flex items-center justify-between pt-1">
                 <button
-                  onClick={() => setShowAll((prev) => !prev)}
-                  className="rounded-md border border-border bg-muted/40 px-3 py-1.5 text-xs font-medium text-muted-foreground transition-colors hover:bg-muted hover:text-foreground"
+                  onClick={() => setPage((p) => Math.max(1, p - 1))}
+                  disabled={safePage === 1}
+                  className={cn(
+                    "rounded-md border px-3 py-1.5 text-xs font-medium transition-colors",
+                    safePage === 1
+                      ? "cursor-not-allowed border-border/60 bg-muted/30 text-muted-foreground/60"
+                      : "border-border bg-muted/40 text-muted-foreground hover:bg-muted hover:text-foreground"
+                  )}
                 >
-                  {showAll ? "View less" : `View more (${filtered.length - 5} more)`}
+                  Previous
+                </button>
+                <span className="text-xs text-muted-foreground">
+                  Page {safePage} of {totalPages}
+                </span>
+                <button
+                  onClick={() => setPage((p) => Math.min(totalPages, p + 1))}
+                  disabled={safePage === totalPages}
+                  className={cn(
+                    "rounded-md border px-3 py-1.5 text-xs font-medium transition-colors",
+                    safePage === totalPages
+                      ? "cursor-not-allowed border-border/60 bg-muted/30 text-muted-foreground/60"
+                      : "border-border bg-muted/40 text-muted-foreground hover:bg-muted hover:text-foreground"
+                  )}
+                >
+                  Next
                 </button>
               </div>
             )}
