@@ -6,7 +6,7 @@ import { CalendarClock, Eye, EyeOff } from "lucide-react";
 import { formatCurrency } from "~/lib/currency";
 import { toDateStr } from "~/lib/dates";
 import { cn } from "~/lib/utils";
-import { trackerStore, setShowHidden } from "~/store/tracker-store";
+import { trackerStore } from "~/store/tracker-store";
 import { OccurrenceDetailModal, type OccurrenceModalItem } from "~/components/tracker/occurrence-detail-modal";
 import type { DashboardData } from "~/server/fn/dashboard";
 
@@ -47,8 +47,8 @@ function formatDate(dateStr: string): string {
 export function UpcomingBillsList({ upcomingBills }: UpcomingBillsListProps) {
   const [selectedDays, setSelectedDays] = useState<DayFilter>(7);
   const [modalItem, setModalItem] = useState<OccurrenceModalItem | null>(null);
+  const [showHidden, setShowHidden] = useState(false);
   const referenceDate = useStore(trackerStore, (s) => s.periodStart);
-  const showHidden = useStore(trackerStore, (s) => s.showHidden);
 
   const filtered = getFilteredBills(upcomingBills, selectedDays, referenceDate, showHidden);
 
@@ -61,7 +61,7 @@ export function UpcomingBillsList({ upcomingBills }: UpcomingBillsListProps) {
           </h3>
           <div className="flex items-center gap-2">
             <button
-              onClick={() => setShowHidden(!showHidden)}
+              onClick={() => setShowHidden((prev) => !prev)}
               className={cn(
                 "inline-flex items-center gap-1.5 rounded-full border px-3 py-1 text-xs font-medium transition-colors",
                 showHidden

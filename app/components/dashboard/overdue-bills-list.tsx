@@ -1,9 +1,7 @@
 import { useState } from "react";
-import { useStore } from "@tanstack/react-store";
 import { CheckCircle, AlertCircle, Eye, EyeOff } from "lucide-react";
 import { formatCurrency } from "~/lib/currency";
 import { cn } from "~/lib/utils";
-import { trackerStore, setShowHidden } from "~/store/tracker-store";
 import { OccurrenceDetailModal, type OccurrenceModalItem } from "~/components/tracker/occurrence-detail-modal";
 import type { DashboardData } from "~/server/fn/dashboard";
 
@@ -29,7 +27,7 @@ function formatDate(dateStr: string): string {
 
 export function OverdueBillsList({ overdueBills }: OverdueBillsListProps) {
   const [modalItem, setModalItem] = useState<OccurrenceModalItem | null>(null);
-  const showHidden = useStore(trackerStore, (s) => s.showHidden);
+  const [showHidden, setShowHidden] = useState(false);
   const visibleBills = overdueBills.filter((b) => !b.hidden || showHidden);
 
   return (
@@ -40,7 +38,7 @@ export function OverdueBillsList({ overdueBills }: OverdueBillsListProps) {
             Overdue Expenses
           </h3>
           <button
-            onClick={() => setShowHidden(!showHidden)}
+            onClick={() => setShowHidden((prev) => !prev)}
             className={cn(
               "inline-flex items-center gap-1.5 rounded-full border px-3 py-1 text-xs font-medium transition-colors",
               showHidden
