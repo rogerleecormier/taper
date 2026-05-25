@@ -48,9 +48,11 @@ export function UpcomingBillsList({ upcomingBills }: UpcomingBillsListProps) {
   const [selectedDays, setSelectedDays] = useState<DayFilter>(7);
   const [modalItem, setModalItem] = useState<OccurrenceModalItem | null>(null);
   const [showHidden, setShowHidden] = useState(false);
+  const [showAll, setShowAll] = useState(false);
   const referenceDate = useStore(trackerStore, (s) => s.periodStart);
 
   const filtered = getFilteredBills(upcomingBills, selectedDays, referenceDate, showHidden);
+  const visibleRows = showAll ? filtered : filtered.slice(0, 5);
 
   return (
     <>
@@ -97,64 +99,77 @@ export function UpcomingBillsList({ upcomingBills }: UpcomingBillsListProps) {
             <p className="text-sm">No upcoming expenses in this period</p>
           </div>
         ) : (
-          <ul className="divide-y">
-            {filtered.map((bill) => (
-              <li
-                key={bill.id}
-                className="group py-3 cursor-pointer hover:bg-muted/10 rounded-md px-1 -mx-1 transition-colors"
-                onClick={() =>
-                  setModalItem({
-                    occurrenceId: bill.id,
-                    billId: bill.billId,
-                    billName: bill.billName,
-                    billInterval: "monthly",
-                    dueDate: bill.dueDate,
-                    amountCents: bill.amountCents,
-                    paidAmountCents: bill.paidAmountCents,
-                    status: bill.status,
-                    notes: null,
-                    carriedFromId: bill.carriedFromId,
-                    vendorName: bill.vendorName,
-                    categoryName: bill.categoryName,
-                    categoryColor: bill.categoryColor,
-                    hidden: bill.hidden,
-                  })
-                }
-              >
-                {/* Row 1: dot + name + amount */}
-                <div className="flex items-center gap-3">
-                  <span
-                    className="h-2.5 w-2.5 flex-shrink-0 rounded-full"
-                    style={{ backgroundColor: bill.categoryColor ?? "#94a3b8" }}
-                  />
-                  <span className="flex-1 text-sm font-medium text-accent group-hover:underline">
-                    {bill.billName}
-                  </span>
-                  <span className="flex-shrink-0 text-sm font-semibold tabular-nums">
-                    {formatCurrency(bill.amountCents)}
-                  </span>
-                </div>
+          <div className="space-y-2">
+            <ul className="divide-y">
+              {visibleRows.map((bill) => (
+                <li
+                  key={bill.id}
+                  className="group py-3 cursor-pointer hover:bg-muted/10 rounded-md px-1 -mx-1 transition-colors"
+                  onClick={() =>
+                    setModalItem({
+                      occurrenceId: bill.id,
+                      billId: bill.billId,
+                      billName: bill.billName,
+                      billInterval: "monthly",
+                      dueDate: bill.dueDate,
+                      amountCents: bill.amountCents,
+                      paidAmountCents: bill.paidAmountCents,
+                      status: bill.status,
+                      notes: null,
+                      carriedFromId: bill.carriedFromId,
+                      vendorName: bill.vendorName,
+                      categoryName: bill.categoryName,
+                      categoryColor: bill.categoryColor,
+                      hidden: bill.hidden,
+                    })
+                  }
+                >
+                  {/* Row 1: dot + name + amount */}
+                  <div className="flex items-center gap-3">
+                    <span
+                      className="h-2.5 w-2.5 flex-shrink-0 rounded-full"
+                      style={{ backgroundColor: bill.categoryColor ?? "#94a3b8" }}
+                    />
+                    <span className="flex-1 text-sm font-medium text-accent group-hover:underline">
+                      {bill.billName}
+                    </span>
+                    <span className="flex-shrink-0 text-sm font-semibold tabular-nums">
+                      {formatCurrency(bill.amountCents)}
+                    </span>
+                  </div>
 
-                {/* Row 2: vendor | badge + date */}
-                <div className="flex items-center gap-2 mt-1 pl-5">
-                  <span className="flex-1 text-xs text-muted-foreground">
-                    {bill.vendorName ?? ""}
-                  </span>
-                  <span
-                    className={cn(
-                      "flex-shrink-0 rounded-md border px-2 py-0.5 text-xs font-semibold capitalize",
-                      STATUS_CLASSES[bill.status] ?? STATUS_CLASSES.pending
-                    )}
-                  >
-                    {bill.status}
-                  </span>
-                  <span className="flex-shrink-0 text-xs text-muted-foreground">
-                    {formatDate(bill.dueDate)}
-                  </span>
-                </div>
-              </li>
-            ))}
-          </ul>
+                  {/* Row 2: vendor | badge + date */}
+                  <div className="flex items-center gap-2 mt-1 pl-5">
+                    <span className="flex-1 text-xs text-muted-foreground">
+                      {bill.vendorName ?? ""}
+                    </span>
+                    <span
+                      className={cn(
+                        "flex-shrink-0 rounded-md border px-2 py-0.5 text-xs font-semibold capitalize",
+                        STATUS_CLASSES[bill.status] ?? STATUS_CLASSES.pending
+                      )}
+                    >
+                      {bill.status}
+                    </span>
+                    <span className="flex-shrink-0 text-xs text-muted-foreground">
+                      {formatDate(bill.dueDate)}
+                    </span>
+                  </div>
+                </li>
+              ))}
+            </ul>
+
+            {filtered.length > 5 && (
+              <div className="flex justify-center pt-1">
+                <button
+                  onClick={() => setShowAll((prev) => !prev)}
+                  className="rounded-md border border-border bg-muted/40 px-3 py-1.5 text-xs font-medium text-muted-foreground transition-colors hover:bg-muted hover:text-foreground"
+                >
+                  {showAll ? "View less" : `View more (${filtered.length - 5} more)`}
+                </button>
+              </div>
+            )}
+          </div>
         )}
       </div>
 

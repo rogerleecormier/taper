@@ -19,8 +19,10 @@ const STATUS_STYLES: Record<string, string> = {
 export function CarriedForwardList() {
   const { data: rows = [], isLoading, isError } = useCarriedForwardUnpaid();
   const [modalItem, setModalItem] = useState<OccurrenceModalItem | null>(null);
+  const [showAll, setShowAll] = useState(false);
   const showHidden = useStore(trackerStore, (s) => s.showHidden);
   const visibleRows = rows.filter((r) => !r.hidden || showHidden);
+  const displayedRows = showAll ? visibleRows : visibleRows.slice(0, 5);
 
   if (isError) {
     return (
@@ -87,7 +89,7 @@ export function CarriedForwardList() {
             </tr>
           </thead>
           <tbody className="divide-y divide-border/60">
-            {visibleRows.map((row) => {
+            {displayedRows.map((row) => {
               const originalDate = parseISO(row.originalDueDate);
               const scheduledDate = parseISO(row.dueDate);
               const daysOld = differenceInDays(today, originalDate);
@@ -173,6 +175,17 @@ export function CarriedForwardList() {
           </tbody>
         </table>
       </div>
+
+      {visibleRows.length > 5 && (
+        <div className="px-4 pb-4 pt-2 flex justify-center">
+          <button
+            onClick={() => setShowAll((prev) => !prev)}
+            className="rounded-md border border-border bg-muted/40 px-3 py-1.5 text-xs font-medium text-muted-foreground transition-colors hover:bg-muted hover:text-foreground"
+          >
+            {showAll ? "View less" : `View more (${visibleRows.length - 5} more)`}
+          </button>
+        </div>
+      )}
 
       <OccurrenceDetailModal
         item={modalItem}
