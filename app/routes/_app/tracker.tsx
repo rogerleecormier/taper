@@ -47,6 +47,17 @@ type YearInterval = z.infer<typeof trackerSearchSchema>["yearInterval"];
 export const Route = createFileRoute("/_app/tracker")({
   validateSearch: (search) => trackerSearchSchema.parse(search),
   component: TrackerPage,
+  head: () => ({
+    meta: [
+      {
+        title: "Tracker - Taper",
+      },
+      {
+        name: "description",
+        content: "Track your budget across different time periods",
+      },
+    ],
+  }),
 });
 
 const MONTH_INTERVALS: Array<{ value: MonthInterval; label: string }> = [

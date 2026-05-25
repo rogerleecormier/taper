@@ -8,6 +8,17 @@ import { Button } from "~/components/ui/button";
 
 export const Route = createFileRoute("/_app/income/")({
   component: IncomePage,
+  head: () => ({
+    meta: [
+      {
+        title: "Income Sources - Taper",
+      },
+      {
+        name: "description",
+        content: "Manage your income sources and pay schedules",
+      },
+    ],
+  }),
 });
 
 function IncomePage() {

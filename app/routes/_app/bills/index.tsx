@@ -10,6 +10,17 @@ import { trackerStore, setShowHidden } from "~/store/tracker-store";
 
 export const Route = createFileRoute("/_app/bills/")({
   component: BillsPage,
+  head: () => ({
+    meta: [
+      {
+        title: "Expenses - Taper",
+      },
+      {
+        name: "description",
+        content: "Manage your recurring and one-time expenses",
+      },
+    ],
+  }),
 });
 
 function BillsPage() {

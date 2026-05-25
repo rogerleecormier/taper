@@ -9,6 +9,17 @@ import { cn } from "~/lib/utils";
 
 export const Route = createFileRoute("/_app/settings")({
   component: SettingsPage,
+  head: () => ({
+    meta: [
+      {
+        title: "Settings - Taper",
+      },
+      {
+        name: "description",
+        content: "Manage your account preferences",
+      },
+    ],
+  }),
 });
 
 function SettingsPage() {

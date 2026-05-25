@@ -8,6 +8,17 @@ import { Button } from "~/components/ui/button";
 
 export const Route = createFileRoute("/_app/categories/")({
   component: CategoriesPage,
+  head: () => ({
+    meta: [
+      {
+        title: "Categories - Taper",
+      },
+      {
+        name: "description",
+        content: "Organize your expenses and income into categories",
+      },
+    ],
+  }),
 });
 
 function CategoriesPage() {

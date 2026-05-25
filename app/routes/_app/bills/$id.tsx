@@ -35,6 +35,17 @@ import type { BillPayment } from "~/db/schema/bill-payments";
 
 export const Route = createFileRoute("/_app/bills/$id")({
   component: BillDetailPage,
+  head: () => ({
+    meta: [
+      {
+        title: "Expense Details - Taper",
+      },
+      {
+        name: "description",
+        content: "View and manage expense details",
+      },
+    ],
+  }),
 });
 
 const INTERVAL_LABELS: Record<string, string> = {

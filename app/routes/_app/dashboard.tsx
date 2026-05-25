@@ -18,6 +18,17 @@ import { cn } from "~/lib/utils";
 
 export const Route = createFileRoute("/_app/dashboard")({
   component: DashboardPage,
+  head: () => ({
+    meta: [
+      {
+        title: "Dashboard - Taper",
+      },
+      {
+        name: "description",
+        content: "Your budget overview at a glance",
+      },
+    ],
+  }),
 });
 
 function computePeriod(viewingNext: boolean): { periodStart: string; periodEnd: string } {

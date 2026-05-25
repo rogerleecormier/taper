@@ -32,6 +32,17 @@ import { DEDUCTION_CATEGORY_LABELS, type DeductionCategory } from "~/db/schema/p
 
 export const Route = createFileRoute("/_app/income/$id")({
   component: PayrollDetailPage,
+  head: () => ({
+    meta: [
+      {
+        title: "Income Source Details - Taper",
+      },
+      {
+        name: "description",
+        content: "View and manage income source details",
+      },
+    ],
+  }),
 });
 
 const INTERVAL_LABELS: Record<string, string> = {

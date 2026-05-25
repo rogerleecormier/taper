@@ -8,6 +8,17 @@ import { Button } from "~/components/ui/button";
 
 export const Route = createFileRoute("/_app/vendors/")({
   component: VendorsPage,
+  head: () => ({
+    meta: [
+      {
+        title: "Vendors - Taper",
+      },
+      {
+        name: "description",
+        content: "Manage the vendors associated with your expenses",
+      },
+    ],
+  }),
 });
 
 function VendorsPage() {

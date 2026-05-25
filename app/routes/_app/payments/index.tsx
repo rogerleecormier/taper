@@ -34,6 +34,17 @@ import type { OccurrenceStatus } from "~/db/schema/bill-occurrences";
 
 export const Route = createFileRoute("/_app/payments/")({
   component: PaymentsPage,
+  head: () => ({
+    meta: [
+      {
+        title: "Payments - Taper",
+      },
+      {
+        name: "description",
+        content: "View and manage your payments",
+      },
+    ],
+  }),
 });
 
 // ─── Types ────────────────────────────────────────────────────────────────────

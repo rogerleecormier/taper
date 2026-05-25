@@ -8,6 +8,17 @@ import { useGoals } from "~/hooks/use-goals";
 
 export const Route = createFileRoute("/_app/goals/")({
   component: GoalsPage,
+  head: () => ({
+    meta: [
+      {
+        title: "Goals - Taper",
+      },
+      {
+        name: "description",
+        content: "Save toward specific targets and reallocate funds as needed",
+      },
+    ],
+  }),
 });
 
 function GoalsPage() {

@@ -18,6 +18,17 @@ export const Route = createFileRoute("/_app/admin")({
     }
   },
   component: AdminPage,
+  head: () => ({
+    meta: [
+      {
+        title: "Admin - Taper",
+      },
+      {
+        name: "description",
+        content: "Administrative tools and user management",
+      },
+    ],
+  }),
 });
 
 type UserWithRole = {

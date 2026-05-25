@@ -31,6 +31,17 @@ import type { CreditReceipt } from "~/db/schema/credit-receipts";
 
 export const Route = createFileRoute("/_app/credits/$id")({
   component: CreditDetailPage,
+  head: () => ({
+    meta: [
+      {
+        title: "Credit Details - Taper",
+      },
+      {
+        name: "description",
+        content: "View and manage credit details",
+      },
+    ],
+  }),
 });
 
 const INTERVAL_LABELS: Record<string, string> = {

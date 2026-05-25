@@ -8,6 +8,17 @@ import { Button } from "~/components/ui/button";
 
 export const Route = createFileRoute("/_app/credits/")({
   component: CreditsPage,
+  head: () => ({
+    meta: [
+      {
+        title: "Credits - Taper",
+      },
+      {
+        name: "description",
+        content: "Manage amounts vendors owe back to you",
+      },
+    ],
+  }),
 });
 
 function CreditsPage() {
