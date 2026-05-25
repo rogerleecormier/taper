@@ -130,7 +130,7 @@ export function PaymentModal({
               {paidSoFar > 0 && (
                 <div className="flex items-center justify-between text-sm">
                   <span className="text-muted-foreground">Paid so far</span>
-                  <span className="font-medium tabular-nums text-green-700">
+                  <span className="font-medium tabular-nums text-success">
                     {formatCurrency(paidSoFar)}
                   </span>
                 </div>
@@ -140,7 +140,7 @@ export function PaymentModal({
                 <span
                   className={cn(
                     "font-bold tabular-nums",
-                    remaining === 0 ? "text-green-600" : "text-red-600"
+                    remaining === 0 ? "text-success" : "text-destructive"
                   )}
                 >
                   {formatCurrency(remaining)}
@@ -167,7 +167,7 @@ export function PaymentModal({
                 <span className="w-24 flex-shrink-0 tabular-nums text-muted-foreground">
                   {p.paidDate}
                 </span>
-                <span className="flex-1 font-medium tabular-nums text-green-700">
+                <span className="flex-1 font-medium tabular-nums text-success">
                   {formatCurrency(p.amountCents)}
                 </span>
                 {p.notes && (
@@ -255,8 +255,8 @@ export function PaymentModal({
 
         {/* Carry-forward section */}
         {occurrence.status !== "skipped" && occurrence.status !== "carried" && remaining > 0 && lastRecorded === null && (
-          <div className="rounded-md border border-dashed border-amber-200 bg-amber-50/50 px-3 py-2.5 space-y-2">
-            <p className="text-xs font-semibold text-amber-800">
+          <div className="rounded-md border border-dashed border-warning/30 bg-warning/10 px-3 py-2.5 space-y-2">
+            <p className="text-xs font-semibold text-warning">
               Carry forward {formatCurrency(remaining)} to another date
             </p>
             <div className="flex items-center gap-2">
@@ -269,7 +269,7 @@ export function PaymentModal({
               <Button
                 size="sm"
                 variant="outline"
-                className="h-8 text-xs border-amber-300 text-amber-800 hover:bg-amber-100 flex-shrink-0"
+                className="h-8 text-xs border-warning/40 text-warning hover:bg-warning/15 flex-shrink-0"
                 disabled={isBusy}
                 onClick={handleCarryForward}
               >
@@ -283,20 +283,20 @@ export function PaymentModal({
         )}
 
         {lastRecorded !== null && remaining === 0 && (
-          <div className="flex items-center justify-between gap-3 rounded-md border border-green-200 bg-green-50 px-3 py-2.5">
-            <div className="flex items-center gap-2 text-sm text-green-800">
+          <div className="flex items-center justify-between gap-3 rounded-md border border-success/30 bg-success/10 px-3 py-2.5">
+            <div className="flex items-center gap-2 text-sm text-success">
               <CheckCircle2 className="h-4 w-4 flex-shrink-0" />
               <span>Payment recorded. Bill is fully paid!</span>
             </div>
-            <Button size="sm" variant="outline" className="h-7 text-xs border-green-300 text-green-800 hover:bg-green-100 flex-shrink-0" onClick={onClose}>
+            <Button size="sm" variant="outline" className="h-7 text-xs border-success/40 text-success hover:bg-success/15 flex-shrink-0" onClick={onClose}>
               Close
             </Button>
           </div>
         )}
 
         {lastRecorded !== null && remaining > 0 && (
-          <div className="flex items-center justify-between gap-3 rounded-md border border-green-200 bg-green-50 px-3 py-2.5">
-            <div className="flex items-center gap-2 text-sm text-green-800">
+          <div className="flex items-center justify-between gap-3 rounded-md border border-success/30 bg-success/10 px-3 py-2.5">
+            <div className="flex items-center gap-2 text-sm text-success">
               <CheckCircle2 className="h-4 w-4 flex-shrink-0" />
               <span>
                 {formatCurrency(lastRecorded)} recorded. Record another payment?
@@ -306,7 +306,7 @@ export function PaymentModal({
               <Button
                 size="sm"
                 variant="outline"
-                className="h-7 text-xs border-green-300 text-green-800 hover:bg-green-100"
+                className="h-7 text-xs border-success/40 text-success hover:bg-success/15"
                 onClick={() => {
                   setLastRecorded(null);
                   setAmount(String(remaining / 100));

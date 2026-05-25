@@ -73,7 +73,7 @@ export function TrackerParentRow({
         className="flex flex-wrap items-center gap-2 px-3 py-2 hover:bg-muted/30 cursor-pointer select-none"
         onClick={() => setExpanded((v) => !v)}
       >
-        <Icon className={cn("h-4 w-4 flex-shrink-0", isIncome ? "text-green-500" : isCredit ? "text-teal-500" : "text-red-400")} />
+        <Icon className={cn("h-4 w-4 flex-shrink-0", isIncome ? "text-success" : isCredit ? "text-accent" : "text-destructive")} />
 
         {categoryColor && (
           <span
@@ -111,16 +111,16 @@ export function TrackerParentRow({
           )}
         </div>
 
-        <span className="order-3 sm:order-none flex-shrink-0 rounded-md bg-gray-100 px-1.5 py-0.5 text-xs text-gray-500">
+        <span className="order-3 sm:order-none flex-shrink-0 rounded-md bg-muted px-1.5 py-0.5 text-xs text-muted-foreground">
           {INTERVAL_LABELS[interval] ?? interval}
         </span>
 
-        <span className={cn("order-4 sm:order-none flex-shrink-0 tabular-nums text-sm font-semibold", isIncome ? "text-green-600" : isCredit ? "text-teal-600" : "text-red-600")}>
+        <span className={cn("order-4 sm:order-none flex-shrink-0 tabular-nums text-sm font-semibold", isIncome ? "text-success" : isCredit ? "text-accent" : "text-destructive")}>
           {(!isIncome && !isCredit) ? `-${formatCurrency(displayTotal)}` : formatCurrency(displayTotal)}
         </span>
 
         {occurrences.length > 0 && (
-          <span className="order-5 sm:order-none flex-shrink-0 rounded-full bg-gray-100 px-1.5 text-[11px] text-gray-500">
+          <span className="order-5 sm:order-none flex-shrink-0 rounded-full bg-muted px-1.5 text-[11px] text-muted-foreground">
             {occurrences.length}
           </span>
         )}

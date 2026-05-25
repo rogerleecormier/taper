@@ -66,7 +66,7 @@ function DashboardPage() {
   }
 
   return (
-    <div className="p-6 space-y-6 max-w-7xl mx-auto">
+    <div className="entity-page">
       <div className="flex items-start justify-between gap-4">
         <div>
           <h1 className="text-3xl font-extrabold font-heading text-foreground tracking-tight">Dashboard</h1>

@@ -5,7 +5,7 @@ export function TrackerRowDragHandle({ attributes, listeners }: any) {
     <button
       {...attributes}
       {...listeners}
-      className="cursor-grab active:cursor-grabbing p-1 text-gray-400 hover:text-gray-600"
+      className="cursor-grab p-1 text-muted-foreground/70 hover:text-foreground active:cursor-grabbing"
       tabIndex={-1}
       aria-label="Drag to reorder"
     >

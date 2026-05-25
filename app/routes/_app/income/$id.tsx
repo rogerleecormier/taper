@@ -417,7 +417,7 @@ function PaystubAnalysisModal({
               </div>
               <div className="rounded-lg border p-3 text-center">
                 <p className="text-xs text-muted-foreground mb-1">Deductions</p>
-                <p className="text-lg font-bold text-danger">−{formatCurrency(totalDeductions)}</p>
+                <p className="text-lg font-bold text-destructive">−{formatCurrency(totalDeductions)}</p>
               </div>
               <div className="rounded-lg border bg-success/10 border-success/20 p-3 text-center">
                 <p className="text-xs text-muted-foreground mb-1">Net Pay</p>
@@ -494,7 +494,7 @@ function PaystubAnalysisModal({
                 variant="outline"
                 onClick={onReject}
                 disabled={isRejecting}
-                className="text-danger hover:text-danger/80 hover:border-danger/30"
+                className="text-destructive hover:text-destructive/80 hover:border-destructive/30"
               >
                 {isRejecting ? (
                   <Loader2 className="h-4 w-4 animate-spin mr-1.5" />
@@ -515,7 +515,7 @@ function PaystubAnalysisModal({
         {phase === "error" && (
           <>
             <DialogHeader>
-              <DialogTitle className="flex items-center gap-2 text-danger">
+              <DialogTitle className="flex items-center gap-2 text-destructive">
                 <AlertCircle className="h-5 w-5 flex-shrink-0" />
                 Analysis Failed
               </DialogTitle>
@@ -524,7 +524,7 @@ function PaystubAnalysisModal({
               </DialogDescription>
             </DialogHeader>
             {errorMessage && (
-              <div className="rounded-lg bg-danger/10 border border-danger/20 px-3 py-2.5 text-sm text-danger">
+              <div className="rounded-lg bg-destructive/10 border border-destructive/20 px-3 py-2.5 text-sm text-destructive">
                 {errorMessage}
               </div>
             )}
@@ -559,7 +559,7 @@ function PaystubStatusBadge({ status }: { status: string }) {
     );
   if (status === "error")
     return (
-      <Badge className="border-danger/20 bg-danger/10 text-danger gap-1">
+      <Badge className="border-destructive/20 bg-destructive/10 text-destructive gap-1">
         <AlertCircle className="h-3 w-3" />
         Error
       </Badge>
@@ -769,7 +769,7 @@ function OccurrenceRow({ incomeSourceId, occurrence, paystub }: OccurrenceRowPro
               <Button
                 size="sm"
                 variant="ghost"
-                className="h-8 w-8 p-0 text-danger hover:text-danger/80"
+                className="h-8 w-8 p-0 text-destructive hover:text-destructive/80"
                 onClick={(e) => {
                   e.stopPropagation();
                   handleDelete();
@@ -792,7 +792,7 @@ function OccurrenceRow({ incomeSourceId, occurrence, paystub }: OccurrenceRowPro
               </div>
               <div className="rounded-md bg-muted/40 p-3 text-center">
                 <p className="text-xs text-muted-foreground mb-0.5">Total Deductions</p>
-                <p className="font-semibold text-sm text-danger">
+                <p className="font-semibold text-sm text-destructive">
                   {formatCurrency(
                     paystub.deductions.reduce((s, d) => s + d.amountCents, 0),
                   )}
@@ -845,7 +845,7 @@ function OccurrenceRow({ incomeSourceId, occurrence, paystub }: OccurrenceRowPro
         )}
 
         {expanded && paystub?.status === "error" && (
-          <div className="px-4 py-3 border-t bg-danger/10 border-danger/20 border text-sm text-danger">
+          <div className="px-4 py-3 border-t border-destructive/20 bg-destructive/10 text-sm text-destructive">
             {paystub.errorMessage ?? "An error occurred during analysis."}
           </div>
         )}
@@ -871,7 +871,7 @@ function PayrollDetailPage() {
 
   if (isError || !data) {
     return (
-      <div className="p-6 text-sm text-red-500">
+      <div className="p-6 text-sm text-destructive">
         Failed to load income source.{" "}
         <Link to="/income" className="underline">
           Go back
@@ -883,7 +883,7 @@ function PayrollDetailPage() {
   const { source, occurrences, projection } = data;
 
   return (
-    <div className="p-6 space-y-6 max-w-3xl mx-auto">
+    <div className="entity-page max-w-3xl">
       <div>
         <Link
           to="/income"
@@ -946,7 +946,7 @@ function PayrollDetailPage() {
                         <span className="text-muted-foreground">
                           {DEDUCTION_CATEGORY_LABELS[d.category as DeductionCategory] ?? d.label}
                         </span>
-                        <span className="font-medium tabular-nums text-danger">
+                        <span className="font-medium tabular-nums text-destructive">
                           −{formatCurrency(d.avgAmountCents)}
                         </span>
                       </div>

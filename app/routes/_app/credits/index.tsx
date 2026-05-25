@@ -62,8 +62,8 @@ function CreditsPage() {
       )}
 
       {isError && (
-        <div className="flex flex-col items-center justify-center rounded-lg border border-dashed border-danger/30 bg-danger/5 py-16 text-center">
-          <p className="text-sm text-danger font-medium">Failed to load credits.</p>
+        <div className="flex flex-col items-center justify-center rounded-lg border border-dashed border-destructive/30 bg-destructive/5 py-16 text-center">
+          <p className="text-sm text-destructive font-medium">Failed to load credits.</p>
           <p className="text-xs text-muted-foreground mt-1">Please refresh the page and try again.</p>
         </div>
       )}

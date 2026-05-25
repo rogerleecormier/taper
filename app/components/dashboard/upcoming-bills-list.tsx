@@ -21,7 +21,7 @@ const UPCOMING_WINDOW_DAYS = 30;
 const STATUS_CLASSES: Record<string, string> = {
   pending: "border-warning/20 bg-warning/10 text-warning",
   paid: "border-success/20 bg-success/10 text-success",
-  overdue: "border-danger/20 bg-danger/10 text-danger",
+  overdue: "border-destructive/20 bg-destructive/10 text-destructive",
   skipped: "border-border bg-muted/50 text-muted-foreground",
 };
 

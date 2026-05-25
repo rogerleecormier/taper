@@ -105,7 +105,7 @@ export function VendorList({ vendors }: VendorListProps) {
             <Button
               variant="ghost"
               size="sm"
-              className="h-8 w-8 p-0 text-danger hover:text-danger/80"
+              className="h-8 w-8 p-0 text-destructive hover:text-destructive/80"
               onClick={() => handleDelete(vendor.id)}
               disabled={deletingId === vendor.id}
             >
@@ -185,7 +185,7 @@ export function VendorList({ vendors }: VendorListProps) {
                 <Button
                   variant="ghost"
                   size="sm"
-                  className="h-8 w-8 p-0 text-danger hover:text-danger/80"
+                  className="h-8 w-8 p-0 text-destructive hover:text-destructive/80"
                   onClick={() => handleDelete(vendor.id)}
                   disabled={deletingId === vendor.id}
                 >

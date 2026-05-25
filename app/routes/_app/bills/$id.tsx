@@ -60,7 +60,7 @@ const STATUS_STYLES: Record<string, string> = {
   paid: "border-success/20 bg-success/10 text-success",
   partial: "border-warning/20 bg-warning/10 text-warning",
   pending: "border-border bg-muted/50 text-muted-foreground",
-  overdue: "border-danger/20 bg-danger/10 text-danger",
+  overdue: "border-destructive/20 bg-destructive/10 text-destructive",
   skipped: "border-border bg-muted/50 text-muted-foreground",
   carried: "border-accent/20 bg-accent/10 text-accent",
 };
@@ -252,7 +252,7 @@ function OccurrenceCard({
                 "ml-auto font-semibold tabular-nums",
                 occurrence.status === "skipped"
                   ? "text-muted-foreground"
-                  : "text-danger"
+                  : "text-destructive"
               )}
             >
               {formatCurrency(occurrence.amountCents)}
@@ -279,8 +279,8 @@ function OccurrenceCard({
 
       {/* Delete confirmation */}
       {confirmDelete && (
-        <div className="flex items-center gap-2 px-4 py-2.5 bg-danger/5 border-b border-danger/20">
-          <span className="text-xs text-danger font-medium">
+        <div className="flex items-center gap-2 px-4 py-2.5 bg-destructive/5 border-b border-destructive/20">
+          <span className="text-xs text-destructive font-medium">
             Delete this instance{occurrence.payments.length > 0 ? " and its payments" : ""}?
           </span>
           <div className="ml-auto flex items-center gap-1.5">
@@ -330,7 +330,7 @@ function OccurrenceCard({
           {remaining > 0 && (
             <span>
               Remaining:{" "}
-              <span className="font-semibold text-danger">
+              <span className="font-semibold text-destructive">
                 {formatCurrency(remaining)}
               </span>
             </span>
@@ -523,7 +523,7 @@ function BillDetailPage() {
   ).length;
 
   return (
-    <div className="p-6 space-y-6 max-w-3xl mx-auto">
+    <div className="entity-page max-w-3xl">
       {/* Back link */}
       <Link
         to="/bills"
@@ -536,8 +536,8 @@ function BillDetailPage() {
       {/* Bill header */}
       <div className="flex items-start justify-between gap-4">
         <div className="flex items-center gap-3">
-          <div className="rounded-full bg-danger/10 border border-danger/20 p-2.5">
-            <Receipt className="h-5 w-5 text-danger" />
+          <div className="rounded-full bg-destructive/10 border border-destructive/20 p-2.5">
+            <Receipt className="h-5 w-5 text-destructive" />
           </div>
           <div>
             <h1 className="text-2xl font-bold font-heading text-foreground">{bill.name}</h1>
@@ -594,7 +594,7 @@ function BillDetailPage() {
           {
             label: "Outstanding",
             value: formatCurrency(outstanding),
-            valueClass: outstanding > 0 ? "text-danger" : "text-muted-foreground",
+            valueClass: outstanding > 0 ? "text-destructive" : "text-muted-foreground",
           },
         ].map(({ label, value, valueClass }) => (
           <div

@@ -63,7 +63,7 @@ function AdminPage() {
   const demoUser = users.find((u) => u.role === "demo");
 
   return (
-    <div className="p-6 space-y-6 max-w-4xl mx-auto">
+    <div className="entity-page max-w-4xl">
       <div>
         <h1 className="text-3xl font-extrabold font-heading text-foreground tracking-tight">
           Admin
@@ -198,7 +198,7 @@ function SeedDemoButton({
 
   if (status === "success") {
     return (
-      <span className="flex items-center gap-1 text-xs text-green-600">
+      <span className="flex items-center gap-1 text-xs text-success">
         <CheckCircle2 className="h-3 w-3" /> Seeded
       </span>
     );
@@ -256,7 +256,7 @@ function RegenerateOccurrencesButton({ userId }: { userId: string }) {
 
   if (status === "success") {
     return (
-      <span className="flex items-center gap-1 text-xs text-green-600">
+      <span className="flex items-center gap-1 text-xs text-success">
         <CheckCircle2 className="h-3 w-3" /> Regenerated
       </span>
     );
@@ -332,7 +332,7 @@ function CreateUserForm({ onSuccess }: { onSuccess: () => void }) {
           className={[
             "rounded-md px-3 py-2 text-sm flex items-center gap-2",
             feedback.type === "success"
-              ? "bg-green-500/10 border border-green-500/20 text-green-700"
+              ? "bg-success/10 border border-success/20 text-success"
               : "bg-destructive/10 border border-destructive/20 text-destructive",
           ].join(" ")}
         >

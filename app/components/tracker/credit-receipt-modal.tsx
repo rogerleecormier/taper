@@ -127,14 +127,14 @@ export function CreditReceiptModal({
               </div>
               <div className="flex items-center justify-between text-sm">
                 <span className="text-muted-foreground">Credit Amount</span>
-                <span className="font-medium tabular-nums text-teal-700">
+                <span className="font-medium tabular-nums text-accent">
                   {formatCurrency(occurrence.amountCents)}
                 </span>
               </div>
               {receivedSoFar > 0 && (
                 <div className="flex items-center justify-between text-sm">
                   <span className="text-muted-foreground">Received so far</span>
-                  <span className="font-medium tabular-nums text-teal-700">
+                  <span className="font-medium tabular-nums text-accent">
                     {formatCurrency(receivedSoFar)}
                   </span>
                 </div>
@@ -144,7 +144,7 @@ export function CreditReceiptModal({
                 <span
                   className={cn(
                     "font-bold tabular-nums",
-                    remaining === 0 ? "text-teal-600" : "text-amber-600"
+                    remaining === 0 ? "text-accent" : "text-warning"
                   )}
                 >
                   {formatCurrency(remaining)}
@@ -171,7 +171,7 @@ export function CreditReceiptModal({
                 <span className="w-24 flex-shrink-0 tabular-nums text-muted-foreground">
                   {r.receivedDate}
                 </span>
-                <span className="flex-1 font-medium tabular-nums text-teal-700">
+                <span className="flex-1 font-medium tabular-nums text-accent">
                   {formatCurrency(r.amountCents)}
                 </span>
                 {r.notes && (
@@ -259,8 +259,8 @@ export function CreditReceiptModal({
 
         {/* Carry-forward section */}
         {occurrence.status !== "skipped" && occurrence.status !== "carried" && remaining > 0 && (
-          <div className="rounded-md border border-dashed border-amber-200 bg-amber-50/50 px-3 py-2.5 space-y-2">
-            <p className="text-xs font-semibold text-amber-800">
+          <div className="rounded-md border border-dashed border-warning/30 bg-warning/10 px-3 py-2.5 space-y-2">
+            <p className="text-xs font-semibold text-warning">
               Carry forward to another date
             </p>
             <div className="space-y-2">
@@ -289,7 +289,7 @@ export function CreditReceiptModal({
               <Button
                 size="sm"
                 variant="outline"
-                className="h-8 text-xs border-amber-300 text-amber-800 hover:bg-amber-100"
+                className="h-8 text-xs border-warning/40 text-warning hover:bg-warning/15"
                 disabled={isBusy}
                 onClick={handleCarryForward}
               >
@@ -309,7 +309,7 @@ export function CreditReceiptModal({
           {remaining > 0 && (
             <Button
               size="sm"
-              className="bg-teal-600 hover:bg-teal-700"
+              className="bg-accent text-accent-foreground hover:bg-accent/90"
               disabled={isBusy}
               onClick={handleAddReceipt}
             >

@@ -19,6 +19,7 @@ import {
   Sparkles,
   HelpCircle,
   Check,
+  BadgeDollarSign,
 } from "lucide-react";
 
 export const Route = createFileRoute("/")({
@@ -27,13 +28,13 @@ export const Route = createFileRoute("/")({
 
 function LandingPage() {
   const [activeTab, setActiveTab] = useState<"dashboard" | "tracker">("dashboard");
-  const [trackerView, setTrackerView] = useState<"calendar" | "timeline">("calendar");
+  const [trackerView, setTrackerView] = useState<"calendar" | "timeline">("timeline");
 
   return (
-    <div className="min-h-screen bg-background text-foreground font-sans">
+    <div className="brand-canvas min-h-screen text-foreground font-sans">
       {/* Nav */}
       <nav className="sticky top-0 z-50 border-b border-border bg-card/90 backdrop-blur">
-        <div className="mx-auto flex h-16 max-w-6xl items-center justify-between px-6">
+        <div className="mx-auto flex h-16 max-w-6xl items-center justify-between px-4 sm:px-6">
           <Link to="/">
             <Logo size="md" />
           </Link>
@@ -55,21 +56,21 @@ function LandingPage() {
       </nav>
 
       {/* Hero */}
-      <section className="mx-auto max-w-6xl px-6 pt-20 pb-16 text-center">
+      <section className="mx-auto max-w-6xl px-4 pb-14 pt-14 text-center sm:px-6 sm:pt-20 sm:pb-16">
         <div className="inline-flex items-center gap-2 rounded-full bg-primary/10 px-4 py-1.5 text-sm font-medium text-primary mb-6 animate-pulse">
           <Target className="h-3.5 w-3.5" />
           Funnel your income with absolute precision.
         </div>
-        <h1 className="text-5xl font-bold tracking-tight text-foreground font-heading sm:text-6xl">
+        <h1 className="text-4xl font-bold tracking-tight text-foreground font-heading sm:text-6xl">
           Taper your budget.
           <br />
           <span className="text-primary">Balance your allocations.</span>
         </h1>
-        <p className="mt-6 max-w-2xl mx-auto text-xl text-muted-foreground leading-relaxed">
+        <p className="mx-auto mt-6 max-w-2xl text-lg leading-relaxed text-muted-foreground sm:text-xl">
           Take your raw monthly income and taper it into targeted, balanced category buckets.
           No waste. Complete alignment. Funnel every dollar to a clean, precise point.
         </p>
-        <div className="mt-10 flex items-center justify-center gap-4">
+        <div className="mt-10 flex flex-col items-center justify-center gap-3 sm:flex-row sm:gap-4">
           <Link
             to="/register"
             className="inline-flex items-center gap-2 rounded-lg bg-primary px-6 py-3 text-base font-semibold text-primary-foreground hover:bg-primary/95 transition-colors shadow-sm"
@@ -87,8 +88,17 @@ function LandingPage() {
       </section>
 
       {/* Main Interactive Browser Mockup */}
-      <section className="mx-auto max-w-6xl px-6 pb-24">
-        <div className="rounded-2xl border border-border/60 bg-secondary/30 p-4 shadow-lg">
+      <section className="mx-auto max-w-6xl px-4 pb-20 sm:px-6 sm:pb-24">
+        <div className="rounded-2xl border border-border/60 bg-secondary/30 p-3 shadow-lg sm:p-4">
+          <div className="md:hidden">
+            <MobileProductMockup
+              activeTab={activeTab}
+              setActiveTab={setActiveTab}
+              trackerView={trackerView}
+              setTrackerView={setTrackerView}
+            />
+          </div>
+          <div className="hidden md:block">
           <div className="rounded-xl border border-border bg-card overflow-hidden shadow-sm">
             {/* Browser chrome header */}
             <div className="flex h-10 items-center gap-2 border-b border-border bg-secondary/20 px-4">
@@ -114,7 +124,10 @@ function LandingPage() {
                     {[
                       { id: "dashboard", icon: LayoutDashboard, label: "Dashboard" },
                       { id: "tracker", icon: CalendarDays, label: "Budget Tracker" },
-                      { id: "expenses", icon: Receipt, label: "Expenses" },
+                      { id: "bills", icon: Receipt, label: "Bills" },
+                      { id: "credits", icon: BadgeDollarSign, label: "Credits" },
+                      { id: "goals", icon: Target, label: "Goals" },
+                      { id: "payments", icon: Calendar, label: "Payments" },
                       { id: "income", icon: Wallet, label: "Income" },
                       { id: "vendors", icon: Building2, label: "Vendors" },
                       { id: "categories", icon: Tag, label: "Categories" },
@@ -377,7 +390,7 @@ function LandingPage() {
                                         return (
                                           <div
                                             key={i}
-                                            className={`rounded px-1.5 py-0.5 text-[7px] font-bold flex items-center justify-between gap-0.5 border ${style} cursor-grab active:cursor-grabbing hover:scale-102 transition-transform`}
+                                            className={`rounded px-1.5 py-0.5 text-[7px] font-bold flex items-center justify-between gap-0.5 border ${style} cursor-grab active:cursor-grabbing hover:scale-[1.02] transition-transform`}
                                             title="Drag to reschedule date"
                                           >
                                             <span className="truncate max-w-[28px]">{item.name}</span>
@@ -476,6 +489,7 @@ function LandingPage() {
                 )}
               </div>
             </div>
+          </div>
           </div>
         </div>
       </section>
@@ -609,6 +623,134 @@ function LandingPage() {
   );
 }
 
+function MobileProductMockup({
+  activeTab,
+  setActiveTab,
+  trackerView,
+  setTrackerView,
+}: {
+  activeTab: "dashboard" | "tracker";
+  setActiveTab: (tab: "dashboard" | "tracker") => void;
+  trackerView: "calendar" | "timeline";
+  setTrackerView: (view: "calendar" | "timeline") => void;
+}) {
+  return (
+    <div className="mx-auto w-full max-w-[360px] rounded-[26px] border border-border bg-card p-2 shadow-sm">
+      <div className="overflow-hidden rounded-[20px] border border-border bg-background">
+        <div className="flex items-center justify-between border-b border-border bg-card px-3 py-2">
+          <Logo size="sm" />
+          <span className="rounded-full bg-primary/10 px-2 py-0.5 text-[10px] font-bold text-primary">
+            Mobile Preview
+          </span>
+        </div>
+
+        <div className="border-b border-border bg-secondary/20 p-2">
+          <div className="grid grid-cols-2 gap-1">
+            {[
+              { id: "dashboard", label: "Dashboard" },
+              { id: "tracker", label: "Tracker" },
+            ].map((tab) => (
+              <button
+                key={tab.id}
+                onClick={() => setActiveTab(tab.id as "dashboard" | "tracker")}
+                className={`rounded-md px-2 py-1.5 text-[10px] font-bold ${
+                  activeTab === tab.id ? "bg-card text-foreground shadow-xs" : "text-muted-foreground"
+                }`}
+              >
+                {tab.label}
+              </button>
+            ))}
+          </div>
+        </div>
+
+        <div className="space-y-2 p-2.5 text-[10px]">
+          {activeTab === "dashboard" ? (
+            <>
+              <div className="rounded-lg border border-success/20 bg-success/5 p-2">
+                <p className="text-[10px] font-bold text-success">Fully allocated this month</p>
+                <p className="text-[9px] text-muted-foreground">$4,850 income · $0 unallocated</p>
+              </div>
+              <div className="grid grid-cols-2 gap-2">
+                <div className="rounded-lg border border-border bg-card p-2">
+                  <p className="text-[9px] text-muted-foreground">Income</p>
+                  <p className="font-black text-success">$4,850</p>
+                </div>
+                <div className="rounded-lg border border-border bg-card p-2">
+                  <p className="text-[9px] text-muted-foreground">Expenses</p>
+                  <p className="font-black text-destructive">$4,850</p>
+                </div>
+              </div>
+              <div className="space-y-1 rounded-lg border border-border bg-card p-2">
+                <p className="text-[9px] font-bold uppercase tracking-wide text-muted-foreground">Upcoming</p>
+                <div className="flex items-center justify-between">
+                  <span>Verizon</span>
+                  <span className="font-bold">$85</span>
+                </div>
+                <div className="flex items-center justify-between">
+                  <span>Rent</span>
+                  <span className="font-bold">$1,200</span>
+                </div>
+              </div>
+            </>
+          ) : (
+            <>
+              <div className="inline-flex rounded-md border border-border bg-muted p-0.5">
+                {[
+                  { id: "timeline", label: "Timeline" },
+                  { id: "calendar", label: "Calendar" },
+                ].map((v) => (
+                  <button
+                    key={v.id}
+                    onClick={() => setTrackerView(v.id as "calendar" | "timeline")}
+                    className={`rounded px-2 py-1 text-[9px] font-bold ${
+                      trackerView === v.id ? "bg-card text-foreground shadow-xs" : "text-muted-foreground"
+                    }`}
+                  >
+                    {v.label}
+                  </button>
+                ))}
+              </div>
+              {trackerView === "timeline" ? (
+                <div className="space-y-1.5">
+                  {[
+                    { name: "Paycheck", amount: "$2,400", status: "received" },
+                    { name: "Rent", amount: "-$1,200", status: "paid" },
+                    { name: "Verizon", amount: "-$85", status: "pending" },
+                  ].map((row) => (
+                    <div key={row.name} className="rounded-lg border border-border bg-card p-2">
+                      <div className="flex items-center justify-between text-[10px] font-bold">
+                        <span>{row.name}</span>
+                        <span className={row.amount.startsWith("-") ? "text-destructive" : "text-success"}>{row.amount}</span>
+                      </div>
+                      <span className="text-[8px] uppercase text-muted-foreground">{row.status}</span>
+                    </div>
+                  ))}
+                </div>
+              ) : (
+                <div className="grid grid-cols-7 gap-1">
+                  {Array.from({ length: 14 }).map((_, i) => (
+                    <div key={i} className="min-h-[28px] rounded border border-border bg-card p-1 text-[8px]">
+                      {i + 10}
+                    </div>
+                  ))}
+                </div>
+              )}
+            </>
+          )}
+        </div>
+
+        <div className="grid grid-cols-5 border-t border-border bg-card px-2 py-1.5 text-[8px] text-muted-foreground">
+          <span>Dash</span>
+          <span>Tracker</span>
+          <span>Bills</span>
+          <span>Credits</span>
+          <span>Goals</span>
+        </div>
+      </div>
+    </div>
+  );
+}
+
 function FeatureCard({
   icon,
   iconBg,
@@ -637,7 +779,7 @@ function FeatureCard({
 }
 
 function TrackerMockup() {
-  const [view, setView] = useState<"calendar" | "timeline">("calendar");
+  const [view, setView] = useState<"calendar" | "timeline">("timeline");
 
   return (
     <div className="rounded-lg border border-border overflow-hidden text-[10px] bg-card shadow-xs">
@@ -688,12 +830,12 @@ function TrackerMockup() {
                   }`}>{day}</span>
                   <div className="flex-1 flex flex-col justify-end gap-0.2 select-none overflow-hidden">
                     {day === 12 && (
-                      <div className="rounded bg-success/15 border border-success/30 text-success-foreground text-[6px] font-extrabold px-0.5 truncate leading-tight">
+                      <div className="rounded bg-success/15 border border-success/30 text-success text-[6px] font-extrabold px-0.5 truncate leading-tight">
                         Rent
                       </div>
                     )}
                     {day === 15 && (
-                      <div className="rounded bg-warning/15 border border-warning/30 text-warning-foreground text-[6px] font-extrabold px-0.5 truncate leading-tight">
+                      <div className="rounded bg-warning/15 border border-warning/30 text-warning text-[6px] font-extrabold px-0.5 truncate leading-tight">
                         Pay
                       </div>
                     )}
@@ -787,14 +929,27 @@ function BillsMockup() {
 
   return (
     <div className="overflow-hidden rounded-lg border border-border bg-card text-[10px]">
-      <table className="w-full">
+      <div className="space-y-1.5 p-2 md:hidden">
+        {bills.slice(0, 3).map((b) => (
+          <div key={b.name} className="rounded-md border border-border bg-card p-2">
+            <div className="flex items-center justify-between">
+              <p className="font-bold">{b.name}</p>
+              <p className="font-bold tabular-nums">{b.amount}</p>
+            </div>
+            <div className="mt-1 flex items-center gap-1 text-[9px] text-muted-foreground">
+              <span className="h-1.5 w-1.5 rounded-full" style={{ backgroundColor: b.category.color }} />
+              <span>{b.vendor}</span>
+              <span>•</span>
+              <span>{b.interval}</span>
+            </div>
+          </div>
+        ))}
+      </div>
+      <table className="hidden w-full md:table">
         <thead className="border-b border-border bg-secondary/15">
           <tr>
             {["Name", "Vendor", "Category", "Amount", "Interval", "Status"].map((h) => (
-              <th
-                key={h}
-                className="px-2 py-1.5 text-left text-[8.5px] font-black uppercase tracking-wider text-muted-foreground"
-              >
+              <th key={h} className="px-2 py-1.5 text-left text-[8.5px] font-black uppercase tracking-wider text-muted-foreground">
                 {h}
               </th>
             ))}
@@ -807,19 +962,14 @@ function BillsMockup() {
               <td className="px-2 py-1.5 text-muted-foreground/80">{b.vendor}</td>
               <td className="px-2 py-1.5">
                 <div className="flex items-center gap-1">
-                  <span
-                    className="h-1.5 w-1.5 flex-shrink-0 rounded-full"
-                    style={{ backgroundColor: b.category.color }}
-                  />
+                  <span className="h-1.5 w-1.5 flex-shrink-0 rounded-full" style={{ backgroundColor: b.category.color }} />
                   <span className="text-foreground/95 text-[9px]">{b.category.name}</span>
                 </div>
               </td>
               <td className="px-2 py-1.5 font-bold tabular-nums text-foreground">{b.amount}</td>
               <td className="px-2 py-1.5 text-muted-foreground/80">{b.interval}</td>
               <td className="px-2 py-1.5">
-                <span className="rounded border border-success/20 bg-success/15 px-1.5 py-0.2 text-[8px] font-bold text-success">
-                  Active
-                </span>
+                <span className="rounded border border-success/20 bg-success/15 px-1.5 py-0.2 text-[8px] font-bold text-success">Active</span>
               </td>
             </tr>
           ))}
@@ -870,5 +1020,3 @@ function IncomeMockup() {
     </div>
   );
 }
-
-

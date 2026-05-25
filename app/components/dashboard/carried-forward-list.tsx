@@ -12,7 +12,7 @@ import { cn } from "~/lib/utils";
 
 const STATUS_STYLES: Record<string, string> = {
   pending: "border-border bg-muted/50 text-muted-foreground",
-  overdue: "border-danger/20 bg-danger/10 text-danger",
+  overdue: "border-destructive/20 bg-destructive/10 text-destructive",
   partial: "border-warning/20 bg-warning/10 text-warning",
 };
 
@@ -29,7 +29,7 @@ export function CarriedForwardList() {
 
   if (isError) {
     return (
-      <div className="flex flex-col items-center justify-center py-8 text-center text-danger">
+      <div className="flex flex-col items-center justify-center py-8 text-center text-destructive">
         <AlertCircle className="mb-2 h-7 w-7 opacity-60" />
         <p className="text-sm font-medium">Failed to load carried balances</p>
       </div>
@@ -127,7 +127,7 @@ export function CarriedForwardList() {
                   <td className="px-4 py-3 font-medium text-accent transition-colors">
                     <span className="flex items-center gap-1.5 group-hover:underline">
                       {row.billName}
-                      {isOverdue && <AlertCircle className="h-3.5 w-3.5 text-danger flex-shrink-0" />}
+                      {isOverdue && <AlertCircle className="h-3.5 w-3.5 text-destructive flex-shrink-0" />}
                     </span>
                   </td>
                   <td className="px-4 py-3 text-muted-foreground">
@@ -152,7 +152,7 @@ export function CarriedForwardList() {
                     </span>
                   </td>
                   <td className="px-4 py-3 tabular-nums whitespace-nowrap">
-                    <span className={cn("font-semibold", daysOld > 0 ? "text-danger" : "text-muted-foreground")}>
+                    <span className={cn("font-semibold", daysOld > 0 ? "text-destructive" : "text-muted-foreground")}>
                       {daysOld === 0 ? "Today" : daysOld > 0 ? `${daysOld}d ago` : `in ${Math.abs(daysOld)}d`}
                     </span>
                   </td>
@@ -164,7 +164,7 @@ export function CarriedForwardList() {
                       <span className="ml-1.5 text-xs text-muted-foreground/50">upcoming</span>
                     )}
                   </td>
-                  <td className="px-4 py-3 text-right font-semibold tabular-nums text-danger whitespace-nowrap">
+                  <td className="px-4 py-3 text-right font-semibold tabular-nums text-destructive whitespace-nowrap">
                     {formatCurrency(remaining)}
                   </td>
                   <td className="px-4 py-3">

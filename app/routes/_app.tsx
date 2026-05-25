@@ -68,7 +68,7 @@ function AppLayout() {
   }
 
   return (
-    <div className="flex h-screen bg-background overflow-hidden">
+    <div className="brand-canvas flex h-screen overflow-hidden">
       {/* Backdrop overlay — mobile only, shown when sidebar is open */}
       {sidebarOpen && (
         <div
@@ -82,7 +82,7 @@ function AppLayout() {
       <aside
         className={[
           // Mobile: fixed overlay that slides in from the left
-          "fixed inset-y-0 left-0 z-30 flex w-64 flex-shrink-0 flex-col bg-card border-r border-border",
+          "fixed inset-y-0 left-0 z-30 flex w-64 flex-shrink-0 flex-col brand-panel border-r",
           "transition-transform duration-300 ease-in-out",
           sidebarOpen ? "translate-x-0" : "-translate-x-full",
           // Desktop: static flex child, always visible
@@ -154,7 +154,7 @@ function AppLayout() {
       {/* Main content */}
       <div className="flex min-w-0 flex-1 flex-col overflow-hidden">
         {/* Mobile top bar with hamburger — hidden on desktop */}
-        <div className="flex flex-shrink-0 items-center h-14 gap-3 border-b border-border bg-card px-4 md:hidden">
+        <div className="brand-panel flex h-14 flex-shrink-0 items-center gap-3 border-b px-4 md:hidden">
           <button
             onClick={() => setSidebarOpen(true)}
             className="-ml-1 rounded-md p-2 text-foreground/80 hover:bg-secondary transition-colors"
@@ -165,7 +165,7 @@ function AppLayout() {
           <Logo size="sm" />
         </div>
 
-        <main className="flex-1 overflow-y-auto bg-background">
+        <main className="flex-1 overflow-y-auto">
           <Outlet />
         </main>
       </div>

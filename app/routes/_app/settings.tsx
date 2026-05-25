@@ -26,7 +26,7 @@ function SettingsPage() {
   const { data: session } = authClient.useSession();
 
   return (
-    <div className="p-6 space-y-6 max-w-7xl mx-auto">
+    <div className="entity-page">
       <div>
         <h1 className="text-3xl font-extrabold font-heading text-foreground tracking-tight">Settings</h1>
         <p className="mt-1 text-sm text-muted-foreground">Manage your account preferences</p>

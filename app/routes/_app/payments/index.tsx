@@ -94,7 +94,7 @@ type PaidRow = {
 
 const STATUS_STYLES: Record<OccurrenceStatus, { label: string; className: string }> = {
   pending: { label: "Pending",  className: "border-border bg-muted/50 text-muted-foreground" },
-  overdue: { label: "Overdue",  className: "border-danger/20 bg-danger/10 text-danger" },
+  overdue: { label: "Overdue",  className: "border-destructive/20 bg-destructive/10 text-destructive" },
   partial: { label: "Partial",  className: "border-warning/20 bg-warning/10 text-warning" },
   paid:    { label: "Paid",     className: "border-success/20 bg-success/10 text-success" },
   skipped: { label: "Skipped",  className: "border-border bg-muted/50 text-muted-foreground" },
@@ -286,7 +286,7 @@ function PaymentsPage() {
             const active = statusFilter.has(s);
             const count = statusCounts[s] ?? 0;
             const styles: Record<string, string> = {
-              overdue:  active ? "border-danger/40 bg-danger/10 text-danger"       : "border-border text-muted-foreground hover:border-danger/30 hover:text-danger",
+              overdue:  active ? "border-destructive/40 bg-destructive/10 text-destructive"       : "border-border text-muted-foreground hover:border-destructive/30 hover:text-destructive",
               pending:  active ? "border-border bg-muted text-foreground"           : "border-border text-muted-foreground hover:bg-muted/50",
               partial:  active ? "border-warning/40 bg-warning/10 text-warning"    : "border-border text-muted-foreground hover:border-warning/30 hover:text-warning",
               paid:     active ? "border-success/40 bg-success/10 text-success"    : "border-border text-muted-foreground hover:border-success/30 hover:text-success",
@@ -429,8 +429,8 @@ function PaymentsPage() {
       )}
 
       {isError && (
-        <div className="rounded-lg border border-dashed border-danger/30 bg-danger/5 py-12 text-center">
-          <p className="text-sm text-danger font-medium">
+        <div className="rounded-lg border border-dashed border-destructive/30 bg-destructive/5 py-12 text-center">
+          <p className="text-sm text-destructive font-medium">
             Failed to load payments. Please refresh and try again.
           </p>
         </div>
@@ -500,7 +500,7 @@ function UpcomingSection({
                 key={row.occurrenceId}
                 className={cn(
                   "group relative flex items-stretch rounded-lg border bg-card shadow-sm overflow-hidden transition-shadow hover:shadow-md",
-                  row.status === "overdue" && "border-danger/30",
+                  row.status === "overdue" && "border-destructive/30",
                   isCarried && row.status !== "overdue" && "border-warning/30"
                 )}
               >
@@ -565,7 +565,7 @@ function UpcomingSection({
                   <div className="flex-shrink-0 text-right">
                     <p className={cn(
                       "font-bold tabular-nums text-sm",
-                      row.status === "overdue" ? "text-danger" : "text-foreground"
+                      row.status === "overdue" ? "text-destructive" : "text-foreground"
                     )}>
                       {formatCurrency(remaining)}
                     </p>

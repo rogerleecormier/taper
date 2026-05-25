@@ -87,16 +87,16 @@ export function OverdueBillsList({ overdueBills }: OverdueBillsListProps) {
                 >
                   {/* Row 1: icon + name + amount */}
                   <div className="flex items-center gap-3">
-                    <AlertCircle className="h-4 w-4 flex-shrink-0 text-danger" />
+                    <AlertCircle className="h-4 w-4 flex-shrink-0 text-destructive" />
                     <span className="flex-1 text-sm font-medium text-foreground">{bill.billName}</span>
-                    <span className="flex-shrink-0 text-sm font-bold tabular-nums text-danger">
+                    <span className="flex-shrink-0 text-sm font-bold tabular-nums text-destructive">
                       {formatCurrency(isPartial ? remainingCents : bill.amountCents)}
                     </span>
                   </div>
 
                   {/* Row 2: overdue label + partial info | badge + date */}
                   <div className="flex items-center gap-2 mt-1 pl-7">
-                    <span className="flex-1 text-xs font-medium text-danger">
+                    <span className="flex-1 text-xs font-medium text-destructive">
                       {days === 0 ? "Due today" : `${days} day${days !== 1 ? "s" : ""} overdue`}
                       {isPartial && (
                         <span className="text-muted-foreground font-normal ml-1.5">
@@ -104,7 +104,7 @@ export function OverdueBillsList({ overdueBills }: OverdueBillsListProps) {
                         </span>
                       )}
                     </span>
-                    <span className="flex-shrink-0 rounded-md border border-danger/20 bg-danger/10 px-2 py-0.5 text-xs font-semibold text-danger">
+                    <span className="flex-shrink-0 rounded-md border border-destructive/20 bg-destructive/10 px-2 py-0.5 text-xs font-semibold text-destructive">
                       {isPartial ? "Partial" : "Overdue"}
                     </span>
                     <span className="flex-shrink-0 text-xs text-muted-foreground">

@@ -169,7 +169,7 @@ export function IncomeList({ incomeSources }: IncomeListProps) {
             <Button
               variant="ghost"
               size="sm"
-              className="h-8 w-8 p-0 text-danger hover:text-danger/80"
+              className="h-8 w-8 p-0 text-destructive hover:text-destructive/80"
               onClick={() => handleDelete(src.id)}
               disabled={deletingId === src.id}
             >
@@ -240,7 +240,7 @@ export function IncomeList({ incomeSources }: IncomeListProps) {
                 <Button
                   variant="ghost"
                   size="sm"
-                  className="h-8 w-8 p-0 text-danger hover:text-danger/80"
+                  className="h-8 w-8 p-0 text-destructive hover:text-destructive/80"
                   onClick={() => handleDelete(src.id)}
                   disabled={deletingId === src.id}
                 >

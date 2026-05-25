@@ -5,26 +5,26 @@
   --font-sans: 'Plus Jakarta Sans', ui-sans-serif, system-ui, sans-serif;
   --font-heading: 'Outfit', ui-sans-serif, system-ui, sans-serif;
 
-  /* Soothing platinum-silver canvas */
-  --color-background: oklch(0.95 0.005 240);
-  --color-foreground: oklch(0.20 0.015 240);
+  /* Brand-aligned soft lavender canvas */
+  --color-background: oklch(0.955 0.02 292);
+  --color-foreground: oklch(0.22 0.02 282);
 
   /* Crisp White Card Panels */
-  --color-card: oklch(1 0 0);
-  --color-card-foreground: oklch(0.20 0.015 240);
+  --color-card: oklch(0.995 0.01 292);
+  --color-card-foreground: oklch(0.22 0.02 282);
 
-  --color-popover: oklch(1 0 0);
-  --color-popover-foreground: oklch(0.20 0.015 240);
+  --color-popover: oklch(0.995 0.01 292);
+  --color-popover-foreground: oklch(0.22 0.02 282);
 
   /* Royal Indigo-Violet Primary */
   --color-primary: oklch(0.50 0.18 285);
   --color-primary-foreground: oklch(0.98 0.005 285);
 
-  --color-secondary: oklch(0.94 0.01 285);
+  --color-secondary: oklch(0.95 0.02 288);
   --color-secondary-foreground: oklch(0.20 0.015 285);
 
-  --color-muted: oklch(0.94 0.01 285);
-  --color-muted-foreground: oklch(0.48 0.02 285);
+  --color-muted: oklch(0.95 0.018 288);
+  --color-muted-foreground: oklch(0.50 0.02 285);
 
   /* Precise Teal-Cyan Accent */
   --color-accent: oklch(0.54 0.15 200);
@@ -33,8 +33,8 @@
   --color-destructive: oklch(0.60 0.18 25);
   --color-destructive-foreground: oklch(0.98 0.005 240);
 
-  --color-border: oklch(0.90 0.005 285);
-  --color-input: oklch(0.90 0.005 285);
+  --color-border: oklch(0.89 0.02 286);
+  --color-input: oklch(0.89 0.02 286);
   --color-ring: oklch(0.50 0.18 285 / 0.4);
 
   /* Harmonious Success & Warning states */
@@ -60,10 +60,10 @@
     @apply mt-1 text-sm text-muted-foreground;
   }
   .entity-list-card {
-    @apply rounded-lg border border-border bg-card p-3 shadow-sm sm:p-4;
+    @apply brand-panel rounded-lg p-3 sm:p-4;
   }
   .entity-table-shell {
-    @apply hidden w-full overflow-x-auto rounded-lg border border-border bg-card shadow-sm md:block;
+    @apply brand-panel hidden w-full overflow-x-auto rounded-lg md:block;
   }
   .entity-table-head {
     @apply border-b border-border bg-secondary/30;
@@ -98,6 +98,17 @@
   }
   .taper-gradient {
     background: linear-gradient(135deg, var(--color-primary) 0%, var(--color-accent) 100%);
+  }
+
+  .brand-canvas {
+    background:
+      radial-gradient(1200px 600px at 15% -10%, oklch(0.9 0.08 295 / 0.32), transparent 60%),
+      radial-gradient(900px 500px at 90% -5%, oklch(0.9 0.07 205 / 0.26), transparent 60%),
+      linear-gradient(180deg, oklch(0.97 0.015 292) 0%, var(--color-background) 40%, var(--color-background) 100%);
+  }
+
+  .brand-panel {
+    @apply border border-border/80 bg-card/90 backdrop-blur-sm shadow-sm;
   }
 }
 

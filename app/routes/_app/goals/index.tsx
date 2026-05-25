@@ -25,7 +25,7 @@ function GoalsPage() {
   const { data: goals, isLoading, isError } = useGoals();
 
   return (
-    <div className="p-6 space-y-6 max-w-7xl mx-auto">
+    <div className="entity-page">
       <div className="flex flex-wrap items-center justify-between gap-3">
         <div>
           <h1 className="text-3xl font-extrabold font-heading text-foreground tracking-tight">Goals</h1>
@@ -57,8 +57,8 @@ function GoalsPage() {
       )}
 
       {isError && (
-        <div className="flex flex-col items-center justify-center rounded-lg border border-dashed border-danger/30 bg-danger/5 py-16 text-center">
-          <p className="text-sm text-danger font-medium">Failed to load goals. Please try again.</p>
+        <div className="flex flex-col items-center justify-center rounded-lg border border-dashed border-destructive/30 bg-destructive/5 py-16 text-center">
+          <p className="text-sm text-destructive font-medium">Failed to load goals. Please try again.</p>
         </div>
       )}
 

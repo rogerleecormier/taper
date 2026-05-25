@@ -79,7 +79,7 @@ export function CategoryList({ categories }: CategoryListProps) {
             Income
           </Badge>
         ) : (
-          <Badge className="border-danger/20 bg-danger/10 text-danger">
+          <Badge className="border-destructive/20 bg-destructive/10 text-destructive">
             Expense
           </Badge>
         );
@@ -122,7 +122,7 @@ export function CategoryList({ categories }: CategoryListProps) {
             <Button
               variant="ghost"
               size="sm"
-              className="h-8 w-8 p-0 text-danger hover:text-danger/80"
+              className="h-8 w-8 p-0 text-destructive hover:text-destructive/80"
               onClick={() => handleDelete(cat.id)}
               disabled={deletingId === cat.id}
             >
@@ -180,7 +180,7 @@ export function CategoryList({ categories }: CategoryListProps) {
                   {cat.type === "income" ? (
                     <Badge className="border-success/20 bg-success/10 text-success">Income</Badge>
                   ) : (
-                    <Badge className="border-danger/20 bg-danger/10 text-danger">Expense</Badge>
+                    <Badge className="border-destructive/20 bg-destructive/10 text-destructive">Expense</Badge>
                   )}
                   <span className="font-mono text-muted-foreground">{cat.color ?? "—"}</span>
                 </div>
@@ -204,7 +204,7 @@ export function CategoryList({ categories }: CategoryListProps) {
                 <Button
                   variant="ghost"
                   size="sm"
-                  className="h-8 w-8 p-0 text-danger hover:text-danger/80"
+                  className="h-8 w-8 p-0 text-destructive hover:text-destructive/80"
                   onClick={() => handleDelete(cat.id)}
                   disabled={deletingId === cat.id}
                 >

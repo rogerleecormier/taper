@@ -49,8 +49,8 @@ function IncomePage() {
       )}
 
       {isError && (
-        <div className="flex flex-col items-center justify-center rounded-lg border border-dashed border-danger/30 bg-danger/5 py-16 text-center">
-          <p className="text-sm text-danger font-medium">Failed to load income sources.</p>
+        <div className="flex flex-col items-center justify-center rounded-lg border border-dashed border-destructive/30 bg-destructive/5 py-16 text-center">
+          <p className="text-sm text-destructive font-medium">Failed to load income sources.</p>
           <p className="text-xs text-muted-foreground mt-1">
             If this is a new setup, run:{" "}
             <code className="font-mono">npx wrangler d1 migrations apply budget-db --remote</code>

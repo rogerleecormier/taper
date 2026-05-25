@@ -56,7 +56,7 @@ const STATUS_STYLES: Record<string, string> = {
   received: "border-accent/20 bg-accent/10 text-accent",
   partial: "border-warning/20 bg-warning/10 text-warning",
   pending: "border-border bg-muted/50 text-muted-foreground",
-  overdue: "border-danger/20 bg-danger/10 text-danger",
+  overdue: "border-destructive/20 bg-destructive/10 text-destructive",
   skipped: "border-border bg-muted/50 text-muted-foreground",
   carried: "border-accent/20 bg-accent/10 text-accent",
 };
@@ -261,8 +261,8 @@ function OccurrenceCard({
 
       {/* Delete confirmation */}
       {confirmDelete && (
-        <div className="flex items-center gap-2 px-4 py-2.5 bg-danger/5 border-b border-danger/20">
-          <span className="text-xs text-danger font-medium">
+        <div className="flex items-center gap-2 px-4 py-2.5 bg-destructive/5 border-b border-destructive/20">
+          <span className="text-xs text-destructive font-medium">
             Delete this instance{occurrence.receipts.length > 0 ? " and its receipts" : ""}?
           </span>
           <div className="ml-auto flex items-center gap-1.5">
@@ -463,7 +463,7 @@ function CreditDetailPage() {
   ).length;
 
   return (
-    <div className="p-6 space-y-6 max-w-3xl mx-auto">
+    <div className="entity-page max-w-3xl">
       {/* Back link */}
       <Link
         to="/credits"
