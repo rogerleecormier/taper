@@ -377,9 +377,9 @@ export function TrackerOccurrenceRow({
         className={cn(
           "rounded-2xl border bg-card p-4 transition-all shadow-xs duration-200 hover:shadow-md hover:border-primary/20",
           status === "skipped" && "bg-muted/10 opacity-75 border-muted/30",
-          status === "paid" && "border-success/15 bg-success/5/10",
-          status === "received" && "border-success/15 bg-success/5/10",
-          status === "overdue" && "border-destructive/15 bg-destructive/5/10"
+          status === "paid" && "border-success/15 bg-success/5",
+          status === "received" && "border-success/15 bg-success/5",
+          status === "overdue" && "border-destructive/15 bg-destructive/5"
         )}
       >
         {/* Card Header */}
