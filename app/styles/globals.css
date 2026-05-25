@@ -60,10 +60,10 @@
     @apply mt-1 text-sm text-muted-foreground;
   }
   .entity-list-card {
-    @apply brand-panel rounded-lg p-3 sm:p-4;
+    @apply rounded-lg border border-border/80 bg-card/90 p-3 shadow-sm backdrop-blur-sm sm:p-4;
   }
   .entity-table-shell {
-    @apply brand-panel hidden w-full overflow-x-auto rounded-lg md:block;
+    @apply hidden w-full overflow-x-auto rounded-lg border border-border/80 bg-card/90 shadow-sm backdrop-blur-sm md:block;
   }
   .entity-table-head {
     @apply border-b border-border bg-secondary/30;
