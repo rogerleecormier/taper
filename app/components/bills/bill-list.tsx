@@ -50,6 +50,12 @@ export function BillList({ bills }: BillListProps) {
     }
   }
 
+  function renderStatusBadge(bill: BillWithRelations) {
+    if (bill.hidden) return <Badge variant="secondary">Hidden</Badge>;
+    if (!bill.isActive) return <Badge variant="secondary">Inactive</Badge>;
+    return <Badge className="border-success/20 bg-success/10 text-success">Active</Badge>;
+  }
+
   const columns = [
     columnHelper.accessor("name", {
       header: "Name",
@@ -110,14 +116,7 @@ export function BillList({ bills }: BillListProps) {
     }),
     columnHelper.accessor("isActive", {
       header: "Status",
-      cell: (info) =>
-        info.getValue() ? (
-          <Badge className="border-success/20 bg-success/10 text-success">
-            Active
-          </Badge>
-        ) : (
-          <Badge variant="secondary">Inactive</Badge>
-        ),
+      cell: (info) => renderStatusBadge(info.row.original),
     }),
     columnHelper.display({
       id: "actions",
@@ -252,11 +251,7 @@ export function BillList({ bills }: BillListProps) {
               <span className="text-muted-foreground">
                 {INTERVAL_LABELS[bill.interval] ?? bill.interval}
               </span>
-              {bill.isActive ? (
-                <Badge className="border-success/20 bg-success/10 text-success">Active</Badge>
-              ) : (
-                <Badge variant="secondary">Inactive</Badge>
-              )}
+              {renderStatusBadge(bill)}
             </div>
           </div>
         ))}
