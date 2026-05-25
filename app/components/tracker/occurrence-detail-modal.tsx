@@ -129,15 +129,17 @@ export function OccurrenceDetailModal({ item, open, onClose }: OccurrenceDetailM
       return;
     }
     try {
+      const selectedPaidDate = date;
       await addPayment.mutateAsync({
         occurrenceId: item.occurrenceId,
         amountCents: cents,
-        paidDate: date,
+        paidDate: selectedPaidDate,
         notes: notes.trim() || undefined,
       });
       setAmount("");
       setNotes("");
-      setDate(today);
+      // Preserve chosen date so backdated entries stay explicit during this session.
+      setDate(selectedPaidDate);
     } catch (e) {
       setError(e instanceof Error ? e.message : "Failed to save payment.");
     }

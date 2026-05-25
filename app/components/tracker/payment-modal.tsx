@@ -75,15 +75,17 @@ export function PaymentModal({
       return;
     }
     try {
+      const selectedPaidDate = date;
       await addPayment.mutateAsync({
         occurrenceId: occurrence.id,
         amountCents: cents,
-        paidDate: date,
+        paidDate: selectedPaidDate,
         notes: notes.trim() || undefined,
       });
       setLastRecorded(cents);
       setNotes("");
-      setDate(today);
+      // Preserve the selected date instead of forcing today's date after save.
+      setDate(selectedPaidDate);
     } catch (e) {
       setError(e instanceof Error ? e.message : "Failed to save payment. Please try again.");
     }
