@@ -16,7 +16,7 @@ interface UpcomingBillsListProps {
   upcomingBills: DashboardData["upcomingBills"];
 }
 
-type DayFilter = 7 | 14 | 30;
+const UPCOMING_WINDOW_DAYS = 30;
 
 const STATUS_CLASSES: Record<string, string> = {
   pending: "border-warning/20 bg-warning/10 text-warning",
@@ -25,7 +25,7 @@ const STATUS_CLASSES: Record<string, string> = {
   skipped: "border-border bg-muted/50 text-muted-foreground",
 };
 
-function getFilteredBills(bills: UpcomingBill[], days: DayFilter, referenceDate: Date, showHidden: boolean) {
+function getFilteredBills(bills: UpcomingBill[], days: number, referenceDate: Date, showHidden: boolean) {
   const referenceStr = toDateStr(referenceDate);
   const todayStr = toDateStr(new Date());
   const startStr = referenceStr > todayStr ? referenceStr : todayStr;
@@ -45,13 +45,17 @@ function formatDate(dateStr: string): string {
 }
 
 export function UpcomingBillsList({ upcomingBills }: UpcomingBillsListProps) {
-  const [selectedDays, setSelectedDays] = useState<DayFilter>(7);
   const [modalItem, setModalItem] = useState<OccurrenceModalItem | null>(null);
   const [showHidden, setShowHidden] = useState(false);
   const [showAll, setShowAll] = useState(false);
   const referenceDate = useStore(trackerStore, (s) => s.periodStart);
 
-  const filtered = getFilteredBills(upcomingBills, selectedDays, referenceDate, showHidden);
+  const filtered = getFilteredBills(
+    upcomingBills,
+    UPCOMING_WINDOW_DAYS,
+    referenceDate,
+    showHidden
+  );
   const visibleRows = showAll ? filtered : filtered.slice(0, 5);
 
   return (
@@ -74,22 +78,6 @@ export function UpcomingBillsList({ upcomingBills }: UpcomingBillsListProps) {
               {showHidden ? <Eye className="h-3 w-3" /> : <EyeOff className="h-3 w-3" />}
               {showHidden ? "Hiding Hidden" : "Show Hidden"}
             </button>
-            <div className="inline-flex rounded-md border bg-muted p-0.5">
-              {([7, 14, 30] as DayFilter[]).map((days) => (
-                <button
-                  key={days}
-                  onClick={() => setSelectedDays(days)}
-                  className={cn(
-                    "rounded px-3 py-1 text-xs font-medium transition-colors",
-                    selectedDays === days
-                      ? "bg-background text-foreground shadow"
-                      : "text-muted-foreground hover:text-foreground"
-                  )}
-                >
-                  {days}d
-                </button>
-              ))}
-            </div>
           </div>
         </div>
 
