@@ -174,9 +174,7 @@ export const getDashboardData = createServerFn()
               eq(billOccurrences.userId, user.id),
               gte(billOccurrences.dueDate, actualToday),
               lte(billOccurrences.dueDate, upcomingEnd),
-              inArray(billOccurrences.status, ["pending", "partial"]),
-              eq(billOccurrences.hidden, false),
-              eq(bills.hidden, false)
+              inArray(billOccurrences.status, ["pending", "partial"])
             )
           )
           .orderBy(asc(billOccurrences.dueDate))
@@ -194,9 +192,7 @@ export const getDashboardData = createServerFn()
             and(
               eq(billOccurrences.userId, user.id),
               lt(billOccurrences.dueDate, actualToday),
-              inArray(billOccurrences.status, ["pending", "partial", "overdue"]),
-              eq(billOccurrences.hidden, false),
-              eq(bills.hidden, false)
+              inArray(billOccurrences.status, ["pending", "partial", "overdue"])
             )
           )
           .orderBy(asc(billOccurrences.dueDate))
@@ -315,7 +311,7 @@ export const getDashboardData = createServerFn()
           paidAmountCents: r.occurrence.paidAmountCents,
           carriedFromId: r.occurrence.carriedFromId,
           status: r.occurrence.status,
-          hidden: r.occurrence.hidden,
+          hidden: r.occurrence.hidden || (r.bill?.hidden ?? false),
         })),
         overdueBills: overdueOccurrences.map((r) => ({
           id: r.occurrence.id,
@@ -325,7 +321,7 @@ export const getDashboardData = createServerFn()
           amountCents: r.occurrence.amountCents,
           paidAmountCents: r.occurrence.paidAmountCents ?? 0,
           status: r.occurrence.status,
-          hidden: r.occurrence.hidden,
+          hidden: r.occurrence.hidden || (r.bill?.hidden ?? false),
         })),
         recentPayments: recentPayments.map((r) => ({
           id: r.payment.id,

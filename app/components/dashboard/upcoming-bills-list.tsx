@@ -70,7 +70,7 @@ export function UpcomingBillsList({ upcomingBills }: UpcomingBillsListProps) {
               )}
             >
               {showHidden ? <Eye className="h-3 w-3" /> : <EyeOff className="h-3 w-3" />}
-              Hidden
+              {showHidden ? "Hiding Hidden" : "Show Hidden"}
             </button>
             <div className="inline-flex rounded-md border bg-muted p-0.5">
               {([7, 14, 30] as DayFilter[]).map((days) => (

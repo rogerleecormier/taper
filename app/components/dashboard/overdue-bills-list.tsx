@@ -59,7 +59,7 @@ export function OverdueBillsList({ overdueBills }: OverdueBillsListProps) {
             )}
           >
             {showHidden ? <Eye className="h-3 w-3" /> : <EyeOff className="h-3 w-3" />}
-            Hidden
+            {showHidden ? "Hiding Hidden" : "Show Hidden"}
           </button>
         </div>
         <ul className="divide-y border-border">
