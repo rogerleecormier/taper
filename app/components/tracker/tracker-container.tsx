@@ -240,6 +240,10 @@ export function TrackerContainer({
     filteredCreditParents.forEach((p) => {
       if (!p) return;
       p.occurrences.forEach((occ) => {
+        const receipts = creditReceiptsByOccurrenceMap?.get(occ.id) ?? [];
+        const dateStr = receipts.length > 0
+          ? receipts[receipts.length - 1].receivedDate
+          : occ.dueDate;
         list.push({
           occurrence: occ,
           type: "credit",
@@ -248,9 +252,9 @@ export function TrackerContainer({
           categoryName: p.categoryName,
           categoryColor: p.categoryColor,
           vendorName: p.vendorName,
-          dateStr: occ.dueDate,
+          dateStr,
           payments: [],
-          receipts: creditReceiptsByOccurrenceMap?.get(occ.id) ?? [],
+          receipts,
         });
       });
     });
