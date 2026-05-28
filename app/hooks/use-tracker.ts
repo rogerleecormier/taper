@@ -207,7 +207,7 @@ export function useTrackerData(interval: TrackerInterval, periodStart: Date) {
         amountCents: c.amountCents,
         interval: c.interval,
         sortOrder: c.sortOrder,
-        hidden: false,
+        hidden: c.hidden,
       }));
 
     return [...billRows, ...incomeRows, ...creditRows].sort((a, b) => a.sortOrder - b.sortOrder);
