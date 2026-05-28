@@ -107,6 +107,10 @@ export const getCredits = createServerFn()
   )
   .handler(async ({ data, context }) => {
     const { db, user } = context;
+    const conditions = [eq(credits.userId, user.id)];
+    if (data?.isActive !== undefined) {
+      conditions.push(eq(credits.isActive, data.isActive));
+    }
     const rows = await db
       .select({
         credit: credits,
@@ -116,7 +120,7 @@ export const getCredits = createServerFn()
       .from(credits)
       .leftJoin(vendors, eq(credits.vendorId, vendors.id))
       .leftJoin(categories, eq(credits.categoryId, categories.id))
-      .where(eq(credits.userId, user.id))
+      .where(and(...conditions))
       .orderBy(asc(credits.sortOrder), asc(credits.name))
       .all();
 
