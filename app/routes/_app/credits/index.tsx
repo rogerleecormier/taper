@@ -1,10 +1,12 @@
 import { createFileRoute } from "@tanstack/react-router";
 import { useState } from "react";
+import { useStore } from "@tanstack/react-store";
 import { Plus, BadgeDollarSign } from "lucide-react";
 import { useCredits } from "~/hooks/use-credits";
 import { CreditList } from "~/components/credits/credit-list";
 import { CreditFormDialog } from "~/components/credits/credit-form-dialog";
 import { Button } from "~/components/ui/button";
+import { trackerStore, setShowHidden } from "~/store/tracker-store";
 
 export const Route = createFileRoute("/_app/credits/")({
   component: CreditsPage,
@@ -24,10 +26,12 @@ export const Route = createFileRoute("/_app/credits/")({
 function CreditsPage() {
   const [isDialogOpen, setIsDialogOpen] = useState(false);
   const [showStandaloneCredits, setShowStandaloneCredits] = useState(false);
+  const showHidden = useStore(trackerStore, (state) => state.showHidden);
   const { data: credits, isLoading, isError } = useCredits();
-  const visibleCredits = (credits ?? []).filter((credit) =>
-    showStandaloneCredits ? true : credit.interval !== "standalone"
-  );
+  const visibleCredits = (credits ?? []).filter((credit) => {
+    if (!showHidden && credit.hidden) return false;
+    return showStandaloneCredits ? true : credit.interval !== "standalone";
+  });
 
   return (
     <div className="entity-page">
@@ -43,15 +47,26 @@ function CreditsPage() {
           Add Credit
         </Button>
       </div>
-      <label className="inline-flex w-fit items-center gap-2 text-sm text-muted-foreground cursor-pointer select-none">
-        <input
-          type="checkbox"
-          checked={showStandaloneCredits}
-          onChange={(e) => setShowStandaloneCredits(e.target.checked)}
-          className="h-4 w-4 rounded border-input bg-card text-primary focus:ring-primary focus:ring-offset-background"
-        />
-        Show standalone credits
-      </label>
+      <div className="flex flex-col gap-2 sm:flex-row sm:gap-4">
+        <label className="inline-flex w-fit items-center gap-2 text-sm text-muted-foreground cursor-pointer select-none">
+          <input
+            type="checkbox"
+            checked={showStandaloneCredits}
+            onChange={(e) => setShowStandaloneCredits(e.target.checked)}
+            className="h-4 w-4 rounded border-input bg-card text-primary focus:ring-primary focus:ring-offset-background"
+          />
+          Show standalone credits
+        </label>
+        <label className="inline-flex w-fit items-center gap-2 text-sm text-muted-foreground cursor-pointer select-none">
+          <input
+            type="checkbox"
+            checked={showHidden}
+            onChange={(e) => setShowHidden(e.target.checked)}
+            className="h-4 w-4 rounded border-input bg-card text-primary focus:ring-primary focus:ring-offset-background"
+          />
+          Show hidden
+        </label>
+      </div>
 
       {isLoading && (
         <div className="space-y-2">

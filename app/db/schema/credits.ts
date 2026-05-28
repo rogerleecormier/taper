@@ -31,6 +31,7 @@ export const credits = sqliteTable("credits", {
   dayOfMonth: integer("day_of_month"),
   dayOfWeek: integer("day_of_week"),
   isActive: integer("is_active", { mode: "boolean" }).notNull().default(true),
+  hidden: integer("hidden", { mode: "boolean" }).notNull().default(false),
   notes: text("notes"),
   sortOrder: integer("sort_order").notNull().default(0),
   createdAt: integer("created_at", { mode: "timestamp" }).notNull(),

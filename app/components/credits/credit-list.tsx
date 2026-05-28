@@ -8,11 +8,11 @@ import {
   flexRender,
   createColumnHelper,
 } from "@tanstack/react-table";
-import { Pencil, Trash2 } from "lucide-react";
+import { Eye, EyeOff, Pencil, Trash2 } from "lucide-react";
 import { Button } from "~/components/ui/button";
 import { Badge } from "~/components/ui/badge";
 import { formatCurrency } from "~/lib/currency";
-import { useDeleteCredit } from "~/hooks/use-credits";
+import { useDeleteCredit, useToggleCreditHidden } from "~/hooks/use-credits";
 import { CreditFormDialog } from "./credit-form-dialog";
 import type { Credit } from "~/db/schema/credits";
 
@@ -37,6 +37,7 @@ const columnHelper = createColumnHelper<CreditWithRelations>();
 
 export function CreditList({ credits }: CreditListProps) {
   const deleteCredit = useDeleteCredit();
+  const toggleHidden = useToggleCreditHidden();
   const [deletingId, setDeletingId] = useState<string | null>(null);
 
   async function handleDelete(id: string) {
@@ -47,6 +48,12 @@ export function CreditList({ credits }: CreditListProps) {
     } finally {
       setDeletingId(null);
     }
+  }
+
+  function renderStatusBadge(credit: CreditWithRelations) {
+    if (credit.hidden) return <Badge variant="secondary">Hidden</Badge>;
+    if (!credit.isActive) return <Badge variant="secondary">Inactive</Badge>;
+    return <Badge className="border-accent/20 bg-accent/10 text-accent">Active</Badge>;
   }
 
   const columns = [
@@ -109,14 +116,7 @@ export function CreditList({ credits }: CreditListProps) {
     }),
     columnHelper.accessor("isActive", {
       header: "Status",
-      cell: (info) =>
-        info.getValue() ? (
-          <Badge className="border-accent/20 bg-accent/10 text-accent">
-            Active
-          </Badge>
-        ) : (
-          <Badge variant="secondary">Inactive</Badge>
-        ),
+      cell: (info) => renderStatusBadge(info.row.original),
     }),
     columnHelper.display({
       id: "actions",
@@ -144,8 +144,20 @@ export function CreditList({ credits }: CreditListProps) {
                 dayOfMonth: credit.dayOfMonth ?? null,
                 dayOfWeek: credit.dayOfWeek ?? null,
                 notes: credit.notes ?? "",
+                hidden: credit.hidden,
               }}
             />
+            <Button
+              variant="ghost"
+              size="sm"
+              className="h-8 w-8 p-0 text-muted-foreground hover:text-foreground"
+              onClick={() => toggleHidden.mutate({ id: credit.id, hidden: !credit.hidden })}
+              disabled={toggleHidden.isPending}
+              title={credit.hidden ? "Unhide" : "Hide"}
+            >
+              {credit.hidden ? <Eye className="h-3.5 w-3.5" /> : <EyeOff className="h-3.5 w-3.5" />}
+              <span className="sr-only">{credit.hidden ? "Unhide" : "Hide"}</span>
+            </Button>
             <Button
               variant="ghost"
               size="sm"
@@ -206,8 +218,20 @@ export function CreditList({ credits }: CreditListProps) {
                     dayOfMonth: credit.dayOfMonth ?? null,
                     dayOfWeek: credit.dayOfWeek ?? null,
                     notes: credit.notes ?? "",
+                    hidden: credit.hidden,
                   }}
                 />
+                <Button
+                  variant="ghost"
+                  size="sm"
+                  className="h-8 w-8 p-0 text-muted-foreground hover:text-foreground"
+                  onClick={() => toggleHidden.mutate({ id: credit.id, hidden: !credit.hidden })}
+                  disabled={toggleHidden.isPending}
+                  title={credit.hidden ? "Unhide" : "Hide"}
+                >
+                  {credit.hidden ? <Eye className="h-3.5 w-3.5" /> : <EyeOff className="h-3.5 w-3.5" />}
+                  <span className="sr-only">{credit.hidden ? "Unhide" : "Hide"}</span>
+                </Button>
                 <Button
                   variant="ghost"
                   size="sm"
@@ -227,11 +251,7 @@ export function CreditList({ credits }: CreditListProps) {
               <span className="text-muted-foreground">
                 {INTERVAL_LABELS[credit.interval] ?? credit.interval}
               </span>
-              {credit.isActive ? (
-                <Badge className="border-accent/20 bg-accent/10 text-accent">Active</Badge>
-              ) : (
-                <Badge variant="secondary">Inactive</Badge>
-              )}
+              {renderStatusBadge(credit)}
             </div>
           </div>
         ))}

@@ -26,6 +26,7 @@ export type CreditFormData = {
   dayOfMonth: number | null;
   dayOfWeek: number | null;
   notes: string;
+  hidden?: boolean;
 };
 
 interface CreditFormProps {
@@ -79,6 +80,7 @@ export function CreditForm({
     defaultValues?.dayOfWeek != null ? String(defaultValues.dayOfWeek) : ""
   );
   const [notes, setNotes] = useState(defaultValues?.notes ?? "");
+  const [hidden, setHidden] = useState(defaultValues?.hidden ?? false);
   const [error, setError] = useState<string | null>(null);
 
   const showDayOfMonth = interval === "monthly";
@@ -109,6 +111,7 @@ export function CreditForm({
       dayOfMonth: showDayOfMonth && dayOfMonth ? parseInt(dayOfMonth, 10) : null,
       dayOfWeek: showDayOfWeek && dayOfWeek !== "" ? parseInt(dayOfWeek, 10) : null,
       notes,
+      hidden,
     });
   }
 
@@ -258,6 +261,20 @@ export function CreditForm({
           onChange={(e) => setNotes(e.target.value)}
           className="w-full rounded-md border border-input bg-transparent px-3 py-2 text-sm shadow-sm placeholder:text-muted-foreground focus:outline-none focus:ring-1 focus:ring-ring disabled:cursor-not-allowed disabled:opacity-50"
         />
+      </div>
+
+      {/* Hidden */}
+      <div className="flex items-center gap-2">
+        <input
+          id="credit-hidden"
+          type="checkbox"
+          checked={hidden}
+          onChange={(e) => setHidden(e.target.checked)}
+          className="rounded border border-input"
+        />
+        <Label htmlFor="credit-hidden" className="cursor-pointer">
+          Hide this credit
+        </Label>
       </div>
 
       <Button type="submit" className="w-full" disabled={isLoading}>

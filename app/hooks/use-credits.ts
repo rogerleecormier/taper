@@ -7,6 +7,7 @@ import {
   updateCredit,
   deleteCredit,
   reorderCredits,
+  toggleCreditHidden,
 } from "~/server/fn/credits";
 
 export const creditKeys = {
@@ -75,6 +76,19 @@ export function useDeleteCredit() {
   const qc = useQueryClient();
   return useMutation({
     mutationFn: (id: string) => deleteCredit({ data: { id } }),
+    onSuccess: () => {
+      qc.invalidateQueries({ queryKey: creditKeys.all() });
+      qc.invalidateQueries({ queryKey: ["credit-occurrences"] });
+      qc.invalidateQueries({ queryKey: ["dashboard"] });
+    },
+  });
+}
+
+export function useToggleCreditHidden() {
+  const qc = useQueryClient();
+  return useMutation({
+    mutationFn: (data: { id: string; hidden: boolean }) =>
+      toggleCreditHidden({ data }),
     onSuccess: () => {
       qc.invalidateQueries({ queryKey: creditKeys.all() });
       qc.invalidateQueries({ queryKey: ["credit-occurrences"] });

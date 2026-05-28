@@ -36,6 +36,7 @@ const CreditInputSchema = z.object({
   dayOfWeek: z.number().int().min(0).max(6).nullable().optional(),
   notes: z.string().optional(),
   sortOrder: z.number().int().optional(),
+  hidden: z.boolean().optional(),
 });
 
 async function generateAndInsertCreditOccurrences(
@@ -159,6 +160,7 @@ export const createCredit = createServerFn()
       dayOfMonth: data.dayOfMonth ?? null,
       dayOfWeek: data.dayOfWeek ?? null,
       isActive: true,
+      hidden: data.hidden ?? false,
       notes: data.notes ?? null,
       sortOrder: data.sortOrder ?? 0,
       createdAt: now,
@@ -203,6 +205,7 @@ export const updateCredit = createServerFn()
         dayOfWeek: data.dayOfWeek ?? null,
         notes: data.notes ?? null,
         sortOrder: data.sortOrder ?? 0,
+        hidden: data.hidden ?? false,
         updatedAt: now,
       })
       .where(and(eq(credits.id, data.id), eq(credits.userId, user.id)));
@@ -256,6 +259,17 @@ export const deleteCredit = createServerFn()
     const { db, user } = context;
     await db
       .delete(credits)
+      .where(and(eq(credits.id, data.id), eq(credits.userId, user.id)));
+  });
+
+export const toggleCreditHidden = createServerFn()
+  .middleware([authMiddleware])
+  .inputValidator(z.object({ id: z.string(), hidden: z.boolean() }))
+  .handler(async ({ data, context }) => {
+    const { db, user } = context;
+    await db
+      .update(credits)
+      .set({ hidden: data.hidden, updatedAt: new Date() })
       .where(and(eq(credits.id, data.id), eq(credits.userId, user.id)));
   });
 
