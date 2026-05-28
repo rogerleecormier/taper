@@ -116,6 +116,7 @@ export function TrackerContainer({
           ).sort((a, b) => a.dueDate.localeCompare(b.dueDate)) as CreditOccurrence[];
           const visibleOccs = allOccs.filter((o) => {
             if (o.status === "carried" && o.carriedFromId) return false;
+            if (o.status === "received" || UNPAID_STATUSES.has(o.status)) return true;
             if (!showReceived && !UNPAID_STATUSES.has(o.status)) return false;
             return true;
           });
