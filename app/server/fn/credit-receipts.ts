@@ -122,8 +122,8 @@ export const getCreditReceiptsForPeriod = createServerFn()
       .where(
         and(
           eq(creditReceipts.userId, user.id),
-          gte(creditOccurrences.dueDate, data.startDate),
-          lte(creditOccurrences.dueDate, data.endDate)
+          gte(creditReceipts.receivedDate, data.startDate),
+          lte(creditReceipts.receivedDate, data.endDate)
         )
       )
       .orderBy(asc(creditReceipts.receivedDate))

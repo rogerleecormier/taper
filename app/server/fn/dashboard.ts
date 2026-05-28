@@ -10,8 +10,8 @@ import { vendors } from "~/db/schema/vendors";
 import { categories } from "~/db/schema/categories";
 import { goals } from "~/db/schema/goals";
 import { getCachedOrFetch, dashboardCacheKey } from "~/lib/kv-cache";
-import { toDateStr } from "~/lib/dates";
-import { addDays, startOfMonth, endOfMonth, format, parseISO } from "date-fns";
+import { toDateStr, getPeriodEnd } from "~/lib/dates";
+import { addDays, format, parseISO } from "date-fns";
 
 export type DashboardData = {
   periodLabel: string;
@@ -94,14 +94,9 @@ export const getDashboardData = createServerFn()
     // Build a human-readable period label
     const ps = parseISO(periodStart);
     const pe = parseISO(periodEnd);
-    const isFullMonth =
-      periodStart === toDateStr(startOfMonth(ps)) &&
-      periodEnd === toDateStr(endOfMonth(ps));
-    const periodLabel = isFullMonth
-      ? format(ps, "MMMM yyyy")
-      : ps.getMonth() === pe.getMonth() && ps.getFullYear() === pe.getFullYear()
-        ? `${format(ps, "MMM d")} – ${format(pe, "d, yyyy")}`
-        : `${format(ps, "MMM d")} – ${format(pe, "MMM d, yyyy")}`;
+    const periodLabel = ps.getMonth() === pe.getMonth() && ps.getFullYear() === pe.getFullYear()
+      ? `${format(ps, "MMM d")} – ${format(pe, "d, yyyy")}`
+      : `${format(ps, "MMM d")} – ${format(pe, "MMM d, yyyy")}`;
 
     const cacheKey = dashboardCacheKey(
       user.id,
@@ -191,7 +186,7 @@ export const getDashboardData = createServerFn()
           .where(
             and(
               eq(billOccurrences.userId, user.id),
-              lt(billOccurrences.dueDate, actualToday),
+              lt(billOccurrences.dueDate, periodStart),
               inArray(billOccurrences.status, ["pending", "partial", "overdue"])
             )
           )
