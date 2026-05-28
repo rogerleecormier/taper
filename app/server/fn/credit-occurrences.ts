@@ -1,7 +1,7 @@
 import { createServerFn } from "@tanstack/react-start";
 import { z } from "zod";
 import { nanoid } from "nanoid";
-import { eq, and, gte, lte, inArray, lt } from "drizzle-orm";
+import { eq, and, gte, lte, inArray, lt, or } from "drizzle-orm";
 import { authMiddleware } from "~/server/middleware";
 import { creditOccurrences, type CreditOccurrenceStatus } from "~/db/schema/credit-occurrences";
 import { credits } from "~/db/schema/credits";
@@ -23,10 +23,17 @@ export const getCreditOccurrences = createServerFn()
   )
   .handler(async ({ data, context }) => {
     const { db, user } = context;
+    const dueInRange = and(
+      gte(creditOccurrences.dueDate, data.startDate),
+      lte(creditOccurrences.dueDate, data.endDate)
+    );
+    const receivedInRange = and(
+      gte(creditOccurrences.receivedDate, data.startDate),
+      lte(creditOccurrences.receivedDate, data.endDate)
+    );
     const conditions = [
       eq(creditOccurrences.userId, user.id),
-      gte(creditOccurrences.dueDate, data.startDate),
-      lte(creditOccurrences.dueDate, data.endDate),
+      or(dueInRange, receivedInRange),
     ];
     if (data.creditId) conditions.push(eq(creditOccurrences.creditId, data.creditId));
     if (data.status) conditions.push(eq(creditOccurrences.status, data.status));

@@ -153,27 +153,14 @@ export function useTrackerData(interval: TrackerInterval, periodStart: Date) {
   );
 
   const filteredCreditOccs = useMemo(
-    () => {
-      const receiptsByOccId = new Map<string, CreditReceipt[]>();
-      for (const r of periodReceipts) {
-        let arr = receiptsByOccId.get(r.occurrenceId);
-        if (!arr) {
-          arr = [];
-          receiptsByOccId.set(r.occurrenceId, arr);
-        }
-        arr.push(r);
-      }
-
-      return creditOccs.filter((occ) => {
-        const dueInRange = isDateInRange(occ.dueDate, windowStart, windowEnd);
-        const receipts = receiptsByOccId.get(occ.id) ?? [];
-        const hasReceiptInRange = receipts.some((r) =>
-          isDateInRange(r.receivedDate, windowStart, windowEnd)
-        );
-        return dueInRange || hasReceiptInRange;
-      });
-    },
-    [creditOccs, periodReceipts, windowStart, windowEnd]
+    () =>
+      creditOccs.filter(
+        (occ) =>
+          isDateInRange(occ.dueDate, windowStart, windowEnd) ||
+          (occ.receivedDate != null &&
+            isDateInRange(occ.receivedDate, windowStart, windowEnd))
+      ),
+    [creditOccs, windowStart, windowEnd]
   );
 
   const rows: TrackerRow[] = useMemo(() => {

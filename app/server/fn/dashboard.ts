@@ -1,11 +1,12 @@
 import { createServerFn } from "@tanstack/react-start";
 import { z } from "zod";
-import { eq, and, gte, lte, lt, desc, asc, inArray } from "drizzle-orm";
+import { eq, and, gte, lte, lt, desc, asc, inArray, or } from "drizzle-orm";
 import { authMiddleware } from "~/server/middleware";
 import { bills } from "~/db/schema/bills";
 import { billOccurrences } from "~/db/schema/bill-occurrences";
 import { billPayments } from "~/db/schema/bill-payments";
 import { incomeOccurrences } from "~/db/schema/income-occurrences";
+import { creditOccurrences } from "~/db/schema/credit-occurrences";
 import { vendors } from "~/db/schema/vendors";
 import { categories } from "~/db/schema/categories";
 import { goals } from "~/db/schema/goals";
@@ -17,6 +18,7 @@ export type DashboardData = {
   periodLabel: string;
   totalMonthlyIncomeCents: number;
   totalMonthlyExpensesCents: number;
+  totalCreditsCents: number;
   netBalanceCents: number;
   unallocatedCents: number;
   totalGoalAllocatedCents: number;
@@ -107,6 +109,7 @@ export const getDashboardData = createServerFn()
       const [
         periodIncomeOccurrences,
         periodBillOccurrences,
+        periodCreditOccurrences,
         activeGoals,
         upcomingOccurrences,
         overdueOccurrences,
@@ -142,6 +145,27 @@ export const getDashboardData = createServerFn()
               inArray(billOccurrences.status, ["pending", "partial", "paid", "overdue"]),
               eq(billOccurrences.hidden, false),
               eq(bills.hidden, false)
+            )
+          )
+          .all(),
+
+        db
+          .select()
+          .from(creditOccurrences)
+          .where(
+            and(
+              eq(creditOccurrences.userId, user.id),
+              or(
+                and(
+                  gte(creditOccurrences.receivedDate, periodStart),
+                  lte(creditOccurrences.receivedDate, periodEnd)
+                ),
+                and(
+                  gte(creditOccurrences.dueDate, periodStart),
+                  lte(creditOccurrences.dueDate, periodEnd),
+                  inArray(creditOccurrences.status, ["pending", "partial", "overdue"])
+                )
+              )
             )
           )
           .all(),
@@ -233,7 +257,12 @@ export const getDashboardData = createServerFn()
         0
       );
 
-      const netBalanceCents = totalMonthlyIncomeCents - totalMonthlyExpensesCents;
+      const totalCreditsCents = periodCreditOccurrences.reduce(
+        (sum, o) => sum + (o.receivedAmountCents ?? o.amountCents),
+        0
+      );
+
+      const netBalanceCents = totalMonthlyIncomeCents + totalCreditsCents - totalMonthlyExpensesCents;
       const totalGoalAllocatedCents = activeGoals.reduce(
         (sum, goal) => sum + goal.allocatedCents,
         0
@@ -290,6 +319,7 @@ export const getDashboardData = createServerFn()
         periodLabel,
         totalMonthlyIncomeCents,
         totalMonthlyExpensesCents,
+        totalCreditsCents,
         netBalanceCents,
         unallocatedCents,
         totalGoalAllocatedCents,

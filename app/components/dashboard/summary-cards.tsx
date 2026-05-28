@@ -1,4 +1,4 @@
-import { TrendingUp, TrendingDown, DollarSign, Target } from "lucide-react";
+import { TrendingUp, TrendingDown, DollarSign, Target, BadgeDollarSign } from "lucide-react";
 import { Card, CardContent } from "~/components/ui/card";
 import { formatCurrency } from "~/lib/currency";
 import { cn } from "~/lib/utils";
@@ -13,6 +13,7 @@ export function SummaryCards({ data }: SummaryCardsProps) {
     periodLabel,
     totalMonthlyIncomeCents,
     totalMonthlyExpensesCents,
+    totalCreditsCents,
     netBalanceCents,
     unallocatedCents,
     totalGoalAllocatedCents,
@@ -23,7 +24,7 @@ export function SummaryCards({ data }: SummaryCardsProps) {
   const unallocatedIsPositive = unallocatedCents > 0;
 
   return (
-    <div className="grid grid-cols-1 gap-4 md:grid-cols-2 lg:grid-cols-4">
+    <div className="grid grid-cols-1 gap-4 md:grid-cols-2 lg:grid-cols-5">
       {/* Monthly Income */}
       <Card>
         <CardContent className="p-6">
@@ -38,6 +39,25 @@ export function SummaryCards({ data }: SummaryCardsProps) {
             </div>
             <div className="flex h-12 w-12 items-center justify-center rounded-full bg-success/10">
               <TrendingUp className="h-6 w-6 text-success" />
+            </div>
+          </div>
+        </CardContent>
+      </Card>
+
+      {/* Credits */}
+      <Card>
+        <CardContent className="p-6">
+          <div className="flex items-center justify-between">
+            <div>
+              <p className="text-sm font-medium text-muted-foreground">
+                {periodLabel} Credits
+              </p>
+              <p className="mt-1 text-2xl font-bold text-accent">
+                {formatCurrency(totalCreditsCents)}
+              </p>
+            </div>
+            <div className="flex h-12 w-12 items-center justify-center rounded-full bg-accent/10">
+              <BadgeDollarSign className="h-6 w-6 text-accent" />
             </div>
           </div>
         </CardContent>
