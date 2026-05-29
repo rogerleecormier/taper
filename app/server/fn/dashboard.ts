@@ -253,7 +253,7 @@ export const getDashboardData = createServerFn()
           .where(
             and(
               eq(goalTransfers.userId, user.id),
-              lte(goalTransfers.transferDate, actualToday)
+              lt(goalTransfers.transferDate, actualToday)
             )
           )
           .all(),
