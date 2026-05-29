@@ -40,6 +40,8 @@ import {
 } from "~/components/ui/dialog";
 import { Card, CardContent } from "~/components/ui/card";
 import { TrackerOccurrenceRow } from "./tracker-occurrence-row";
+import { GoalTransferTimelineRow } from "./goal-transfer-row";
+import { useGoalTransferHistory } from "~/hooks/use-goals";
 import type { BillOccurrence } from "~/db/schema/bill-occurrences";
 import type { IncomeOccurrence } from "~/db/schema/income-occurrences";
 import type { CreditOccurrence } from "~/db/schema/credit-occurrences";
@@ -316,6 +318,9 @@ export function YearCalendarView({ periodStart }: YearCalendarViewProps) {
   const { data: creditOccs = [], isLoading: creditOccsLoading } =
     useCreditOccurrences({ startDate: yearStart, endDate: yearEnd });
 
+  const { data: periodTransfers = [], isLoading: transfersLoading } =
+    useGoalTransferHistory({ startDate: yearStart, endDate: yearEnd });
+
   const { data: payments = [], isLoading: paymentsLoading } =
     useBillPaymentsForPeriod({ startDate: yearStart, endDate: yearEnd });
   const { data: receipts = [], isLoading: receiptsLoading } =
@@ -418,8 +423,29 @@ export function YearCalendarView({ periodStart }: YearCalendarViewProps) {
       });
     });
 
+    periodTransfers.forEach((item) => {
+      const t = item.transfer;
+      const isAllocation = !t.fromGoalId && t.toGoalId;
+      const isReallocation = t.fromGoalId && !t.toGoalId;
+      if (isAllocation || isReallocation) {
+        push(t.transferDate, {
+          id: t.id,
+          type: "goal" as any,
+          name: isAllocation ? `Alloc: ${item.toGoalName}` : `Realloc: ${item.fromGoalName}`,
+          amountCents: t.amountCents,
+          dateStr: t.transferDate,
+          status: isAllocation ? "pending" : "received",
+          categoryColor: "oklch(0.60 0.15 150)",
+          interval: "standalone",
+          categoryName: "Goal",
+          vendorName: null,
+          occurrenceObj: t as any,
+        });
+      }
+    });
+
     return map;
-  }, [incomeOccs, billOccs, creditOccs, incomeMap, billMap, creditMap, showHidden]);
+  }, [incomeOccs, billOccs, creditOccs, incomeMap, billMap, creditMap, showHidden, periodTransfers]);
 
   const paydayDates = useMemo(() => {
     const s = new Set<string>();
@@ -435,18 +461,27 @@ export function YearCalendarView({ periodStart }: YearCalendarViewProps) {
     let income = 0;
     let expenses = 0;
     let credits = 0;
+    let goalAllocations = 0;
     itemsByDate.forEach((items) => {
       items.forEach((item) => {
         if (item.type === "income") income += item.amountCents;
         else if (item.type === "bill") expenses += item.amountCents;
-        else credits += item.amountCents;
+        else if (item.type === "credit") credits += item.amountCents;
+        else if (item.type === "goal" as any) {
+          const isAllocation = !item.occurrenceObj.fromGoalId && item.occurrenceObj.toGoalId;
+          if (isAllocation) {
+            goalAllocations += item.amountCents;
+          } else {
+            goalAllocations -= item.amountCents;
+          }
+        }
       });
     });
     return {
       income,
       expenses,
       credits,
-      balance: income + credits - expenses,
+      balance: income + credits - expenses - goalAllocations,
     };
   }, [itemsByDate]);
 
@@ -474,7 +509,8 @@ export function YearCalendarView({ periodStart }: YearCalendarViewProps) {
     incomeOccsLoading ||
     creditOccsLoading ||
     paymentsLoading ||
-    receiptsLoading;
+    receiptsLoading ||
+    transfersLoading;
 
   if (isLoading) {
     return (
@@ -623,20 +659,31 @@ export function YearCalendarView({ periodStart }: YearCalendarViewProps) {
             </DialogTitle>
           </DialogHeader>
           <div className="space-y-3 py-2 overflow-y-auto flex-1">
-            {selectedDay?.items.map((item) => (
-              <TrackerOccurrenceRow
-                key={item.id}
-                occurrence={item.occurrenceObj}
-                type={item.type}
-                billName={item.name}
-                interval={item.interval}
-                categoryColor={item.categoryColor}
-                categoryName={item.categoryName}
-                vendorName={item.vendorName}
-                payments={paymentsMap.get(item.id) ?? []}
-                receipts={receiptsMap.get(item.id) ?? []}
-              />
-            ))}
+            {selectedDay?.items.map((item) => {
+              if (item.type === "goal" as any) {
+                return (
+                  <GoalTransferTimelineRow
+                    key={item.id}
+                    transfer={item.occurrenceObj}
+                    name={item.name}
+                  />
+                );
+              }
+              return (
+                <TrackerOccurrenceRow
+                  key={item.id}
+                  occurrence={item.occurrenceObj}
+                  type={item.type}
+                  billName={item.name}
+                  interval={item.interval}
+                  categoryColor={item.categoryColor}
+                  categoryName={item.categoryName}
+                  vendorName={item.vendorName}
+                  payments={paymentsMap.get(item.id) ?? []}
+                  receipts={receiptsMap.get(item.id) ?? []}
+                />
+              );
+            })}
           </div>
         </DialogContent>
       </Dialog>

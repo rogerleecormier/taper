@@ -12,6 +12,7 @@ import {
   occurrenceKeys,
 } from "./use-occurrences";
 import { usePreferences } from "./use-preferences";
+import { useGoalTransferHistory, goalKeys } from "./use-goals";
 import { type BillOccurrence } from "~/db/schema/bill-occurrences";
 import { type BillPayment } from "~/db/schema/bill-payments";
 import { type IncomeOccurrence } from "~/db/schema/income-occurrences";
@@ -24,6 +25,7 @@ import { getIncomeOccurrences } from "~/server/fn/income-occurrences";
 import { getBillPaymentsForPeriod } from "~/server/fn/bill-payments";
 import { getCreditOccurrences } from "~/server/fn/credit-occurrences";
 import { getCreditReceiptsForPeriod } from "~/server/fn/credit-receipts";
+import { getGoalTransferHistory } from "~/server/fn/goals";
 
 export type TrackerRow = {
   id: string;
@@ -101,6 +103,9 @@ export function useTrackerData(interval: TrackerInterval, periodStart: Date) {
   const { data: periodReceipts = [], isLoading: receiptsLoading } =
     useCreditReceiptsForPeriod({ startDate: windowStart, endDate: windowEnd });
 
+  const { data: periodTransfers = [], isLoading: transfersLoading } =
+    useGoalTransferHistory({ startDate: windowStart, endDate: windowEnd });
+
   // Prefetch prev and next periods so Prev/Next navigation is instant
   const qc = useQueryClient();
   useEffect(() => {
@@ -133,6 +138,11 @@ export function useTrackerData(interval: TrackerInterval, periodStart: Date) {
       qc.prefetchQuery({
         queryKey: ["credit-receipts-period", window] as const,
         queryFn: () => getCreditReceiptsForPeriod({ data: window }),
+        staleTime: PERIOD_STALE_MS,
+      });
+      qc.prefetchQuery({
+        queryKey: goalKeys.transferHistory(window),
+        queryFn: () => getGoalTransferHistory({ data: window }),
         staleTime: PERIOD_STALE_MS,
       });
     }
@@ -290,7 +300,7 @@ export function useTrackerData(interval: TrackerInterval, periodStart: Date) {
   const isLoading =
     billsLoading || incomeLoading || creditsLoading ||
     billOccsLoading || incomeOccsLoading || creditOccsLoading ||
-    paymentsLoading || receiptsLoading;
+    paymentsLoading || receiptsLoading || transfersLoading;
 
   return {
     rows,
@@ -299,6 +309,7 @@ export function useTrackerData(interval: TrackerInterval, periodStart: Date) {
     creditOccurrenceMap,
     billPaymentsByOccurrenceMap,
     creditReceiptsByOccurrenceMap,
+    periodTransfers,
     windowStart,
     windowEnd,
     isLoading,

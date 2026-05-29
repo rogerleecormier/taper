@@ -33,6 +33,8 @@ import { formatCurrency } from "~/lib/currency";
 import { toDateStr } from "~/lib/dates";
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from "~/components/ui/dialog";
 import { TrackerOccurrenceRow } from "./tracker-occurrence-row";
+import { GoalTransferTimelineRow } from "./goal-transfer-row";
+import { useGoalTransferHistory } from "~/hooks/use-goals";
 import type { BillOccurrence } from "~/db/schema/bill-occurrences";
 import type { IncomeOccurrence } from "~/db/schema/income-occurrences";
 import type { CreditOccurrence } from "~/db/schema/credit-occurrences";
@@ -211,6 +213,11 @@ export function BudgetCalendarView({ scope, interval, periodStart }: BudgetCalen
     endDate: windowEnd,
   });
 
+  const { data: periodTransfers = [], isLoading: transfersLoading } = useGoalTransferHistory({
+    startDate: windowStart,
+    endDate: windowEnd,
+  });
+
   const { data: payments = [], isLoading: paymentsLoading } = useBillPaymentsForPeriod({
     startDate: windowStart,
     endDate: windowEnd,
@@ -307,8 +314,29 @@ export function BudgetCalendarView({ scope, interval, periodStart }: BudgetCalen
       });
     });
 
+    periodTransfers.forEach((item) => {
+      const t = item.transfer;
+      const isAllocation = !t.fromGoalId && t.toGoalId;
+      const isReallocation = t.fromGoalId && !t.toGoalId;
+      if (isAllocation || isReallocation) {
+        list.push({
+          id: t.id,
+          type: "goal" as any,
+          name: isAllocation ? `Alloc: ${item.toGoalName}` : `Realloc: ${item.fromGoalName}`,
+          amountCents: t.amountCents,
+          dateStr: t.transferDate,
+          status: isAllocation ? "pending" : "received",
+          categoryColor: "oklch(0.60 0.15 150)",
+          interval: "standalone",
+          categoryName: "Goal",
+          vendorName: null,
+          occurrenceObj: t as any,
+        });
+      }
+    });
+
     return list;
-  }, [incomeOccs, billOccs, creditOccs, incomeNameMap, billNameMap, creditNameMap, showHidden]);
+  }, [incomeOccs, billOccs, creditOccs, incomeNameMap, billNameMap, creditNameMap, showHidden, periodTransfers]);
 
   // Map items to date buckets for rendering
   const itemsByDate = useMemo(() => {
@@ -340,6 +368,9 @@ export function BudgetCalendarView({ scope, interval, periodStart }: BudgetCalen
     if (!item || !targetDate) return;
     if (item.dateStr === targetDate) return;
 
+    if (item.type === "goal" as any) {
+      return;
+    }
     if (item.type === "bill") {
       await updateBillOccurrence.mutateAsync({ id: item.id, dueDate: targetDate });
       return;
@@ -373,7 +404,8 @@ export function BudgetCalendarView({ scope, interval, periodStart }: BudgetCalen
     incomeOccsLoading ||
     creditOccsLoading ||
     paymentsLoading ||
-    receiptsLoading;
+    receiptsLoading ||
+    transfersLoading;
 
   if (isLoading) {
     return (
@@ -442,17 +474,24 @@ export function BudgetCalendarView({ scope, interval, periodStart }: BudgetCalen
               <DialogTitle className="font-heading font-extrabold text-foreground">Reschedule / Manage Allocation</DialogTitle>
             </DialogHeader>
             <div className="py-4">
-              <TrackerOccurrenceRow
-                occurrence={activeDetailData.occurrenceObj}
-                type={activeDetailData.type}
-                billName={activeDetailData.name}
-                interval={activeDetailData.interval}
-                categoryColor={activeDetailData.categoryColor}
-                categoryName={activeDetailData.categoryName}
-                vendorName={activeDetailData.vendorName}
-                payments={activeDetailData.payments}
-                receipts={activeDetailData.receipts}
-              />
+              {activeDetailData.type === "goal" as any ? (
+                <GoalTransferTimelineRow
+                  transfer={activeDetailData.occurrenceObj}
+                  name={activeDetailData.name}
+                />
+              ) : (
+                <TrackerOccurrenceRow
+                  occurrence={activeDetailData.occurrenceObj}
+                  type={activeDetailData.type}
+                  billName={activeDetailData.name}
+                  interval={activeDetailData.interval}
+                  categoryColor={activeDetailData.categoryColor}
+                  categoryName={activeDetailData.categoryName}
+                  vendorName={activeDetailData.vendorName}
+                  payments={activeDetailData.payments}
+                  receipts={activeDetailData.receipts}
+                />
+              )}
             </div>
           </DialogContent>
         </Dialog>

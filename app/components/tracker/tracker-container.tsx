@@ -15,6 +15,7 @@ import type { BillPayment } from "~/db/schema/bill-payments";
 import type { CreditReceipt } from "~/db/schema/credit-receipts";
 import { TrackerToolbar } from "./tracker-toolbar";
 import { TrackerOccurrenceRow } from "./tracker-occurrence-row";
+import { GoalTransferTimelineRow } from "./goal-transfer-row";
 import {
   Select,
   SelectContent,
@@ -48,6 +49,7 @@ export function TrackerContainer({
     creditOccurrenceMap,
     billPaymentsByOccurrenceMap,
     creditReceiptsByOccurrenceMap,
+    periodTransfers = [],
     isLoading,
   } = useTrackerData(interval, periodStart);
 
@@ -159,7 +161,21 @@ export function TrackerContainer({
   const incomeTotal = filteredIncomeParents.reduce((s, p) => s + p!.periodTotal, 0);
   const expenseTotal = filteredBillParents.reduce((s, p) => s + p!.periodTotal, 0);
   const creditTotal = filteredCreditParents.reduce((s, p) => s + p!.periodTotal, 0);
-  const balance = incomeTotal + creditTotal - expenseTotal;
+
+  const totalGoalAllocatedCents = useMemo(() => {
+    return periodTransfers.reduce((sum, item) => {
+      const t = item.transfer;
+      if (!t.fromGoalId && t.toGoalId) {
+        return sum + t.amountCents;
+      }
+      if (t.fromGoalId && !t.toGoalId) {
+        return sum - t.amountCents;
+      }
+      return sum;
+    }, 0);
+  }, [periodTransfers]);
+
+  const balance = incomeTotal + creditTotal - expenseTotal - totalGoalAllocatedCents;
 
   // Chronological timeline compile
   const timelineOccurrences = useMemo(() => {
@@ -259,13 +275,33 @@ export function TrackerContainer({
       });
     });
 
+    periodTransfers.forEach((item) => {
+      const t = item.transfer;
+      const isAllocation = !t.fromGoalId && t.toGoalId;
+      const isReallocation = t.fromGoalId && !t.toGoalId;
+      if (isAllocation || isReallocation) {
+        list.push({
+          occurrence: t as any,
+          type: "goal" as any,
+          parentName: isAllocation ? `Allocation: ${item.toGoalName}` : `Reallocation: ${item.fromGoalName}`,
+          interval: "standalone",
+          categoryName: "Goal",
+          categoryColor: "oklch(0.60 0.15 150)",
+          vendorName: null,
+          dateStr: t.transferDate,
+          payments: [],
+          receipts: [],
+        });
+      }
+    });
+
     return list.sort((a, b) => {
       const cmp = a.dateStr.localeCompare(b.dateStr);
       if (cmp !== 0) return cmp;
-      const score = { income: 0, credit: 1, bill: 2 };
-      return score[a.type] - score[b.type];
+      const score = { income: 0, credit: 1, bill: 2, goal: 3 };
+      return score[a.type as keyof typeof score] - score[b.type as keyof typeof score];
     });
-  }, [filteredIncomeParents, filteredBillParents, filteredCreditParents, billPaymentsByOccurrenceMap, creditReceiptsByOccurrenceMap, billOccurrenceMap]);
+  }, [filteredIncomeParents, filteredBillParents, filteredCreditParents, billPaymentsByOccurrenceMap, creditReceiptsByOccurrenceMap, billOccurrenceMap, periodTransfers]);
 
   // Category allocations compiler
   const categoryAllocations = useMemo(() => {
@@ -388,7 +424,7 @@ export function TrackerContainer({
           <CardContent className="p-4 flex items-center justify-between">
             <div>
               <p className="text-[11px] font-bold uppercase tracking-wider text-muted-foreground">
-                {balance >= 0 ? "Left to Taper" : "Shortfall"}
+                {balance === 0 ? "Left to Taper" : balance > 0 ? "Left to Taper" : "Shortfall"}
               </p>
               <p
                 className={cn(
@@ -398,6 +434,16 @@ export function TrackerContainer({
               >
                 {formatCurrency(Math.abs(balance))}
               </p>
+              {totalGoalAllocatedCents > 0 && (
+                <p className="mt-1 text-[10px] text-muted-foreground">
+                  {formatCurrency(totalGoalAllocatedCents)} allocated to goals
+                </p>
+              )}
+              {totalGoalAllocatedCents < 0 && (
+                <p className="mt-1 text-[10px] text-muted-foreground">
+                  {formatCurrency(Math.abs(totalGoalAllocatedCents))} reallocated from goals
+                </p>
+              )}
             </div>
             <div
               className={cn(
@@ -546,21 +592,32 @@ export function TrackerContainer({
               </div>
 
               <div className="pt-2">
-                {timelineOccurrences.map(({ occurrence, type, parentName, interval, categoryName, categoryColor, vendorName, payments, receipts, originalDueDate }) => (
-                  <TrackerOccurrenceRow
-                    key={occurrence.id}
-                    occurrence={occurrence}
-                    type={type}
-                    billName={parentName}
-                    interval={interval}
-                    categoryName={categoryName}
-                    categoryColor={categoryColor}
-                    vendorName={vendorName}
-                    payments={payments}
-                    receipts={receipts}
-                    originalDueDate={originalDueDate}
-                  />
-                ))}
+                {timelineOccurrences.map(({ occurrence, type, parentName, interval, categoryName, categoryColor, vendorName, payments, receipts, originalDueDate }) => {
+                  if (type === "goal" as any) {
+                    return (
+                      <GoalTransferTimelineRow
+                        key={occurrence.id}
+                        transfer={occurrence}
+                        name={parentName}
+                      />
+                    );
+                  }
+                  return (
+                    <TrackerOccurrenceRow
+                      key={occurrence.id}
+                      occurrence={occurrence}
+                      type={type}
+                      billName={parentName}
+                      interval={interval}
+                      categoryName={categoryName}
+                      categoryColor={categoryColor}
+                      vendorName={vendorName}
+                      payments={payments}
+                      receipts={receipts}
+                      originalDueDate={originalDueDate}
+                    />
+                  );
+                })}
               </div>
             </div>
 

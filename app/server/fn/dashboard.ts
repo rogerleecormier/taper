@@ -250,12 +250,7 @@ export const getDashboardData = createServerFn()
         db
           .select()
           .from(goalTransfers)
-          .where(
-            and(
-              eq(goalTransfers.userId, user.id),
-              lt(goalTransfers.transferDate, actualToday)
-            )
-          )
+          .where(eq(goalTransfers.userId, user.id))
           .all(),
       ]);
 
@@ -291,7 +286,7 @@ export const getDashboardData = createServerFn()
       const dashboardGoals = activeGoals.map((goal) => {
         const goalTransfersList = transfers.filter(
           (t) => (t.toGoalId === goal.id || t.fromGoalId === goal.id) &&
-                 t.transferDate >= periodStart && t.transferDate <= periodEnd
+                 t.transferDate <= periodEnd
         );
         const allocatedCents = goalTransfersList.reduce((sum, t) => {
           if (t.toGoalId === goal.id) return sum + t.amountCents;
@@ -299,9 +294,18 @@ export const getDashboardData = createServerFn()
           return sum;
         }, 0);
 
+        const overallTransfersList = transfers.filter(
+          (t) => (t.toGoalId === goal.id || t.fromGoalId === goal.id)
+        );
+        const overallAllocatedCents = overallTransfersList.reduce((sum, t) => {
+          if (t.toGoalId === goal.id) return sum + t.amountCents;
+          if (t.fromGoalId === goal.id) return sum - t.amountCents;
+          return sum;
+        }, 0);
+
         const remainingCents = goal.targetAmountCents - allocatedCents;
         const progressPercent = goal.targetAmountCents > 0
-          ? Math.round((allocatedCents / goal.targetAmountCents) * 100)
+          ? Math.round((overallAllocatedCents / goal.targetAmountCents) * 100)
           : 0;
         return {
           id: goal.id,
