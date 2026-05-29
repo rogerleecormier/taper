@@ -10,6 +10,7 @@ import { creditOccurrences } from "~/db/schema/credit-occurrences";
 import { vendors } from "~/db/schema/vendors";
 import { categories } from "~/db/schema/categories";
 import { goals } from "~/db/schema/goals";
+import { goalTransfers } from "~/db/schema/goal-transfers";
 import { getCachedOrFetch, dashboardCacheKey } from "~/lib/kv-cache";
 import { toDateStr, getPeriodEnd } from "~/lib/dates";
 import { addDays, format, parseISO } from "date-fns";
@@ -114,6 +115,7 @@ export const getDashboardData = createServerFn()
         upcomingOccurrences,
         overdueOccurrences,
         recentPayments,
+        transfers,
       ] = await Promise.all([
         db
           .select()
@@ -245,6 +247,16 @@ export const getDashboardData = createServerFn()
           .orderBy(desc(billPayments.paidDate))
           .limit(10)
           .all(),
+        db
+          .select()
+          .from(goalTransfers)
+          .where(
+            and(
+              eq(goalTransfers.userId, user.id),
+              lte(goalTransfers.transferDate, periodEnd)
+            )
+          )
+          .all(),
       ]);
 
       const totalMonthlyIncomeCents = periodIncomeOccurrences.reduce(
@@ -263,22 +275,38 @@ export const getDashboardData = createServerFn()
       );
 
       const netBalanceCents = totalMonthlyIncomeCents + totalCreditsCents - totalMonthlyExpensesCents;
-      const totalGoalAllocatedCents = activeGoals.reduce(
-        (sum, goal) => sum + goal.allocatedCents,
-        0
-      );
+      const totalGoalAllocatedCents = transfers
+        .filter((t) => t.transferDate >= periodStart && t.transferDate <= periodEnd)
+        .reduce((sum, t) => {
+          if (!t.fromGoalId && t.toGoalId) {
+            return sum + t.amountCents;
+          }
+          if (t.fromGoalId && !t.toGoalId) {
+            return sum - t.amountCents;
+          }
+          return sum;
+        }, 0);
       const unallocatedCents = netBalanceCents - totalGoalAllocatedCents;
 
       const dashboardGoals = activeGoals.map((goal) => {
-        const remainingCents = goal.targetAmountCents - goal.allocatedCents;
+        const goalTransfersList = transfers.filter(
+          (t) => t.toGoalId === goal.id || t.fromGoalId === goal.id
+        );
+        const allocatedCents = goalTransfersList.reduce((sum, t) => {
+          if (t.toGoalId === goal.id) return sum + t.amountCents;
+          if (t.fromGoalId === goal.id) return sum - t.amountCents;
+          return sum;
+        }, 0);
+
+        const remainingCents = goal.targetAmountCents - allocatedCents;
         const progressPercent = goal.targetAmountCents > 0
-          ? Math.round((goal.allocatedCents / goal.targetAmountCents) * 100)
+          ? Math.round((allocatedCents / goal.targetAmountCents) * 100)
           : 0;
         return {
           id: goal.id,
           name: goal.name,
           targetAmountCents: goal.targetAmountCents,
-          allocatedCents: goal.allocatedCents,
+          allocatedCents,
           remainingCents,
           progressPercent,
         };
