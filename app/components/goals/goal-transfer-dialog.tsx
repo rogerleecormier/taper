@@ -88,7 +88,7 @@ export function GoalTransferDialog({ goals }: GoalTransferDialogProps) {
       <DialogTrigger asChild>
         <Button variant="outline">Transfer Funds</Button>
       </DialogTrigger>
-      <DialogContent className="sm:max-w-lg">
+      <DialogContent className="sm:max-w-lg" aria-describedby={undefined}>
         <DialogHeader>
           <DialogTitle>Transfer / Reallocate Funds</DialogTitle>
         </DialogHeader>

@@ -65,7 +65,7 @@ export function CategoryFormDialog({
   }
 
   const dialogContent = (
-    <DialogContent className="sm:max-w-md">
+    <DialogContent className="sm:max-w-md" aria-describedby={undefined}>
       <DialogHeader>
         <DialogTitle>
           {isEditing ? "Edit Category" : "Add Category"}

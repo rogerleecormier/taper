@@ -615,7 +615,7 @@ export function YearCalendarView({ periodStart }: YearCalendarViewProps) {
         open={!!selectedDay}
         onOpenChange={(open) => !open && setSelectedDay(null)}
       >
-        <DialogContent className="sm:max-w-xl glass-card max-h-[80vh] flex flex-col">
+        <DialogContent className="sm:max-w-xl glass-card max-h-[80vh] flex flex-col" aria-describedby={undefined}>
           <DialogHeader>
             <DialogTitle className="font-heading font-extrabold text-foreground">
               {selectedDay &&

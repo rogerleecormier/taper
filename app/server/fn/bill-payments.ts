@@ -113,6 +113,7 @@ export const getBillPaymentsForPeriod = createServerFn()
         amountCents: billPayments.amountCents,
         paidDate: billPayments.paidDate,
         notes: billPayments.notes,
+        hidden: billPayments.hidden,
         createdAt: billPayments.createdAt,
         updatedAt: billPayments.updatedAt,
       })

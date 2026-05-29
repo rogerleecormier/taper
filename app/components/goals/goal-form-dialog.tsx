@@ -52,7 +52,7 @@ export function GoalFormDialog({
   const isLoading = createGoal.isPending || updateGoal.isPending;
 
   const content = (
-    <DialogContent className="sm:max-w-md">
+    <DialogContent className="sm:max-w-md" aria-describedby={undefined}>
       <DialogHeader>
         <DialogTitle>{goalId ? "Edit Goal" : "Add Goal"}</DialogTitle>
       </DialogHeader>

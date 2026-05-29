@@ -178,28 +178,34 @@ export const transferGoalFunds = createServerFn()
 
     const now = new Date();
 
-    const executeTransfer = async (tx: typeof db) => {
-      if (fromGoalId) {
-        await tx
+    const batchQueries = [];
+
+    if (fromGoalId) {
+      batchQueries.push(
+        db
           .update(goals)
           .set({
             allocatedCents: sql`${goals.allocatedCents} - ${data.amountCents}`,
             updatedAt: now,
           })
-          .where(and(eq(goals.id, fromGoalId), eq(goals.userId, user.id)));
-      }
+          .where(and(eq(goals.id, fromGoalId), eq(goals.userId, user.id)))
+      );
+    }
 
-      if (toGoalId) {
-        await tx
+    if (toGoalId) {
+      batchQueries.push(
+        db
           .update(goals)
           .set({
             allocatedCents: sql`${goals.allocatedCents} + ${data.amountCents}`,
             updatedAt: now,
           })
-          .where(and(eq(goals.id, toGoalId), eq(goals.userId, user.id)));
-      }
+          .where(and(eq(goals.id, toGoalId), eq(goals.userId, user.id)))
+      );
+    }
 
-      await tx.insert(goalTransfers).values({
+    batchQueries.push(
+      db.insert(goalTransfers).values({
         id: nanoid(),
         userId: user.id,
         fromGoalId,
@@ -209,14 +215,11 @@ export const transferGoalFunds = createServerFn()
         notes: data.notes ?? null,
         createdAt: now,
         updatedAt: now,
-      });
-    };
+      })
+    );
 
-    if (typeof (db as any).transaction === "function") {
-      await (db as any).transaction(async (tx: typeof db) => executeTransfer(tx));
-    } else {
-      await executeTransfer(db);
-    }
+    await db.batch(batchQueries as [any, ...any[]]);
+
 
     const period = data.transferDate.slice(0, 7);
     await invalidateUserDashboard(env.KV, user.id, period);

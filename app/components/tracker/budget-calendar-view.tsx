@@ -437,7 +437,7 @@ export function BudgetCalendarView({ scope, interval, periodStart }: BudgetCalen
       {/* Detail Dialog exposing Occurrence action states */}
       {activeDetailData && (
         <Dialog open={!!activeItem} onOpenChange={(open) => !open && setActiveItem(null)}>
-          <DialogContent className="sm:max-w-xl glass-card">
+          <DialogContent className="sm:max-w-xl glass-card" aria-describedby={undefined}>
             <DialogHeader>
               <DialogTitle className="font-heading font-extrabold text-foreground">Reschedule / Manage Allocation</DialogTitle>
             </DialogHeader>

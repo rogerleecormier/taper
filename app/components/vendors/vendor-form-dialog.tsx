@@ -66,7 +66,7 @@ export function VendorFormDialog({
   }
 
   const dialogContent = (
-    <DialogContent className="sm:max-w-md">
+    <DialogContent className="sm:max-w-md" aria-describedby={undefined}>
       <DialogHeader>
         <DialogTitle>{isEditing ? "Edit Vendor" : "Add Vendor"}</DialogTitle>
       </DialogHeader>

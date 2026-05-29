@@ -182,7 +182,7 @@ export function useUpdateBillPayment() {
 export function useCarryForwardOccurrence() {
   const qc = useQueryClient();
   return useMutation({
-    mutationFn: (data: { id: string; targetDate: string }) =>
+    mutationFn: (data: { id: string; targetDate: string; carryAmountCents?: number }) =>
       carryForwardOccurrence({ data }),
     onSuccess: () => {
       qc.invalidateQueries({ queryKey: ["bill-occurrences"] });
@@ -372,7 +372,7 @@ export function useDeleteCreditReceipt() {
 export function useCarryForwardCreditOccurrence() {
   const qc = useQueryClient();
   return useMutation({
-    mutationFn: (data: { id: string; targetDate: string }) =>
+    mutationFn: (data: { id: string; targetDate: string; carryAmountCents?: number }) =>
       carryForwardCreditOccurrence({ data }),
     onSuccess: () => {
       qc.invalidateQueries({ queryKey: ["credit-occurrences"] });

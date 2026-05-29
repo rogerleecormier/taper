@@ -218,7 +218,7 @@ export function OccurrenceDetailModal({ item, open, onClose }: OccurrenceDetailM
 
   return (
     <Dialog open={open} onOpenChange={(v) => { if (!v) handleClose(); }}>
-      <DialogContent className="max-w-lg">
+      <DialogContent className="max-w-lg" aria-describedby={undefined}>
         <DialogHeader>
           <DialogTitle className="flex items-center gap-2">
             <span>{item.billName}</span>

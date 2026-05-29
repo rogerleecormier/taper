@@ -93,7 +93,7 @@ export function PaymentEditModal({ item, open, onClose }: PaymentEditModalProps)
 
   return (
     <Dialog open={open} onOpenChange={(v) => { if (!v) handleClose(); }}>
-      <DialogContent className="max-w-sm">
+      <DialogContent className="max-w-sm" aria-describedby={undefined}>
         <DialogHeader>
           <DialogTitle className="text-base">Edit Payment</DialogTitle>
         </DialogHeader>
