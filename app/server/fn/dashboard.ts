@@ -290,7 +290,8 @@ export const getDashboardData = createServerFn()
 
       const dashboardGoals = activeGoals.map((goal) => {
         const goalTransfersList = transfers.filter(
-          (t) => t.toGoalId === goal.id || t.fromGoalId === goal.id
+          (t) => (t.toGoalId === goal.id || t.fromGoalId === goal.id) &&
+                 t.transferDate >= periodStart && t.transferDate <= periodEnd
         );
         const allocatedCents = goalTransfersList.reduce((sum, t) => {
           if (t.toGoalId === goal.id) return sum + t.amountCents;
