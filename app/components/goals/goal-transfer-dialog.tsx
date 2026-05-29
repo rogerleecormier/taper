@@ -46,20 +46,31 @@ export function GoalTransferDialog({ goals }: GoalTransferDialogProps) {
       return;
     }
 
-    if (fromGoalId === toGoalId) {
+    const fromId = fromGoalId === "__untethered__" ? null : fromGoalId;
+    const toId = toGoalId === "__untethered__" ? null : toGoalId;
+
+    if (!fromId && !toId) {
+      setError("Select at least a source or destination goal.");
+      return;
+    }
+
+    if (fromId && toId && fromId === toId) {
       setError("Source and destination must be different.");
       return;
     }
 
     const cents = Math.round(amountNumber * 100);
-    if (sourceGoal && sourceGoal.allocatedCents < cents) {
-      setError("Source goal does not have enough allocated funds.");
-      return;
+    if (fromId) {
+      const source = goals.find((g) => g.id === fromId);
+      if (source && source.allocatedCents < cents) {
+        setError("Source goal does not have enough allocated funds.");
+        return;
+      }
     }
 
     await transferFunds.mutateAsync({
-      fromGoalId: fromGoalId === "__untethered__" ? null : fromGoalId,
-      toGoalId: toGoalId === "__untethered__" ? null : toGoalId,
+      fromGoalId: fromId,
+      toGoalId: toId,
       amountCents: cents,
       transferDate,
       notes: notes.trim() || undefined,
@@ -165,7 +176,7 @@ export function GoalTransferDialog({ goals }: GoalTransferDialogProps) {
           <Button
             type="submit"
             className="w-full"
-            disabled={transferFunds.isPending || fromGoalId === toGoalId}
+            disabled={transferFunds.isPending || (fromGoalId === "__untethered__" && toGoalId === "__untethered__")}
           >
             {transferFunds.isPending ? "Transferring..." : "Submit Transfer"}
           </Button>
