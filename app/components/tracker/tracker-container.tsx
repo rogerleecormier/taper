@@ -162,17 +162,32 @@ export function TrackerContainer({
   const expenseTotal = filteredBillParents.reduce((s, p) => s + p!.periodTotal, 0);
   const creditTotal = filteredCreditParents.reduce((s, p) => s + p!.periodTotal, 0);
 
-  const totalGoalAllocatedCents = useMemo(() => {
-    return periodTransfers.reduce((sum, item) => {
+  const { totalGoalAllocatedCents, goalAllocations } = useMemo(() => {
+    const allocations = new Map<string, number>();
+    let total = 0;
+
+    periodTransfers.forEach((item) => {
       const t = item.transfer;
       if (!t.fromGoalId && t.toGoalId) {
-        return sum + t.amountCents;
+        // Allocation to goal
+        const goalName = item.toGoalName || "Unknown Goal";
+        allocations.set(goalName, (allocations.get(goalName) ?? 0) + t.amountCents);
+        total += t.amountCents;
       }
       if (t.fromGoalId && !t.toGoalId) {
-        return sum - t.amountCents;
+        // Reallocation from goal
+        const goalName = item.fromGoalName || "Unknown Goal";
+        allocations.set(goalName, (allocations.get(goalName) ?? 0) - t.amountCents);
+        total -= t.amountCents;
       }
-      return sum;
-    }, 0);
+    });
+
+    return {
+      totalGoalAllocatedCents: total,
+      goalAllocations: Array.from(allocations.entries())
+        .map(([name, amount]) => ({ name, amountCents: amount }))
+        .sort((a, b) => Math.abs(b.amountCents) - Math.abs(a.amountCents))
+    };
   }, [periodTransfers]);
 
   const balance = incomeTotal + creditTotal - expenseTotal - totalGoalAllocatedCents;
@@ -422,7 +437,7 @@ export function TrackerContainer({
 
         <Card className={cn("border bg-card shadow-xs", balance === 0 ? "border-success/30 bg-success/5" : "border-border")}>
           <CardContent className="p-4 flex items-center justify-between">
-            <div>
+            <div className="flex-1">
               <p className="text-[11px] font-bold uppercase tracking-wider text-muted-foreground">
                 {balance === 0 ? "Left to Taper" : balance > 0 ? "Left to Taper" : "Shortfall"}
               </p>
@@ -434,20 +449,25 @@ export function TrackerContainer({
               >
                 {formatCurrency(Math.abs(balance))}
               </p>
-              {totalGoalAllocatedCents > 0 && (
-                <p className="mt-1 text-[10px] text-muted-foreground">
-                  {formatCurrency(totalGoalAllocatedCents)} allocated to goals
-                </p>
-              )}
-              {totalGoalAllocatedCents < 0 && (
-                <p className="mt-1 text-[10px] text-muted-foreground">
-                  {formatCurrency(Math.abs(totalGoalAllocatedCents))} reallocated from goals
-                </p>
+              {goalAllocations.length > 0 && (
+                <div className="mt-2 space-y-1">
+                  {goalAllocations.map((alloc) => (
+                    <p key={alloc.name} className="text-[10px] text-muted-foreground flex items-center justify-between">
+                      <span>{alloc.name}</span>
+                      <span className={cn(
+                        "tabular-nums font-semibold",
+                        alloc.amountCents > 0 ? "text-success" : "text-accent"
+                      )}>
+                        {alloc.amountCents > 0 ? "+" : ""}{formatCurrency(alloc.amountCents)}
+                      </span>
+                    </p>
+                  ))}
+                </div>
               )}
             </div>
             <div
               className={cn(
-                "h-10 w-10 rounded-xl flex items-center justify-center",
+                "h-10 w-10 rounded-xl flex items-center justify-center flex-shrink-0 ml-2",
                 balance === 0 ? "bg-success/15" : balance > 0 ? "bg-warning/10" : "bg-destructive/10"
               )}
             >
